@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Neubiva3mostb Product</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0f;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+      width: 100vw; height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+    }
+    canvas { display: block; touch-action: none; }
+
+    #nickOverlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,5,16,0.97);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    #nickOverlay.active { display: flex; }
+    #nickOverlay h1 {
+      color: #00ffcc; font-size: 22px; letter-spacing: 3px;
+      text-shadow: 0 0 20px #00ffcc;
+      font-family: 'Courier New', monospace;
+    }
+    #nickOverlay h2 {
+      color: #ff9944; font-size: 14px; letter-spacing: 4px;
+      text-shadow: 0 0 10px #ff9944;
+      font-family: 'Courier New', monospace;
+    }
+    #nickOverlay p {
+      color: #ffffff; font-size: 18px; margin-top: 16px;
+      font-family: 'Courier New', monospace;
+    }
+    #nickInput {
+      width: min(280px, 75vw);
+      padding: 14px 18px;
+      font-size: 20px;
+      font-family: 'Courier New', monospace;
+      background: #001a2a;
+      color: #00ffcc;
+      border: 2px solid #00ffcc;
+      border-radius: 12px;
+      outline: none;
+      text-align: center;
+      box-shadow: 0 0 20px #00ffcc44;
+      letter-spacing: 3px;
+    }
+    #nickError {
+      color: #ff4444; font-size: 13px; min-height: 18px;
+      font-family: 'Courier New', monospace;
+      text-shadow: 0 0 8px #ff4444;
+    }
+    #nickBtn {
+      padding: 14px 36px;
+      background: linear-gradient(180deg, #00ccaa, #004455);
+      color: #fff;
+      border: 2px solid #009977;
+      border-radius: 12px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      letter-spacing: 2px;
+      box-shadow: 0 0 12px #00ffcc44;
+    }
+    #nickBtn:active { opacity: 0.8; }
+    #tgBtn {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2aabee, #1a7bbf);
+      box-shadow: 0 0 18px #2aabee88, 0 2px 8px rgba(0,0,0,0.5);
+      border: 2px solid #5dc8f5;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      text-decoration: none;
+    }
+    #tgBtn:active { transform: scale(0.9); }
+    #tgBtn svg { width: 28px; height: 28px; fill: white; }
+
+    #nickHint {
+      color: #444; font-size: 11px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nickname overlay — pure HTML, no canvas duplication -->
+<div id="nickOverlay">
+  <h1>Neubiva3mostb</h1>
+  <h2>P R O D U C T</h2>
+  <p>КАК ТЕБЯ ЗОВУТ?</p>
+  <input id="nickInput" type="text" maxlength="16" placeholder="Твой ник..." autocomplete="off" spellcheck="false">
+  <div id="nickError"></div>
+  <button id="nickBtn">✔ ПОДТВЕРДИТЬ</button>
+  <span id="nickHint">Ник сохранится навсегда</span>
+</div>
+
+<!-- Telegram button -->
+<a id="tgBtn" href="https://t.me/Neubiva3mostb" target="_blank">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.023 9.531c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.088 14.56l-2.948-.924c-.64-.203-.654-.64.136-.948l11.526-4.445c.534-.194 1.001.13.76.005z"/>
+  </svg>
+</a>
+
+<canvas id="c"></canvas>
+
+<script>
+  // ─── Firebase (Realtime Database) ────────────────────────────
+  // ─── ВЕРСИЯ ИГРЫ ─────────────────────────────────────────────
+  // ⬇ Меняй это число каждый раз когда выпускаешь обновление
+  const GAME_VERSION = 1;
+
+  // ─── АВТООБНОВЛЕНИЕ ──────────────────────────────────────────
+  // Замени ТВОЙ_НИК на твой GitHub логин и nb3game на название репозитория
+  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/ТВОЙ_НИК/nb3game/main/version.txt';
+  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/ТВОЙ_НИК/nb3game/main/game.html';
+
+  async function checkForUpdate() {
+    try {
+      const res = await fetch(UPDATE_VERSION_URL + '?t=' + Date.now());
+      if (!res.ok) return;
+      const remoteVer = parseInt(await res.text());
+      if (remoteVer > GAME_VERSION) showUpdateOverlay(remoteVer);
+    } catch(e) {}
+  }
+
+  function showUpdateOverlay(newVer) {
+    const ov = document.createElement('div');
+    ov.id = 'updateOv';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,5,16,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:Courier New,monospace;';
+    ov.innerHTML = '<div style="color:#00ffcc;font-size:22px;letter-spacing:3px;text-shadow:0 0 20px #00ffcc">Neubiva3mostb</div><div style="color:#ff9944;font-size:13px;letter-spacing:4px">P R O D U C T</div><div style="color:#fff;font-size:17px;margin-top:8px">🆕 Доступно обновление!</div><div style="color:#aaa;font-size:13px">v'+GAME_VERSION+' → v'+newVer+'</div><div id="upTxt" style="color:#00ffcc;font-size:13px">Загрузка...</div><div style="width:220px;height:6px;background:#001a2a;border-radius:3px"><div id="upBar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ffcc,#0088ff);border-radius:3px;transition:width 0.2s"></div></div>';
+    document.body.appendChild(ov);
+    doDownload();
+  }
+
+  async function doDownload() {
+    try {
+      let p = 0;
+      const iv = setInterval(() => { p = Math.min(p+2,88); const b=document.getElementById('upBar'); if(b) b.style.width=p+'%'; }, 80);
+      const res = await fetch(UPDATE_HTML_URL + '?t=' + Date.now());
+      const html = await res.text();
+      clearInterval(iv);
+      const b=document.getElementById('upBar'); if(b) b.style.width='100%';
+      const t=document.getElementById('upTxt'); if(t) t.textContent='Установка...';
+      localStorage.setItem('nb3_upd_html', html);
+      setTimeout(() => { const t2=document.getElementById('upTxt'); if(t2) t2.textContent='Готово! Перезапуск...'; setTimeout(() => location.reload(), 600); }, 400);
+    } catch(e) {
+      const t=document.getElementById('upTxt'); if(t) t.textContent='Ошибка. Запускаем текущую версию...';
+      setTimeout(() => { const ov=document.getElementById('updateOv'); if(ov) ov.remove(); }, 2000);
+    }
+  }
+
+  // Применяем скачанное обновление при следующем запуске
+  (function applyUpdate() {
+    const upd = localStorage.getItem('nb3_upd_html');
+    if (!upd) return;
+    localStorage.removeItem('nb3_upd_html');
+    const blob = new Blob([upd], {type:'text/html'});
+    const url = URL.createObjectURL(blob);
+    location.replace(url);
+  })();
+  // Используем Firebase REST API — не нужны npm/модули
+  const FB_URL = 'https://nb3game-default-rtdb.firebaseio.com/';
+
+  async function fbGet(path) {
+    try {
+      const r = await fetch(`${FB_URL}/${path}.json`);
+      return await r.json();
+    } catch(e) { return null; }
+  }
+  async function fbSet(path, data) {
+    try {
+      await fetch(`${FB_URL}/${path}.json`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
+    } catch(e) {}
+  }
+
+  // ─── CANVAS SETUP ────────────────────────────────────────────
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let W, H, SCALE;
+  function resize() {
+    W = Math.min(window.innerWidth, 480);
+    H = Math.min(window.innerHeight, 854);
+    canvas.width = W; canvas.height = H;
+    SCALE = W / 480;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ─── LOCAL STORAGE ───────────────────────────────────────────
+  function loadLocal() {
+    try { return JSON.parse(localStorage.getItem('nb3_data')) || { coins: 0, nickname: '' }; }
+    catch(e) { return { coins: 0, nickname: '' }; }
+  }
+  function saveLocal(d) { localStorage.setItem('nb3_data', JSON.stringify(d)); }
+  let gameData = loadLocal();
+
+  // ─── GLOBAL LEADERBOARD ──────────────────────────────────────
+  let globalLB = []; // [{name, time}]
+
+  async function loadGlobalLB() {
+    const data = await fbGet('leaderboard');
+    if (!data) { globalLB = []; return; }
+    // data is object {name: time, ...}
+    globalLB = Object.entries(data)
+      .map(([name, time]) => ({ name, time }))
+      .sort((a, b) => b.time - a.time)
+      .slice(0, 3);
+  }
+
+  async function submitScore(name, time) {
+    // Get existing score for this player
+    const existing = await fbGet(`leaderboard/${encodeNick(name)}`);
+    if (!existing || time > existing) {
+      await fbSet(`leaderboard/${encodeNick(name)}`, time);
+    }
+    await loadGlobalLB();
+    // Keep only top 3 — delete anyone outside top 3
+    const all = await fbGet('leaderboard');
+    if (!all) return;
+    const sorted = Object.entries(all).sort((a,b) => b[1]-a[1]);
+    // Remove entries beyond top 3
+    for (let i = 3; i < sorted.length; i++) {
+      await fetch(`${FB_URL}/leaderboard/${sorted[i][0]}.json`, { method: 'DELETE' });
+    }
+    await loadGlobalLB();
+  }
+
+  function encodeNick(name) {
+    // Firebase keys can't have . # $ [ ]
+    return name.replace(/[.#$\[\]]/g, '_');
+  }
+
+  // ─── STATES ──────────────────────────────────────────────────
+  const STATE = { SPLASH: 0, MENU: 1, GAME: 2, GAMEOVER: 3 };
+  let state = STATE.SPLASH;
+
+  // ─── NICKNAME (HTML overlay) ──────────────────────────────────
+  const nickOverlay = document.getElementById('nickOverlay');
+  const nickInput   = document.getElementById('nickInput');
+  const nickError   = document.getElementById('nickError');
+  const nickBtn     = document.getElementById('nickBtn');
+
+  function showNickScreen() {
+    nickOverlay.classList.add('active');
+    setTimeout(() => nickInput.focus(), 100);
+  }
+  function hideNickScreen() {
+    nickOverlay.classList.remove('active');
+  }
+  function confirmNickname() {
+    const nick = nickInput.value.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '').trim();
+    if (nick.length < 2) { nickError.textContent = 'Минимум 2 символа!'; return; }
+    if (nick.length > 16) { nickError.textContent = 'Максимум 16 символов!'; return; }
+    gameData.nickname = nick;
+    saveLocal(gameData);
+    hideNickScreen();
+    state = STATE.MENU;
+    loadGlobalLB();
+  }
+  nickBtn.addEventListener('click', confirmNickname);
+  nickInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmNickname(); });
+  nickInput.addEventListener('input', () => {
+    nickInput.value = nickInput.value.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '').slice(0, 16);
+    nickError.textContent = '';
+  });
+
+  // ─── SPLASH ──────────────────────────────────────────────────
+  let splashTimer = 0;
+  const SPLASH_DURATION = 180;
+  let splashParticles = [];
+
+  function initSplash() {
+    splashTimer = 0; splashParticles = [];
+    for (let i = 0; i < 80; i++) {
+      splashParticles.push({
+        x: W/2, y: H/2,
+        vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+        life: Math.random()*80+40, maxLife: 120,
+        size: Math.random()*4+1, hue: Math.random()*60+180
+      });
+    }
+  }
+
+  // ─── MENU ────────────────────────────────────────────────────
+  let menuTab = 0; // 0=main 1=leaderboard
+  let menuAnim = 0;
+  let lbLoading = false;
+
+  // ─── GAME ────────────────────────────────────────────────────
+  let player, cubes, survivalTime, spawnInterval, cubeSpeed, spawnTimer, diffTick, coins;
+  let joystick = { active: false, startX:0, startY:0, dx:0, dy:0, id:null };
+  let trail = [];
+
+  function initGame() {
+    player = { x:W/2, y:H/2, w:28*SCALE, h:28*SCALE, speed:3.5*SCALE,
+               vx:0, vy:0, alive:true, animTick:0, invincible:0 };
+    cubes=[]; survivalTime=0; spawnInterval=90; cubeSpeed=1.4*SCALE;
+    spawnTimer=0; diffTick=0; coins=0; trail=[];
+  }
+
+  function spawnCube() {
+    let side=Math.floor(Math.random()*4), x, y;
+    const m=20;
+    if(side===0){x=Math.random()*W;y=-m;}
+    else if(side===1){x=W+m;y=Math.random()*H;}
+    else if(side===2){x=Math.random()*W;y=H+m;}
+    else{x=-m;y=Math.random()*H;}
+    const sz=(22+Math.random()*10)*SCALE;
+    const angle=Math.atan2(player.y-y,player.x-x);
+    const speed=cubeSpeed*(0.8+Math.random()*0.5);
+    cubes.push({x,y,sz,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
+      rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-0.5)*0.1,
+      hue:Math.random()*30,pulsePhase:Math.random()*Math.PI*2});
+  }
+
+  // ─── GAME OVER ───────────────────────────────────────────────
+  let goAnim=0, goCoins=0;
+
+  // ─── INPUT ───────────────────────────────────────────────────
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); for(let t of e.changedTouches) handleDown(t.clientX*(W/window.innerWidth), t.clientY*(H/window.innerHeight), t.identifier); }, {passive:false});
+  canvas.addEventListener('touchmove',  e => { e.preventDefault(); for(let t of e.changedTouches) handleMove(t.clientX*(W/window.innerWidth), t.clientY*(H/window.innerHeight), t.identifier); }, {passive:false});
+  canvas.addEventListener('touchend',   e => { e.preventDefault(); for(let t of e.changedTouches) handleUp(t.identifier); }, {passive:false});
+  canvas.addEventListener('mousedown',  e => handleDown(e.offsetX, e.offsetY, 'mouse'));
+  canvas.addEventListener('mousemove',  e => handleMove(e.offsetX, e.offsetY, 'mouse'));
+  canvas.addEventListener('mouseup',    e => handleUp('mouse'));
+  const keys={};
+  window.addEventListener('keydown', e => keys[e.key]=true);
+  window.addEventListener('keyup',   e => keys[e.key]=false);
+
+  function handleDown(x, y, id) {
+    if (state === STATE.MENU) {
+      if (menuTab === 0) {
+        const bx=W/2-100*SCALE, bw=200*SCALE;
+        if (x>bx&&x<bx+bw&&y>H*0.55-25*SCALE&&y<H*0.55+25*SCALE) { state=STATE.GAME; initGame(); return; }
+        if (x>bx&&x<bx+bw&&y>H*0.67-25*SCALE&&y<H*0.67+25*SCALE) {
+          menuTab=1; lbLoading=true; loadGlobalLB().then(()=>lbLoading=false); return;
+        }
+      } else {
+        // Back button in leaderboard
+        const bx=W/2-80*SCALE, bw=160*SCALE, by=H*0.88-22*SCALE, bh=44*SCALE;
+        if (x>bx&&x<bx+bw&&y>by&&y<by+bh) { menuTab=0; return; }
+      }
+      return;
+    }
+    if (state === STATE.GAMEOVER) {
+      const bx=W/2-90*SCALE, bw=180*SCALE;
+      if (x>bx&&x<bx+bw&&y>H*0.72-22*SCALE&&y<H*0.72+22*SCALE) { state=STATE.MENU; menuTab=0; return; }
+      if (x>bx&&x<bx+bw&&y>H*0.82-22*SCALE&&y<H*0.82+22*SCALE) { state=STATE.GAME; initGame(); return; }
+      return;
+    }
+    if (state===STATE.GAME&&player.alive) {
+      joystick={active:true,startX:x,startY:y,dx:0,dy:0,id};
+    }
+  }
+  function handleMove(x,y,id) {
+    if(state===STATE.GAME&&joystick.active&&joystick.id===id){joystick.dx=x-joystick.startX;joystick.dy=y-joystick.startY;}
+  }
+  function handleUp(id) {
+    if(joystick.id===id){joystick.active=false;joystick.dx=0;joystick.dy=0;}
+  }
+
+  // ─── COLLISION ───────────────────────────────────────────────
+  function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
+
+  // ─── DRAW HELPERS ────────────────────────────────────────────
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  }
+  function drawGlowText(text,x,y,size,color,glow,alpha=1){
+    ctx.save();ctx.globalAlpha=alpha;ctx.font=`bold ${size}px 'Courier New'`;
+    ctx.textAlign='center';ctx.shadowBlur=glow;ctx.shadowColor=color;ctx.fillStyle=color;
+    ctx.fillText(text,x,y);ctx.restore();
+  }
+  function drawButton(label,x,y,w,h){
+    ctx.save();
+    const g=ctx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,'#00ccaa');g.addColorStop(1,'#004455');
+    roundRect(x,y,w,h,10*SCALE);ctx.fillStyle=g;ctx.fill();
+    ctx.strokeStyle='#009977';ctx.lineWidth=2;ctx.stroke();
+    ctx.font=`bold ${14*SCALE}px 'Courier New'`;ctx.textAlign='center';
+    ctx.fillStyle='#fff';ctx.shadowBlur=8;ctx.shadowColor='#00ffcc';
+    ctx.fillText(label,x+w/2,y+h/2+5*SCALE);ctx.restore();
+  }
+  function drawGrid(alpha=0.06){
+    ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle='#00ffcc';ctx.lineWidth=1;
+    const gs=40*SCALE;
+    for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.restore();
+  }
+  function formatTime(sec){
+    const m=Math.floor(sec/60),s=Math.floor(sec%60);
+    return m>0?`${m}:${s.toString().padStart(2,'0')}`:`${Math.floor(sec)}s`;
+  }
+
+  // ─── DRAW SPLASH ─────────────────────────────────────────────
+  function drawSplash(){
+    const t=splashTimer/SPLASH_DURATION;
+    ctx.clearRect(0,0,W,H);
+    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W);
+    bg.addColorStop(0,`rgba(0,30,40,${Math.min(t*3,1)})`);bg.addColorStop(1,'#000005');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    for(let p of splashParticles){
+      const a=Math.max(0,1-p.life/p.maxLife);
+      ctx.save();ctx.globalAlpha=a*0.7;ctx.fillStyle=`hsl(${p.hue},100%,60%)`;
+      ctx.shadowBlur=10;ctx.shadowColor=`hsl(${p.hue},100%,70%)`;
+      ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);ctx.restore();
+      p.x+=p.vx;p.y+=p.vy;p.vx*=0.97;p.vy*=0.97;p.life--;
+    }
+    drawGrid(0.06*Math.min(t*2,1));
+    let ta=0;
+    if(t>0.15)ta=Math.min((t-0.15)/0.3,1);
+    if(t>0.85)ta=Math.max(0,1-(t-0.85)/0.15);
+    const ls=0.6+0.4*Math.min((t-0.1)/0.4,1);
+    ctx.save();ctx.translate(W/2,H/2);ctx.scale(ls,ls);ctx.translate(-W/2,-H/2);
+    const pulse=1+0.03*Math.sin(splashTimer*0.12);
+    ctx.save();ctx.translate(W/2,H/2);ctx.scale(pulse,pulse);ctx.translate(-W/2,-H/2);
+    ctx.globalAlpha=ta;
+    ctx.font=`bold ${32*SCALE}px 'Courier New'`;ctx.textAlign='center';
+    ctx.shadowBlur=30;ctx.shadowColor='#00ffcc';ctx.fillStyle='#00ffcc';
+    ctx.fillText('Neubiva3mostb',W/2,H/2-20*SCALE);
+    ctx.font=`bold ${20*SCALE}px 'Courier New'`;ctx.shadowColor='#ff6600';ctx.fillStyle='#ff9944';
+    ctx.fillText('P R O D U C T',W/2,H/2+20*SCALE);
+    ctx.strokeStyle='#00ffcc';ctx.lineWidth=2*SCALE;ctx.globalAlpha=ta*0.5;
+    ctx.beginPath();ctx.moveTo(W/2-120*SCALE,H/2-35*SCALE);ctx.lineTo(W/2+120*SCALE,H/2-35*SCALE);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(W/2-120*SCALE,H/2+35*SCALE);ctx.lineTo(W/2+120*SCALE,H/2+35*SCALE);ctx.stroke();
+    ctx.restore();ctx.restore();
+    if(t>0.5){
+      const ba=Math.min((t-0.5)/0.2,1),bw=200*SCALE,bh=6*SCALE,bx=W/2-bw/2,by=H*0.7;
+      ctx.save();ctx.globalAlpha=ba*0.4;roundRect(bx,by,bw,bh,3*SCALE);ctx.fillStyle='#003344';ctx.fill();
+      ctx.globalAlpha=ba;roundRect(bx,by,bw*Math.min((t-0.5)*2,1),bh,3*SCALE);
+      const lg=ctx.createLinearGradient(bx,0,bx+bw,0);lg.addColorStop(0,'#00ffcc');lg.addColorStop(1,'#0088ff');
+      ctx.fillStyle=lg;ctx.shadowBlur=10;ctx.shadowColor='#00ffcc';ctx.fill();ctx.restore();
+    }
+  }
+
+  // ─── DRAW MENU ───────────────────────────────────────────────
+  function drawMenu(){
+    menuAnim++;ctx.clearRect(0,0,W,H);
+    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#000510');bg.addColorStop(1,'#001520');
+    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+    drawGrid(0.05);
+    for(let i=0;i<5;i++){
+      const a=(menuAnim*0.003+i*1.2)%(Math.PI*2),r=(60+i*30)*SCALE;
+      const x=W/2+Math.cos(a)*r,y=H*0.25+Math.sin(a*0.7)*r*0.4,s=(12+i*4)*SCALE;
+      ctx.save();ctx.globalAlpha=0.15;ctx.translate(x,y);ctx.rotate(menuAnim*0.02+i);
+      ctx.fillStyle=`hsl(${i*40},100%,60%)`;ctx.shadowBlur=15;ctx.shadowColor=`hsl(${i*40},100%,60%)`;
+      ctx.fillRect(-s/2,-s/2,s,s);ctx.restore();
+    }
+    const pulse=1+0.015*Math.sin(menuAnim*0.05);
+    drawGlowText('Neubiva3mostb',W/2,H*0.18,26*SCALE*pulse,'#00ffcc',20);
+    drawGlowText('P R O D U C T',W/2,H*0.25,16*SCALE,'#ff9944',15);
+    drawGlowText(`👤 ${gameData.nickname||'???'}`,W/2,H*0.33,14*SCALE,'#aaffee',6);
+    drawGlowText(`💰 ${gameData.coins}`,W/2,H*0.40,18*SCALE,'#ffdd44',10);
+
+    if(menuTab===0){
+      drawButton('▶  ИГРАТЬ',W/2-100*SCALE,H*0.55-25*SCALE,200*SCALE,50*SCALE);
+      drawButton('🏆  РЕКОРДЫ',W/2-100*SCALE,H*0.67-25*SCALE,200*SCALE,50*SCALE);
+    } else {
+      drawGlowText('🏆 МИРОВОЙ ТОП-3',W/2,H*0.44,17*SCALE,'#ffdd44',12);
+      if(lbLoading){
+        drawGlowText('Загрузка...',W/2,H*0.55,14*SCALE,'#888',6);
+      } else if(globalLB.length===0){
+        drawGlowText('Пока нет рекордов',W/2,H*0.55,13*SCALE,'#888',5);
+      } else {
+        const medals=['🥇','🥈','🥉'];
+        const cols=['#ffd700','#c0c0c0','#cd7f32'];
+        for(let i=0;i<globalLB.length;i++){
+          const e=globalLB[i],y=H*0.50+i*32*SCALE;
+          drawGlowText(`${medals[i]} ${e.name}`,W/2-20*SCALE,y,13*SCALE,cols[i],i===0?10:0);
+          drawGlowText(formatTime(e.time),W/2+80*SCALE,y,13*SCALE,cols[i],0);
+        }
+      }
+      drawButton('← НАЗАД',W/2-80*SCALE,H*0.88-22*SCALE,160*SCALE,44*SCALE);
+    }
+  }
+
+  // ─── DRAW GAME ───────────────────────────────────────────────
+  function drawGame(){
+    ctx.clearRect(0,0,W,H);ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
+    const gs=40*SCALE,offX=(survivalTime*0.5)%gs;
+    ctx.save();ctx.globalAlpha=0.07;ctx.strokeStyle='#00ffcc';ctx.lineWidth=1;
+    for(let x=-offX;x<W+gs;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+    for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+    ctx.restore();
+    for(let i=0;i<trail.length;i++){
+      const tp=trail[i],a=(i/trail.length)*0.3;
+      ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#00ffcc';
+      ctx.fillRect(tp.x-player.w*0.3,tp.y-player.h*0.3,player.w*0.6,player.h*0.6);ctx.restore();
+    }
+    for(let c of cubes){
+      const pulse=0.15*Math.sin(survivalTime*0.05+c.pulsePhase);
+      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);
+      ctx.shadowBlur=20+pulse*20;ctx.shadowColor=`hsl(${c.hue},100%,50%)`;
+      const cg=ctx.createLinearGradient(-c.sz/2,-c.sz/2,c.sz/2,c.sz/2);
+      cg.addColorStop(0,`hsl(${c.hue+20},100%,70%)`);cg.addColorStop(1,`hsl(${c.hue},100%,40%)`);
+      ctx.fillStyle=cg;ctx.fillRect(-c.sz/2,-c.sz/2,c.sz,c.sz);
+      ctx.strokeStyle=`hsl(${c.hue+30},100%,80%)`;ctx.lineWidth=2*SCALE;ctx.strokeRect(-c.sz/2,-c.sz/2,c.sz,c.sz);
+      ctx.restore();
+    }
+    if(player.alive){
+      player.animTick++;
+      const bobY=Math.sin(player.animTick*0.15)*2*SCALE;
+      const facing=player.vx<0?-1:1;
+      ctx.save();ctx.translate(player.x,player.y+bobY);ctx.scale(facing,1);
+      if(player.invincible>0&&Math.floor(player.invincible/4)%2===0)ctx.globalAlpha=0.5;
+      ctx.save();ctx.globalAlpha*=0.3;ctx.fillStyle='#000';ctx.beginPath();
+      ctx.ellipse(0,player.h/2,player.w*0.4,4*SCALE,0,0,Math.PI*2);ctx.fill();ctx.restore();
+      ctx.shadowBlur=15;ctx.shadowColor='#00ffcc';
+      ctx.fillStyle='#00ccaa';roundRect(-player.w*0.3,-player.h*0.15,player.w*0.6,player.h*0.5,4*SCALE);ctx.fill();
+      ctx.fillStyle='#ffddaa';ctx.shadowColor='#ffddaa';ctx.shadowBlur=5;
+      ctx.beginPath();ctx.arc(0,-player.h*0.3,player.w*0.28,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#222';ctx.beginPath();ctx.arc(player.w*0.08,-player.h*0.33,3*SCALE,0,Math.PI*2);ctx.fill();
+      const legA=Math.sin(player.animTick*0.25)*8*SCALE;ctx.shadowBlur=0;ctx.fillStyle='#0088aa';
+      ctx.fillRect(-player.w*0.25,player.h*0.28,player.w*0.22,player.h*0.28+legA*0.3);
+      ctx.fillRect(player.w*0.03,player.h*0.28,player.w*0.22,player.h*0.28-legA*0.3);
+      ctx.fillStyle='#00ccaa';const armA=Math.sin(player.animTick*0.25+1)*6*SCALE;
+      ctx.fillRect(-player.w*0.5,-player.h*0.12+armA,player.w*0.2,player.h*0.3);
+      ctx.fillRect(player.w*0.3,-player.h*0.12-armA,player.w*0.2,player.h*0.3);
+      ctx.restore();
+    }
+    // HUD
+    ctx.save();ctx.fillStyle='rgba(0,0,0,0.5)';roundRect(W/2-80*SCALE,10*SCALE,160*SCALE,36*SCALE,8*SCALE);ctx.fill();
+    drawGlowText(`⏱ ${formatTime(survivalTime/60)}`,W/2,34*SCALE,18*SCALE,'#ffffff',8);ctx.restore();
+    drawGlowText(`💰 ${coins}`,55*SCALE,34*SCALE,14*SCALE,'#ffdd44',6);
+    drawGlowText(`LV ${Math.floor(diffTick/15)+1}`,W-40*SCALE,34*SCALE,14*SCALE,'#ff6644',6);
+    if(joystick.active){
+      ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle='#00ffcc';ctx.lineWidth=2*SCALE;
+      ctx.beginPath();ctx.arc(joystick.startX,joystick.startY,40*SCALE,0,Math.PI*2);ctx.stroke();
+      const len=Math.min(Math.hypot(joystick.dx,joystick.dy),40*SCALE),ang=Math.atan2(joystick.dy,joystick.dx);
+      ctx.globalAlpha=0.6;ctx.fillStyle='#00ffcc';ctx.beginPath();
+      ctx.arc(joystick.startX+Math.cos(ang)*len,joystick.startY+Math.sin(ang)*len,12*SCALE,0,Math.PI*2);ctx.fill();ctx.restore();
+    }
+  }
+
+  // ─── DRAW GAMEOVER ───────────────────────────────────────────
+  function drawGameOver(){
+    goAnim++;ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(5,8,15,0.95)';ctx.fillRect(0,0,W,H);
+    if(goAnim<60){
+      const r=goAnim*12*SCALE;ctx.save();ctx.globalAlpha=Math.max(0,1-goAnim/60)*0.5;
+      ctx.strokeStyle='#ff2200';ctx.lineWidth=4*SCALE;ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();ctx.restore();
+    }
+    const a=Math.min(goAnim/30,1);
+    drawGlowText('GAME OVER',W/2,H*0.2,36*SCALE,'#ff2200',25,a);
+    drawGlowText(`Выжил: ${formatTime(survivalTime/60)}`,W/2,H*0.32,16*SCALE,'#ffffff',8,a);
+    drawGlowText(`Монеты: +${goCoins} 💰`,W/2,H*0.40,20*SCALE,'#ffdd44',12,a);
+    drawGlowText(`Итого: ${gameData.coins} 💰`,W/2,H*0.48,14*SCALE,'#aaaaaa',5,a);
+    if(globalLB.length>0) drawGlowText(`Рекорд: ${formatTime(globalLB[0].time)} (${globalLB[0].name})`,W/2,H*0.56,12*SCALE,'#ffd700',10,a);
+    if(goAnim>20){
+      drawButton('🏠 МЕНЮ',W/2-90*SCALE,H*0.72-22*SCALE,180*SCALE,44*SCALE);
+      drawButton('▶ ЕЩЁ РАЗ',W/2-90*SCALE,H*0.82-22*SCALE,180*SCALE,44*SCALE);
+    }
+  }
+
+  // ─── UPDATE ──────────────────────────────────────────────────
+  function update(){
+    if(state===STATE.SPLASH){
+      splashTimer++;
+      if(splashTimer>=SPLASH_DURATION){
+        if(!gameData.nickname){ showNickScreen(); }
+        else { state=STATE.MENU; loadGlobalLB(); }
+      }
+    }
+    if(state===STATE.GAME&&player.alive){
+      survivalTime++;diffTick=survivalTime/60;
+      let dx=0,dy=0;
+      if(joystick.active){const len=Math.hypot(joystick.dx,joystick.dy);if(len>5){dx=joystick.dx/Math.max(len,40*SCALE);dy=joystick.dy/Math.max(len,40*SCALE);}}
+      if(keys['ArrowLeft']||keys['a']||keys['A'])dx-=1;if(keys['ArrowRight']||keys['d']||keys['D'])dx+=1;
+      if(keys['ArrowUp']||keys['w']||keys['W'])dy-=1;if(keys['ArrowDown']||keys['s']||keys['S'])dy+=1;
+      const spd=Math.hypot(dx,dy);if(spd>0){dx/=spd;dy/=spd;}
+      player.vx=dx*player.speed;player.vy=dy*player.speed;
+      player.x=Math.max(player.w/2,Math.min(W-player.w/2,player.x+player.vx));
+      player.y=Math.max(player.h/2,Math.min(H-player.h/2,player.y+player.vy));
+      trail.push({x:player.x,y:player.y});if(trail.length>12)trail.shift();
+      const secAlive=survivalTime/60;
+      const spawnLevel=Math.floor(secAlive/15);spawnInterval=Math.max(20,90-spawnLevel*8);
+      const speedLevel=Math.floor(secAlive/20);cubeSpeed=(1.4+speedLevel*0.3)*SCALE;
+      for(let c of cubes){
+        const ang=Math.atan2(player.y-c.y,player.x-c.x);const spd2=cubeSpeed;
+        c.vx+=(Math.cos(ang)*spd2-c.vx)*0.04;c.vy+=(Math.sin(ang)*spd2-c.vy)*0.04;
+        c.x+=c.vx;c.y+=c.vy;c.rot+=c.rotSpeed;c.pulsePhase+=0.05;
+      }
+      cubes=cubes.filter(c=>c.x>-100*SCALE&&c.x<W+100*SCALE&&c.y>-100*SCALE&&c.y<H+100*SCALE);
+      spawnTimer++;if(spawnTimer>=spawnInterval){spawnTimer=0;spawnCube();if(spawnLevel>3)spawnCube();if(spawnLevel>6)spawnCube();}
+      if(player.invincible<=0){
+        for(let c of cubes){
+          if(rectsOverlap(player.x-player.w*0.35,player.y-player.h*0.35,player.w*0.7,player.h*0.7,c.x-c.sz*0.45,c.y-c.sz*0.45,c.sz*0.9,c.sz*0.9)){
+            player.alive=false;
+            const sec2=survivalTime/60;
+            goCoins=Math.floor(sec2*10);gameData.coins+=goCoins;saveLocal(gameData);
+            goAnim=0;state=STATE.GAMEOVER;
+            submitScore(gameData.nickname||'Player', sec2);
+            break;
+          }
+        }
+      }
+      if(player.invincible>0)player.invincible--;
+    }
+  }
+
+  // ─── LOOP ────────────────────────────────────────────────────
+  function loop(){
+    update();
+    switch(state){
+      case STATE.SPLASH: drawSplash(); break;
+      case STATE.MENU:   drawMenu();   break;
+      case STATE.GAME:   drawGame();   break;
+      case STATE.GAMEOVER: drawGameOver(); break;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  checkForUpdate();
+  initSplash();
+  loop();
+</script>
+</body>
+</html>
