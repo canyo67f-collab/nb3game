@@ -363,8 +363,8 @@
     const login = cleanLogin(fieldLogin.value.trim());
     const pass  = fieldPass.value;
 
-    if (login.length < 2) { authError.textContent = 'Логин: минимум 2 символа!'; return; }
-    if (pass.length  < 4) { authError.textContent = 'Пароль: минимум 4 символа!'; return; }
+    if (login.length < 4) { authError.textContent = 'Логин: минимум 4 символа!'; return; }
+    if (pass.length  < 6) { authError.textContent = 'Пароль: минимум 6 символа!'; return; }
 
     authBtn.disabled = true;
     authBtn.textContent = '⏳ ...';
@@ -374,7 +374,7 @@
 
       if (authMode === 'reg') {
         const nick = cleanNick(fieldNick.value.trim());
-        if (nick.length < 2)  { authError.textContent = 'Ник: минимум 2 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
+        if (nick.length < 4)  { authError.textContent = 'Ник: минимум 4 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
         if (nick.length > 16) { authError.textContent = 'Ник: максимум 16 символов!'; authBtn.disabled=false; switchTab('reg'); return; }
 
         // Check if login already taken
