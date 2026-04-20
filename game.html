@@ -16,63 +16,7 @@
     }
     canvas { display: block; touch-action: none; }
 
-    #nickOverlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,5,16,0.97);
-      z-index: 100;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-    #nickOverlay.active { display: flex; }
-    #nickOverlay h1 {
-      color: #00ffcc; font-size: 22px; letter-spacing: 3px;
-      text-shadow: 0 0 20px #00ffcc;
-      font-family: 'Courier New', monospace;
-    }
-    #nickOverlay h2 {
-      color: #ff9944; font-size: 14px; letter-spacing: 4px;
-      text-shadow: 0 0 10px #ff9944;
-      font-family: 'Courier New', monospace;
-    }
-    #nickOverlay p {
-      color: #ffffff; font-size: 18px; margin-top: 16px;
-      font-family: 'Courier New', monospace;
-    }
-    #nickInput {
-      width: min(280px, 75vw);
-      padding: 14px 18px;
-      font-size: 20px;
-      font-family: 'Courier New', monospace;
-      background: #001a2a;
-      color: #00ffcc;
-      border: 2px solid #00ffcc;
-      border-radius: 12px;
-      outline: none;
-      text-align: center;
-      box-shadow: 0 0 20px #00ffcc44;
-      letter-spacing: 3px;
-    }
-    #nickError {
-      color: #ff4444; font-size: 13px; min-height: 18px;
-      font-family: 'Courier New', monospace;
-      text-shadow: 0 0 8px #ff4444;
-    }
-    #nickBtn {
-      padding: 14px 36px;
-      background: linear-gradient(180deg, #00ccaa, #004455);
-      color: #fff;
-      border: 2px solid #009977;
-      border-radius: 12px;
-      font-size: 16px;
-      font-family: 'Courier New', monospace;
-      cursor: pointer;
-      letter-spacing: 2px;
-      box-shadow: 0 0 12px #00ffcc44;
-    }
-    #nickBtn:active { opacity: 0.8; }
+
     #tgBtn {
       position: fixed;
       right: 16px;
@@ -93,27 +37,136 @@
     #tgBtn:active { transform: scale(0.9); }
     #tgBtn svg { width: 28px; height: 28px; fill: white; }
 
-    #nickHint {
-      color: #444; font-size: 11px;
-      font-family: 'Courier New', monospace;
-    }
+    /* ── AUTH OVERLAY ── */
+  #authOverlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,5,16,0.98);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  #authOverlay.active { display: flex; }
+  #authOverlay h1 {
+    color: #00ffcc; font-size: 22px; letter-spacing: 3px;
+    text-shadow: 0 0 20px #00ffcc;
+    font-family: 'Courier New', monospace;
+  }
+  #authOverlay h2 {
+    color: #ff9944; font-size: 14px; letter-spacing: 4px;
+    text-shadow: 0 0 10px #ff9944;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 6px;
+  }
+  .auth-tabs {
+    display: flex; gap: 0;
+    border: 2px solid #00ffcc44;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .auth-tab {
+    padding: 8px 28px;
+    background: transparent;
+    color: #00ffcc88;
+    border: none;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    background: #00ffcc22;
+    color: #00ffcc;
+    text-shadow: 0 0 10px #00ffcc;
+  }
+  .auth-field {
+    width: min(280px, 75vw);
+    padding: 12px 16px;
+    font-size: 16px;
+    font-family: 'Courier New', monospace;
+    background: #001a2a;
+    color: #00ffcc;
+    border: 2px solid #00ffcc44;
+    border-radius: 10px;
+    outline: none;
+    text-align: center;
+    letter-spacing: 2px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .auth-field:focus {
+    border-color: #00ffcc;
+    box-shadow: 0 0 16px #00ffcc44;
+  }
+  .auth-field::placeholder { color: #00ffcc44; letter-spacing: 1px; }
+  #authError {
+    color: #ff4444; font-size: 13px; min-height: 18px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 8px #ff4444;
+    text-align: center;
+  }
+  #authSuccess {
+    color: #00ffcc; font-size: 13px; min-height: 18px;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 8px #00ffcc;
+  }
+  #authBtn {
+    width: min(280px, 75vw);
+    padding: 14px;
+    background: linear-gradient(180deg, #00ccaa, #004455);
+    color: #fff;
+    border: 2px solid #009977;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    letter-spacing: 2px;
+    box-shadow: 0 0 12px #00ffcc44;
+    transition: opacity 0.15s;
+  }
+  #authBtn:active { opacity: 0.8; }
+  #authBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .auth-hint {
+    color: #444; font-size: 11px;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    max-width: 260px;
+  }
+  /* field shown only in register mode */
+  #fieldNick { display: none; }
   </style>
 </head>
 <body>
 
-<!-- Nickname overlay — pure HTML, no canvas duplication -->
-<div id="nickOverlay">
+<!-- Auth overlay — register / login -->
+<div id="authOverlay">
   <h1>Neubiva3mostb</h1>
   <h2>P R O D U C T</h2>
-  <p>КАК ТЕБЯ ЗОВУТ?</p>
-  <input id="nickInput" type="text" maxlength="16" placeholder="Твой ник..." autocomplete="off" spellcheck="false">
-  <div id="nickError"></div>
-  <button id="nickBtn">✔ ПОДТВЕРДИТЬ</button>
-  <span id="nickHint">Ник сохранится навсегда</span>
+
+  <div class="auth-tabs">
+    <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">ВХОД</button>
+    <button class="auth-tab"        id="tabReg"    onclick="switchTab('reg')">РЕГИСТРАЦИЯ</button>
+  </div>
+
+  <!-- Nickname field — register only -->
+  <input id="fieldNick"  class="auth-field" type="text"     maxlength="16" placeholder="Ник (2–16 символов)" autocomplete="off" spellcheck="false">
+  <!-- Login -->
+  <input id="fieldLogin" class="auth-field" type="text"     maxlength="32" placeholder="Логин" autocomplete="off" spellcheck="false">
+  <!-- Password -->
+  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off">
+
+  <div id="authError"></div>
+  <div id="authSuccess"></div>
+
+  <button id="authBtn" onclick="doAuth()">✔ ВОЙТИ</button>
+  <span class="auth-hint" id="authHint">Аккаунт сохраняется в облаке</span>
 </div>
 
 <!-- Telegram button -->
-<a id="tgBtn" href="https://t.me/Neubiva3mostb" target="_blank">
+<a id="tgBtn" href="https://t.me/neubiva3mostb_product" target="_blank">
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.023 9.531c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.088 14.56l-2.948-.924c-.64-.203-.654-.64.136-.948l11.526-4.445c.534-.194 1.001.13.76.005z"/>
   </svg>
@@ -199,10 +252,10 @@
   const ctx = canvas.getContext('2d');
   let W, H, SCALE;
   function resize() {
-    W = Math.min(window.innerWidth, 480);
-    H = Math.min(window.innerHeight, 854);
+    W = window.innerWidth;
+    H = window.innerHeight;
     canvas.width = W; canvas.height = H;
-    SCALE = W / 480;
+    SCALE = Math.min(W, 480) / 480;
   }
   resize();
   window.addEventListener('resize', resize);
@@ -255,34 +308,131 @@
   const STATE = { SPLASH: 0, MENU: 1, GAME: 2, GAMEOVER: 3 };
   let state = STATE.SPLASH;
 
-  // ─── NICKNAME (HTML overlay) ──────────────────────────────────
-  const nickOverlay = document.getElementById('nickOverlay');
-  const nickInput   = document.getElementById('nickInput');
-  const nickError   = document.getElementById('nickError');
-  const nickBtn     = document.getElementById('nickBtn');
+  // ─── AUTH (HTML overlay) ─────────────────────────────────────
+  const authOverlay = document.getElementById('authOverlay');
+  const fieldNick   = document.getElementById('fieldNick');
+  const fieldLogin  = document.getElementById('fieldLogin');
+  const fieldPass   = document.getElementById('fieldPass');
+  const authError   = document.getElementById('authError');
+  const authSuccess = document.getElementById('authSuccess');
+  const authBtn     = document.getElementById('authBtn');
+  const authHint    = document.getElementById('authHint');
 
-  function showNickScreen() {
-    nickOverlay.classList.add('active');
-    setTimeout(() => nickInput.focus(), 100);
+  let authMode = 'login'; // 'login' | 'reg'
+
+  function switchTab(mode) {
+    authMode = mode;
+    authError.textContent = '';
+    authSuccess.textContent = '';
+    if (mode === 'login') {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabReg').classList.remove('active');
+      fieldNick.style.display = 'none';
+      authBtn.textContent = '✔ ВОЙТИ';
+    } else {
+      document.getElementById('tabReg').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      fieldNick.style.display = '';
+      authBtn.textContent = '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
+    }
   }
-  function hideNickScreen() {
-    nickOverlay.classList.remove('active');
+
+  // Simple non-crypto hash (good enough for a game, NOT production security)
+  async function hashPassword(pw) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw + 'nb3salt'));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
-  function confirmNickname() {
-    const nick = nickInput.value.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '').trim();
-    if (nick.length < 2) { nickError.textContent = 'Минимум 2 символа!'; return; }
-    if (nick.length > 16) { nickError.textContent = 'Максимум 16 символов!'; return; }
-    gameData.nickname = nick;
-    saveLocal(gameData);
-    hideNickScreen();
-    state = STATE.MENU;
-    loadGlobalLB();
+
+  function cleanLogin(s) { return s.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase(); }
+  function cleanNick(s)  { return s.replace(/[^a-zA-Zа-яА-Я0-9_]/g, ''); }
+
+  function showAuthScreen() {
+    canvas.style.pointerEvents = 'none';
+    authOverlay.classList.add('active');
+    setTimeout(() => fieldLogin.focus(), 100);
   }
-  nickBtn.addEventListener('click', confirmNickname);
-  nickInput.addEventListener('keydown', e => { if (e.key === 'Enter') confirmNickname(); });
-  nickInput.addEventListener('input', () => {
-    nickInput.value = nickInput.value.replace(/[^a-zA-Zа-яА-Я0-9_]/g, '').slice(0, 16);
-    nickError.textContent = '';
+  function hideAuthScreen() {
+    authOverlay.classList.remove('active');
+    canvas.style.pointerEvents = '';
+  }
+
+  async function doAuth() {
+    authError.textContent = '';
+    authSuccess.textContent = '';
+
+    const login = cleanLogin(fieldLogin.value.trim());
+    const pass  = fieldPass.value;
+
+    if (login.length < 2) { authError.textContent = 'Логин: минимум 2 символа!'; return; }
+    if (pass.length  < 4) { authError.textContent = 'Пароль: минимум 4 символа!'; return; }
+
+    authBtn.disabled = true;
+    authBtn.textContent = '⏳ ...';
+
+    try {
+      const hash = await hashPassword(pass);
+
+      if (authMode === 'reg') {
+        const nick = cleanNick(fieldNick.value.trim());
+        if (nick.length < 2)  { authError.textContent = 'Ник: минимум 2 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
+        if (nick.length > 16) { authError.textContent = 'Ник: максимум 16 символов!'; authBtn.disabled=false; switchTab('reg'); return; }
+
+        // Check if login already taken
+        const existing = await fbGet(`users/${login}`);
+        if (existing) { authError.textContent = 'Логин уже занят!'; authBtn.disabled=false; switchTab('reg'); return; }
+
+        // Register
+        const userData = { nick, hash, coins: 0, createdAt: Date.now() };
+        await fbSet(`users/${login}`, userData);
+
+        gameData.nickname = nick;
+        gameData.coins    = 0;
+        gameData.login    = login;
+        saveLocal(gameData);
+
+        authSuccess.textContent = '✅ Аккаунт создан!';
+        setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
+
+      } else {
+        // Login
+        const userData = await fbGet(`users/${login}`);
+        if (!userData)         { authError.textContent = 'Аккаунт не найден!'; authBtn.disabled=false; authBtn.textContent='✔ ВОЙТИ'; return; }
+        if (userData.hash !== hash) { authError.textContent = 'Неверный пароль!'; authBtn.disabled=false; authBtn.textContent='✔ ВОЙТИ'; return; }
+
+        gameData.nickname = userData.nick;
+        gameData.coins    = userData.coins || 0;
+        gameData.login    = login;
+        saveLocal(gameData);
+
+        authSuccess.textContent = `✅ Добро пожаловать, ${userData.nick}!`;
+        setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
+      }
+    } catch(e) {
+      authError.textContent = 'Ошибка сети. Попробуй ещё раз.';
+      authBtn.disabled = false;
+      authBtn.textContent = authMode === 'login' ? '✔ ВОЙТИ' : '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
+    }
+  }
+
+  // Sync coins to Firebase after game over
+  async function syncCoinsToCloud() {
+    if (!gameData.login) return;
+    const existing = await fbGet(`users/${gameData.login}/coins`);
+    if (gameData.coins > (existing || 0)) {
+      await fbSet(`users/${gameData.login}/coins`, gameData.coins);
+    }
+  }
+
+  authBtn.addEventListener('click', doAuth);
+  [fieldNick, fieldLogin, fieldPass].forEach(f => {
+    f.addEventListener('keydown', e => { if (e.key === 'Enter') doAuth(); });
+    f.addEventListener('input', () => { authError.textContent = ''; });
+  });
+  fieldLogin.addEventListener('input', () => {
+    fieldLogin.value = cleanLogin(fieldLogin.value);
+  });
+  fieldNick.addEventListener('input', () => {
+    fieldNick.value = cleanNick(fieldNick.value).slice(0, 16);
   });
 
   // ─── SPLASH ──────────────────────────────────────────────────
@@ -292,12 +442,16 @@
 
   function initSplash() {
     splashTimer = 0; splashParticles = [];
-    for (let i = 0; i < 80; i++) {
+    const spread = Math.max(W, H) * 0.04;
+    for (let i = 0; i < 160; i++) {
+      // spread across full screen, not just from center
+      const startX = Math.random() < 0.5 ? W/2 : Math.random()*W;
+      const startY = Math.random() < 0.5 ? H/2 : Math.random()*H;
       splashParticles.push({
-        x: W/2, y: H/2,
-        vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
-        life: Math.random()*80+40, maxLife: 120,
-        size: Math.random()*4+1, hue: Math.random()*60+180
+        x: startX, y: startY,
+        vx: (Math.random()-0.5)*spread, vy: (Math.random()-0.5)*spread,
+        life: Math.random()*100+60, maxLife: 160,
+        size: Math.random()*6+1, hue: Math.random()*60+180
       });
     }
   }
@@ -338,18 +492,41 @@
   let goAnim=0, goCoins=0;
 
   // ─── INPUT ───────────────────────────────────────────────────
-  canvas.addEventListener('touchstart', e => { e.preventDefault(); for(let t of e.changedTouches) handleDown(t.clientX*(W/window.innerWidth), t.clientY*(H/window.innerHeight), t.identifier); }, {passive:false});
-  canvas.addEventListener('touchmove',  e => { e.preventDefault(); for(let t of e.changedTouches) handleMove(t.clientX*(W/window.innerWidth), t.clientY*(H/window.innerHeight), t.identifier); }, {passive:false});
-  canvas.addEventListener('touchend',   e => { e.preventDefault(); for(let t of e.changedTouches) handleUp(t.identifier); }, {passive:false});
-  canvas.addEventListener('mousedown',  e => handleDown(e.offsetX, e.offsetY, 'mouse'));
-  canvas.addEventListener('mousemove',  e => handleMove(e.offsetX, e.offsetY, 'mouse'));
-  canvas.addEventListener('mouseup',    e => handleUp('mouse'));
+  function isAuthOpen() { return authOverlay.classList.contains('active'); }
+
+  // Use document-level listeners so HTML inputs in overlay always receive native events
+  document.addEventListener('touchstart', e => {
+    if (isAuthOpen()) return;
+    e.preventDefault();
+    for(let t of e.changedTouches) handleDown(t.clientX, t.clientY, t.identifier);
+  }, {passive:false});
+  document.addEventListener('touchmove', e => {
+    if (isAuthOpen()) return;
+    e.preventDefault();
+    for(let t of e.changedTouches) handleMove(t.clientX, t.clientY, t.identifier);
+  }, {passive:false});
+  document.addEventListener('touchend', e => {
+    if (isAuthOpen()) return;
+    e.preventDefault();
+    for(let t of e.changedTouches) handleUp(t.identifier);
+  }, {passive:false});
+  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen()) handleDown(e.clientX, e.clientY, 'mouse'); });
+  canvas.addEventListener('mousemove',  e => { if (!isAuthOpen()) handleMove(e.clientX, e.clientY, 'mouse'); });
+  canvas.addEventListener('mouseup',    e => { if (!isAuthOpen()) handleUp('mouse'); });
   const keys={};
   window.addEventListener('keydown', e => keys[e.key]=true);
   window.addEventListener('keyup',   e => keys[e.key]=false);
 
   function handleDown(x, y, id) {
     if (state === STATE.MENU) {
+      // logout button
+      if (x>W-70*SCALE&&x<W-10*SCALE&&y>10*SCALE&&y<38*SCALE) {
+        gameData = { coins: 0, nickname: '', login: '' };
+        saveLocal(gameData);
+        state = STATE.SPLASH; splashTimer = 0;
+        setTimeout(() => showAuthScreen(), 100);
+        return;
+      }
       if (menuTab === 0) {
         const bx=W/2-100*SCALE, bw=200*SCALE;
         if (x>bx&&x<bx+bw&&y>H*0.55-25*SCALE&&y<H*0.55+25*SCALE) { state=STATE.GAME; initGame(); return; }
@@ -474,6 +651,8 @@
     drawGlowText('P R O D U C T',W/2,H*0.25,16*SCALE,'#ff9944',15);
     drawGlowText(`👤 ${gameData.nickname||'???'}`,W/2,H*0.33,14*SCALE,'#aaffee',6);
     drawGlowText(`💰 ${gameData.coins}`,W/2,H*0.40,18*SCALE,'#ffdd44',10);
+    // logout
+    drawButton('⎋ ВЫЙТИ',W-70*SCALE,10*SCALE,60*SCALE,28*SCALE);
 
     if(menuTab===0){
       drawButton('▶  ИГРАТЬ',W/2-100*SCALE,H*0.55-25*SCALE,200*SCALE,50*SCALE);
@@ -579,7 +758,7 @@
     if(state===STATE.SPLASH){
       splashTimer++;
       if(splashTimer>=SPLASH_DURATION){
-        if(!gameData.nickname){ showNickScreen(); }
+        if(!gameData.nickname || !gameData.login){ showAuthScreen(); }
         else { state=STATE.MENU; loadGlobalLB(); }
       }
     }
@@ -612,6 +791,7 @@
             goCoins=Math.floor(sec2*10);gameData.coins+=goCoins;saveLocal(gameData);
             goAnim=0;state=STATE.GAMEOVER;
             submitScore(gameData.nickname||'Player', sec2);
+            syncCoinsToCloud();
             break;
           }
         }
