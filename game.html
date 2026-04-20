@@ -15,6 +15,8 @@
       display: flex; align-items: center; justify-content: center;
     }
     canvas { display: block; touch-action: none; }
+    body.auth-open canvas { pointer-events: none !important; }
+
 
 
     #tgBtn {
@@ -178,12 +180,12 @@
   // ─── Firebase (Realtime Database) ────────────────────────────
   // ─── ВЕРСИЯ ИГРЫ ─────────────────────────────────────────────
   // ⬇ Меняй это число каждый раз когда выпускаешь обновление
-  const GAME_VERSION = 2;
+  const GAME_VERSION = 999;
 
   // ─── АВТООБНОВЛЕНИЕ ──────────────────────────────────────────
   // Замени ТВОЙ_НИК на твой GitHub логин и nb3game на название репозитория
-  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/version.txt';
-  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/game.html';
+  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/main/version.txt';
+  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/main/game.html';
 
   async function checkForUpdate() {
     try {
@@ -222,12 +224,7 @@
 
   // Применяем скачанное обновление при следующем запуске
   (function applyUpdate() {
-    const upd = localStorage.getItem('nb3_upd_html');
-    if (!upd) return;
     localStorage.removeItem('nb3_upd_html');
-    const blob = new Blob([upd], {type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    location.replace(url);
   })();
   // Используем Firebase REST API — не нужны npm/модули
   const FB_URL = 'https://nb3game-default-rtdb.firebaseio.com/';
@@ -347,12 +344,14 @@
   function cleanNick(s)  { return s.replace(/[^a-zA-Zа-яА-Я0-9_]/g, ''); }
 
   function showAuthScreen() {
+    document.body.classList.add('auth-open');
     canvas.style.pointerEvents = 'none';
     authOverlay.classList.add('active');
     setTimeout(() => fieldLogin.focus(), 100);
   }
   function hideAuthScreen() {
     authOverlay.classList.remove('active');
+    document.body.classList.remove('auth-open');
     canvas.style.pointerEvents = '';
   }
 
@@ -363,8 +362,8 @@
     const login = cleanLogin(fieldLogin.value.trim());
     const pass  = fieldPass.value;
 
-    if (login.length < 4) { authError.textContent = 'Логин: минимум 4 символа!'; return; }
-    if (pass.length  < 6) { authError.textContent = 'Пароль: минимум 6 символа!'; return; }
+    if (login.length < 2) { authError.textContent = 'Логин: минимум 2 символа!'; return; }
+    if (pass.length  < 4) { authError.textContent = 'Пароль: минимум 4 символа!'; return; }
 
     authBtn.disabled = true;
     authBtn.textContent = '⏳ ...';
@@ -374,7 +373,7 @@
 
       if (authMode === 'reg') {
         const nick = cleanNick(fieldNick.value.trim());
-        if (nick.length < 4)  { authError.textContent = 'Ник: минимум 4 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
+        if (nick.length < 2)  { authError.textContent = 'Ник: минимум 2 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
         if (nick.length > 16) { authError.textContent = 'Ник: максимум 16 символов!'; authBtn.disabled=false; switchTab('reg'); return; }
 
         // Check if login already taken
@@ -510,7 +509,7 @@
     e.preventDefault();
     for(let t of e.changedTouches) handleUp(t.identifier);
   }, {passive:false});
-  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen()) handleDown(e.clientX, e.clientY, 'mouse'); });
+  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen() && !authOverlay.contains(e.target)) handleDown(e.clientX, e.clientY, 'mouse'); });
   canvas.addEventListener('mousemove',  e => { if (!isAuthOpen()) handleMove(e.clientX, e.clientY, 'mouse'); });
   canvas.addEventListener('mouseup',    e => { if (!isAuthOpen()) handleUp('mouse'); });
   const keys={};
