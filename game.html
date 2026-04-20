@@ -180,12 +180,12 @@
   // ─── Firebase (Realtime Database) ────────────────────────────
   // ─── ВЕРСИЯ ИГРЫ ─────────────────────────────────────────────
   // ⬇ Меняй это число каждый раз когда выпускаешь обновление
-  const GAME_VERSION = 999;
+  const GAME_VERSION = 3;
 
   // ─── АВТООБНОВЛЕНИЕ ──────────────────────────────────────────
   // Замени ТВОЙ_НИК на твой GitHub логин и nb3game на название репозитория
-  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/version.txt';
-  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/game.html';
+  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/main/version.txt';
+  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/main/game.html';
 
   async function checkForUpdate() {
     try {
@@ -485,6 +485,11 @@
     cubes.push({x,y,sz,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
       rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-0.5)*0.1,
       hue:Math.random()*30,pulsePhase:Math.random()*Math.PI*2});
+      
+    // Ограничение количества кубиков на экране (максимум 20)
+    if (cubes.length > 20) {
+        cubes.shift(); // Удаляем самый старый кубик
+    }
   }
 
   // ─── GAME OVER ───────────────────────────────────────────────
