@@ -158,7 +158,7 @@
   <!-- Login -->
   <input id="fieldLogin" class="auth-field" type="text"     maxlength="32" placeholder="Логин" autocomplete="off" spellcheck="false">
   <!-- Password -->
-  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off">
+  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off" spellcheck="false">
 
   <div id="authError"></div>
   <div id="authSuccess"></div>
@@ -485,7 +485,7 @@
     cubes.push({x,y,sz,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
       rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-0.5)*0.1,
       hue:Math.random()*30,pulsePhase:Math.random()*Math.PI*2});
-      
+
     // Ограничение количества кубиков на экране (максимум 20)
     if (cubes.length > 20) {
         cubes.shift(); // Удаляем самый старый кубик
