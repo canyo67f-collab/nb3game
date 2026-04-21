@@ -138,7 +138,6 @@
     max-width: 260px;
   }
   /* field shown only in register mode */
-  #fieldNick { display: none; }
   </style>
 </head>
 <body>
@@ -153,18 +152,16 @@
     <button class="auth-tab"        id="tabReg"    onclick="switchTab('reg')">РЕГИСТРАЦИЯ</button>
   </div>
 
-  <!-- Nickname field — register only -->
-  <input id="fieldNick"  class="auth-field" type="text"     maxlength="16" placeholder="Ник (2–16 символов)" autocomplete="off" spellcheck="false">
-  <!-- Login -->
-  <input id="fieldLogin" class="auth-field" type="text"     maxlength="32" placeholder="Логин" autocomplete="off" spellcheck="false">
+  <!-- Single login field used for both reg and login -->
+  <input id="fieldLogin" class="auth-field" type="text" maxlength="32" placeholder="Логин (он же ник)" autocomplete="off" spellcheck="false" tabindex="1">
   <!-- Password -->
-  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off" spellcheck="false">
+  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done" tabindex="2">
 
   <div id="authError"></div>
   <div id="authSuccess"></div>
 
-  <button id="authBtn" onclick="doAuth()">✔ ВОЙТИ</button>
-  <span class="auth-hint" id="authHint">Аккаунт сохраняется в облаке</span>
+  <button id="authBtn">✔ ВОЙТИ</button>
+
 </div>
 
 <!-- Telegram button -->
@@ -180,7 +177,7 @@
   // ─── Firebase (Realtime Database) ────────────────────────────
   // ─── ВЕРСИЯ ИГРЫ ─────────────────────────────────────────────
   // ⬇ Меняй это число каждый раз когда выпускаешь обновление
-  const GAME_VERSION = 3;
+  const GAME_VERSION = 4;
 
   // ─── АВТООБНОВЛЕНИЕ ──────────────────────────────────────────
   // Замени ТВОЙ_НИК на твой GitHub логин и nb3game на название репозитория
@@ -199,33 +196,28 @@
   function showUpdateOverlay(newVer) {
     const ov = document.createElement('div');
     ov.id = 'updateOv';
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,5,16,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;font-family:Courier New,monospace;';
-    ov.innerHTML = '<div style="color:#00ffcc;font-size:22px;letter-spacing:3px;text-shadow:0 0 20px #00ffcc">Neubiva3mostb</div><div style="color:#ff9944;font-size:13px;letter-spacing:4px">P R O D U C T</div><div style="color:#fff;font-size:17px;margin-top:8px">🆕 Доступно обновление!</div><div style="color:#aaa;font-size:13px">v'+GAME_VERSION+' → v'+newVer+'</div><div id="upTxt" style="color:#00ffcc;font-size:13px">Загрузка...</div><div style="width:220px;height:6px;background:#001a2a;border-radius:3px"><div id="upBar" style="height:100%;width:0%;background:linear-gradient(90deg,#00ffcc,#0088ff);border-radius:3px;transition:width 0.2s"></div></div>';
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,5,16,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:Courier New,monospace;text-align:center;padding:24px;';
+    ov.innerHTML = `
+      <div style="color:#00ffcc;font-size:22px;letter-spacing:3px;text-shadow:0 0 20px #00ffcc">Neubiva3mostb</div>
+      <div style="color:#ff9944;font-size:13px;letter-spacing:4px">P R O D U C T</div>
+      <div style="font-size:48px;margin:8px 0;">🚨</div>
+      <div style="color:#ff2200;font-size:20px;font-weight:bold;letter-spacing:2px;text-shadow:0 0 20px #ff2200;line-height:1.4">СРОЧНОЕ ОБНОВЛЕНИЕ</div>
+      <div style="color:#ffffff;font-size:15px;letter-spacing:1px;line-height:1.6">СКАЧАТЬ В ТЕЛЕГРАМЕ<br><span style="color:#2aabee;font-size:18px;text-shadow:0 0 12px #2aabee">@neubiva3mostb_product</span></div>
+      <div id="upCountdown" style="color:#aaa;font-size:13px;margin-top:4px">Переход через <span id="upSec" style="color:#00ffcc;font-size:16px">5</span> сек...</div>
+    `;
     document.body.appendChild(ov);
-    doDownload();
-  }
 
-  async function doDownload() {
-    try {
-      let p = 0;
-      const iv = setInterval(() => { p = Math.min(p+2,88); const b=document.getElementById('upBar'); if(b) b.style.width=p+'%'; }, 80);
-      const res = await fetch(UPDATE_HTML_URL + '?t=' + Date.now());
-      const html = await res.text();
-      clearInterval(iv);
-      const b=document.getElementById('upBar'); if(b) b.style.width='100%';
-      const t=document.getElementById('upTxt'); if(t) t.textContent='Установка...';
-      localStorage.setItem('nb3_upd_html', html);
-      setTimeout(() => { const t2=document.getElementById('upTxt'); if(t2) t2.textContent='Готово! Перезапуск...'; setTimeout(() => location.reload(), 600); }, 400);
-    } catch(e) {
-      const t=document.getElementById('upTxt'); if(t) t.textContent='Ошибка. Запускаем текущую версию...';
-      setTimeout(() => { const ov=document.getElementById('updateOv'); if(ov) ov.remove(); }, 2000);
-    }
+    let sec = 5;
+    const iv = setInterval(() => {
+      sec--;
+      const el = document.getElementById('upSec');
+      if (el) el.textContent = sec;
+      if (sec <= 0) {
+        clearInterval(iv);
+        window.location.href = 'https://t.me/neubiva3mostb_product';
+      }
+    }, 1000);
   }
-
-  // Применяем скачанное обновление при следующем запуске
-  (function applyUpdate() {
-    localStorage.removeItem('nb3_upd_html');
-  })();
   // Используем Firebase REST API — не нужны npm/модули
   const FB_URL = 'https://nb3game-default-rtdb.firebaseio.com/';
 
@@ -307,7 +299,7 @@
 
   // ─── AUTH (HTML overlay) ─────────────────────────────────────
   const authOverlay = document.getElementById('authOverlay');
-  const fieldNick   = document.getElementById('fieldNick');
+  const fieldNick = { value: '', style: {}, addEventListener: ()=>{} }; // removed from HTML
   const fieldLogin  = document.getElementById('fieldLogin');
   const fieldPass   = document.getElementById('fieldPass');
   const authError   = document.getElementById('authError');
@@ -324,12 +316,12 @@
     if (mode === 'login') {
       document.getElementById('tabLogin').classList.add('active');
       document.getElementById('tabReg').classList.remove('active');
-      fieldNick.style.display = 'none';
+      fieldLogin.style.display = 'block';
       authBtn.textContent = '✔ ВОЙТИ';
     } else {
       document.getElementById('tabReg').classList.add('active');
       document.getElementById('tabLogin').classList.remove('active');
-      fieldNick.style.display = '';
+      fieldLogin.style.display = 'block';
       authBtn.textContent = '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
     }
   }
@@ -340,14 +332,14 @@
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
 
-  function cleanLogin(s) { return s.replace(/[^a-zA-Z0-9_]/g, '').toLowerCase(); }
-  function cleanNick(s)  { return s.replace(/[^a-zA-Zа-яА-Я0-9_]/g, ''); }
+  function cleanLogin(s) { return s.replace(/[.#$\[\]/]/g, '_'); }
+  function cleanNick(s)  { return s.replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, ''); }
 
   function showAuthScreen() {
     document.body.classList.add('auth-open');
     canvas.style.pointerEvents = 'none';
     authOverlay.classList.add('active');
-    setTimeout(() => fieldLogin.focus(), 100);
+    // No auto-focus — causes focus-jump bug on Android WebView
   }
   function hideAuthScreen() {
     authOverlay.classList.remove('active');
@@ -356,14 +348,23 @@
   }
 
   async function doAuth() {
+    if (authBtn.disabled) return;
     authError.textContent = '';
     authSuccess.textContent = '';
 
     const login = cleanLogin(fieldLogin.value.trim());
+    const rawLogin = fieldLogin.value.trim();
     const pass  = fieldPass.value;
+    const btnLabel = authMode === 'login' ? '✔ ВОЙТИ' : '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
 
-    if (login.length < 2) { authError.textContent = 'Логин: минимум 2 символа!'; return; }
-    if (pass.length  < 4) { authError.textContent = 'Пароль: минимум 4 символа!'; return; }
+    function fail(msg) {
+      authError.textContent = msg;
+      authBtn.disabled = false;
+      authBtn.textContent = btnLabel;
+    }
+
+    if (login.length < 2) { fail('Логин: минимум 2 символа!'); return; }
+    if (pass.length  < 4) { fail('Пароль: минимум 4 символа!'); return; }
 
     authBtn.disabled = true;
     authBtn.textContent = '⏳ ...';
@@ -372,17 +373,13 @@
       const hash = await hashPassword(pass);
 
       if (authMode === 'reg') {
-        const nick = cleanNick(fieldNick.value.trim());
-        if (nick.length < 2)  { authError.textContent = 'Ник: минимум 2 символа!'; authBtn.disabled=false; switchTab('reg'); return; }
-        if (nick.length > 16) { authError.textContent = 'Ник: максимум 16 символов!'; authBtn.disabled=false; switchTab('reg'); return; }
+        const nick = login;
+        if (nick.length < 2)  { fail('Ник: минимум 2 символа!'); return; }
 
-        // Check if login already taken
-        const existing = await fbGet(`users/${login}`);
-        if (existing) { authError.textContent = 'Логин уже занят!'; authBtn.disabled=false; switchTab('reg'); return; }
+        const existing = await fbGet('users/' + login);
+        if (existing) { fail('Этот ник уже занят!'); return; }
 
-        // Register
-        const userData = { nick, hash, coins: 0, createdAt: Date.now() };
-        await fbSet(`users/${login}`, userData);
+        await fbSet('users/' + login, { nick, hash, coins: 0, createdAt: Date.now() });
 
         gameData.nickname = nick;
         gameData.coins    = 0;
@@ -393,23 +390,20 @@
         setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
 
       } else {
-        // Login
-        const userData = await fbGet(`users/${login}`);
-        if (!userData)         { authError.textContent = 'Аккаунт не найден!'; authBtn.disabled=false; authBtn.textContent='✔ ВОЙТИ'; return; }
-        if (userData.hash !== hash) { authError.textContent = 'Неверный пароль!'; authBtn.disabled=false; authBtn.textContent='✔ ВОЙТИ'; return; }
+        const userData = await fbGet('users/' + login);
+        if (!userData)              { fail('Аккаунт не найден!'); return; }
+        if (userData.hash !== hash) { fail('Неверный пароль!'); return; }
 
         gameData.nickname = userData.nick;
         gameData.coins    = userData.coins || 0;
         gameData.login    = login;
         saveLocal(gameData);
 
-        authSuccess.textContent = `✅ Добро пожаловать, ${userData.nick}!`;
+        authSuccess.textContent = '✅ Добро пожаловать, ' + userData.nick + '!';
         setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
       }
     } catch(e) {
-      authError.textContent = 'Ошибка сети. Попробуй ещё раз.';
-      authBtn.disabled = false;
-      authBtn.textContent = authMode === 'login' ? '✔ ВОЙТИ' : '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
+      fail('Ошибка: ' + e.message);
     }
   }
 
@@ -423,16 +417,16 @@
   }
 
   authBtn.addEventListener('click', doAuth);
-  [fieldNick, fieldLogin, fieldPass].forEach(f => {
-    f.addEventListener('keydown', e => { if (e.key === 'Enter') doAuth(); });
+  [fieldLogin, fieldPass].forEach(f => {
+    f.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doAuth();
+      }
+    });
     f.addEventListener('input', () => { authError.textContent = ''; });
   });
-  fieldLogin.addEventListener('input', () => {
-    fieldLogin.value = cleanLogin(fieldLogin.value);
-  });
-  fieldNick.addEventListener('input', () => {
-    fieldNick.value = cleanNick(fieldNick.value).slice(0, 16);
-  });
+  // Live filtering removed — validation only on submit to prevent focus jumps
 
   // ─── SPLASH ──────────────────────────────────────────────────
   let splashTimer = 0;
@@ -514,7 +508,8 @@
     e.preventDefault();
     for(let t of e.changedTouches) handleUp(t.identifier);
   }, {passive:false});
-  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen() && !authOverlay.contains(e.target)) handleDown(e.clientX, e.clientY, 'mouse'); });
+  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen()) handleDown(e.clientX, e.clientY, 'mouse'); });
+  document.addEventListener('mousedown', e => { if (isAuthOpen() && !authOverlay.contains(e.target)) e.stopPropagation(); }, true);
   canvas.addEventListener('mousemove',  e => { if (!isAuthOpen()) handleMove(e.clientX, e.clientY, 'mouse'); });
   canvas.addEventListener('mouseup',    e => { if (!isAuthOpen()) handleUp('mouse'); });
   const keys={};
