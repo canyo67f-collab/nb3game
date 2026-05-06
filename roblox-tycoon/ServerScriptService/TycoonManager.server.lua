@@ -11,9 +11,6 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
-local RunService = game:GetService("RunService")
-
 local TycoonConfig = require(ReplicatedStorage:WaitForChild("TycoonConfig"))
 local SetupRemotes = require(ReplicatedStorage:WaitForChild("SetupRemotes"))
 local DataStoreManager = require(script.Parent:WaitForChild("DataStoreManager"))
@@ -156,8 +153,11 @@ end
 local function setupCollector(plot, collectorPart)
 	if not collectorPart then return end
 
+	local debounce = {}
+
 	collectorPart.Touched:Connect(function(hit)
-		if hit.Name == "TycoonDrop" and plot.Owner then
+		if hit.Name == "TycoonDrop" and plot.Owner and not debounce[hit] then
+			debounce[hit] = true
 			local valueTag = hit:FindFirstChild("DropValue")
 			if valueTag then
 				addCash(plot.Owner, valueTag.Value)
@@ -173,18 +173,10 @@ end
 local function setupConveyor(conveyorPart)
 	if not conveyorPart then return end
 
-	-- Создаём BodyVelocity на конвейере
-	RunService.Heartbeat:Connect(function()
-		-- Конвейер перемещает блоки через изменение Velocity
-		for _, obj in ipairs(workspace:GetChildren()) do
-			if obj.Name == "TycoonDrop" and obj:IsA("BasePart") then
-				local distance = (obj.Position - conveyorPart.Position).Magnitude
-				if distance < conveyorPart.Size.X / 2 + 2 then
-					-- Двигаем блок в направлении конвейера
-					local direction = conveyorPart.CFrame.LookVector
-					obj.AssemblyLinearVelocity = direction * TycoonConfig.ConveyorSpeed
-				end
-			end
+	conveyorPart.Touched:Connect(function(hit)
+		if hit.Name == "TycoonDrop" and hit:IsA("BasePart") then
+			local direction = conveyorPart.CFrame.LookVector
+			hit.AssemblyLinearVelocity = direction * TycoonConfig.ConveyorSpeed
 		end
 	end)
 end
@@ -346,7 +338,7 @@ local function claimPlot(player: Player, plotIndex: number)
 	-- Устанавливаем владельца на плоте (визуально)
 	local plot = plots[plotIndex]
 	if plot.Model then
-		local ownerLabel = plot.Model:FindFirstChild("OwnerLabel")
+		local ownerLabel = plot.Model:FindFirstChild("OwnerLabel", true)
 		if ownerLabel and ownerLabel:IsA("SurfaceGui") then
 			local textLabel = ownerLabel:FindFirstChildWhichIsA("TextLabel")
 			if textLabel then
@@ -533,7 +525,7 @@ Players.PlayerRemoving:Connect(function(player)
 			plot.ActiveDrops = {}
 
 			-- Сброс владельца на плоте
-			local ownerLabel = plot.Model:FindFirstChild("OwnerLabel")
+			local ownerLabel = plot.Model:FindFirstChild("OwnerLabel", true)
 			if ownerLabel and ownerLabel:IsA("SurfaceGui") then
 				local textLabel = ownerLabel:FindFirstChildWhichIsA("TextLabel")
 				if textLabel then
