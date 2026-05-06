@@ -711,6 +711,11 @@
         console.warn('Firebase init failed, running offline:', e);
     }
 
+    function getUserKey() {
+        if (!currentUser || !currentUser.email) return null;
+        return currentUser.email.replace(/\./g, ',').replace(/@/g, '_at_');
+    }
+
     // ==================== GAME STATE ====================
     let game = {
         coins: 0,
@@ -1320,9 +1325,9 @@
     }
 
     async function updateLeaderboard() {
-        if (!firebaseReady || !currentUser) return;
+        if (!firebaseReady || !currentUser || !getUserKey()) return;
         try {
-            await db.ref('leaderboard/' + currentUser.uid).set({
+            await db.ref('leaderboard/' + getUserKey()).set({
                 name: game.playerName,
                 totalCoins: Math.floor(game.totalCoins + game.coins),
                 prestigePoints: game.prestigePoints + game.prestigeSpent,
@@ -1334,7 +1339,7 @@
     }
 
     async function saveGameToFirebase() {
-        if (!firebaseReady || !currentUser) return;
+        if (!firebaseReady || !currentUser || !getUserKey()) return;
         try {
             const saveData = {
                 coins: game.coins,
@@ -1350,16 +1355,16 @@
                 achievements: game.achievements.map(a => ({ id: a.id, unlocked: a.unlocked })),
                 savedAt: firebase.database.ServerValue.TIMESTAMP
             };
-            await db.ref('saves/' + currentUser.uid).set(saveData);
+            await db.ref('saves/' + getUserKey()).set(saveData);
         } catch (e) {
             console.error('Firebase save error:', e);
         }
     }
 
     async function loadGameFromFirebase() {
-        if (!firebaseReady || !currentUser) return false;
+        if (!firebaseReady || !currentUser || !getUserKey()) return false;
         try {
-            const snap = await db.ref('saves/' + currentUser.uid).once('value');
+            const snap = await db.ref('saves/' + getUserKey()).once('value');
             const saved = snap.val();
             if (!saved) return false;
 
@@ -1408,7 +1413,7 @@
 
     // ==================== SAVE / LOAD ====================
     function getSaveKey() {
-        return currentUser ? 'nb3game_' + currentUser.uid : 'nb3game_guest';
+        return currentUser ? 'nb3game_' + (getUserKey() || currentUser.uid) : 'nb3game_guest';
     }
 
     function saveGame() {
