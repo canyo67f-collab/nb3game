@@ -1,819 +1,1446 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>Neubiva3mostb Product</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #0a0a0f;
-      font-family: 'Courier New', monospace;
-      overflow: hidden;
-      width: 100vw; height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-    }
-    canvas { display: block; touch-action: none; }
-    body.auth-open canvas { pointer-events: none !important; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>nb3game — Космическая Империя</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+            padding: 16px;
+        }
 
+        /* ===== LOADING SCREEN ===== */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.6s ease;
+        }
+        .loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading-logo {
+            font-size: 56px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+        }
+        .loading-spinner {
+            width: 48px; height: 48px;
+            border: 4px solid rgba(255,255,255,0.15);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-sub {
+            margin-top: 20px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
 
-    #tgBtn {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #2aabee, #1a7bbf);
-      box-shadow: 0 0 18px #2aabee88, 0 2px 8px rgba(0,0,0,0.5);
-      border: 2px solid #5dc8f5;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      text-decoration: none;
-    }
-    #tgBtn:active { transform: scale(0.9); }
-    #tgBtn svg { width: 28px; height: 28px; fill: white; }
+        /* ===== AUTH SCREEN ===== */
+        .auth-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9000;
+            padding: 20px;
+        }
+        .auth-box {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 20px;
+            padding: 32px;
+            width: 100%;
+            max-width: 380px;
+        }
+        .auth-title {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .auth-subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 12px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .auth-input:focus {
+            border-color: #667eea;
+        }
+        .auth-input::placeholder {
+            color: rgba(255,255,255,0.35);
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.1s;
+            margin-bottom: 10px;
+        }
+        .auth-btn:active { transform: scale(0.97); }
+        .auth-btn.secondary {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .auth-error {
+            color: #ff6b6b;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 18px;
+        }
+        .auth-switch {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+        .auth-switch a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .auth-user-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 8px 14px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+        .auth-user-bar span { color: rgba(255,255,255,0.6); }
+        .auth-user-bar strong { color: #667eea; }
+        .logout-btn {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: rgba(255,255,255,0.6);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
 
-    /* ── AUTH OVERLAY ── */
-  #authOverlay {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,5,16,0.98);
-    z-index: 100;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-  }
-  #authOverlay.active { display: flex; }
-  #authOverlay h1 {
-    color: #00ffcc; font-size: 22px; letter-spacing: 3px;
-    text-shadow: 0 0 20px #00ffcc;
-    font-family: 'Courier New', monospace;
-  }
-  #authOverlay h2 {
-    color: #ff9944; font-size: 14px; letter-spacing: 4px;
-    text-shadow: 0 0 10px #ff9944;
-    font-family: 'Courier New', monospace;
-    margin-bottom: 6px;
-  }
-  .auth-tabs {
-    display: flex; gap: 0;
-    border: 2px solid #00ffcc44;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 4px;
-  }
-  .auth-tab {
-    padding: 8px 28px;
-    background: transparent;
-    color: #00ffcc88;
-    border: none;
-    font-size: 13px;
-    font-family: 'Courier New', monospace;
-    cursor: pointer;
-    letter-spacing: 2px;
-    transition: all 0.2s;
-  }
-  .auth-tab.active {
-    background: #00ffcc22;
-    color: #00ffcc;
-    text-shadow: 0 0 10px #00ffcc;
-  }
-  .auth-field {
-    width: min(280px, 75vw);
-    padding: 12px 16px;
-    font-size: 16px;
-    font-family: 'Courier New', monospace;
-    background: #001a2a;
-    color: #00ffcc;
-    border: 2px solid #00ffcc44;
-    border-radius: 10px;
-    outline: none;
-    text-align: center;
-    letter-spacing: 2px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .auth-field:focus {
-    border-color: #00ffcc;
-    box-shadow: 0 0 16px #00ffcc44;
-  }
-  .auth-field::placeholder { color: #00ffcc44; letter-spacing: 1px; }
-  #authError {
-    color: #ff4444; font-size: 13px; min-height: 18px;
-    font-family: 'Courier New', monospace;
-    text-shadow: 0 0 8px #ff4444;
-    text-align: center;
-  }
-  #authSuccess {
-    color: #00ffcc; font-size: 13px; min-height: 18px;
-    font-family: 'Courier New', monospace;
-    text-shadow: 0 0 8px #00ffcc;
-  }
-  #authBtn {
-    width: min(280px, 75vw);
-    padding: 14px;
-    background: linear-gradient(180deg, #00ccaa, #004455);
-    color: #fff;
-    border: 2px solid #009977;
-    border-radius: 12px;
-    font-size: 15px;
-    font-family: 'Courier New', monospace;
-    cursor: pointer;
-    letter-spacing: 2px;
-    box-shadow: 0 0 12px #00ffcc44;
-    transition: opacity 0.15s;
-  }
-  #authBtn:active { opacity: 0.8; }
-  #authBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .auth-hint {
-    color: #444; font-size: 11px;
-    font-family: 'Courier New', monospace;
-    text-align: center;
-    max-width: 260px;
-  }
-  /* field shown only in register mode */
-  </style>
+        /* ===== GAME UI ===== */
+        .container { max-width: 480px; margin: 0 auto; }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .clicker-area { text-align: center; margin-bottom: 30px; }
+        .click-button {
+            width: 200px; height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 4px solid rgba(255,255,255,0.3);
+            font-size: 64px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 10px 40px rgba(102,126,234,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .click-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 20px rgba(102,126,234,0.6);
+        }
+        .click-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+        }
+
+        .float-number {
+            position: fixed;
+            font-size: 24px;
+            font-weight: 700;
+            color: #ffd700;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 1000;
+            text-shadow: 0 0 10px rgba(255,215,0,0.8);
+        }
+        @keyframes floatUp {
+            0%   { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        .section {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upgrade-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .upgrade-info { flex: 1; }
+        .upgrade-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .upgrade-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 6px;
+        }
+        .upgrade-stats {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .buy-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+            white-space: nowrap;
+        }
+        .buy-button:active { transform: scale(0.95); }
+        .buy-button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .count-badge {
+            background: rgba(102,126,234,0.3);
+            border-radius: 12px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .achievement-item {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,215,0,0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .achievement-item.locked {
+            opacity: 0.5;
+            border-color: rgba(255,255,255,0.1);
+        }
+        .achievement-icon {
+            font-size: 32px;
+            filter: grayscale(100%);
+        }
+        .achievement-item:not(.locked) .achievement-icon {
+            filter: grayscale(0%);
+            animation: glow 2s infinite;
+        }
+        @keyframes glow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .achievement-text { flex: 1; }
+        .achievement-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+        .achievement-desc { font-size: 11px; color: rgba(255,255,255,0.6); }
+
+        .leaderboard-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .leader-rank { font-size: 18px; font-weight: 700; min-width: 35px; }
+        .leader-name { flex: 1; margin-left: 12px; font-size: 14px; }
+        .leader-coins { font-weight: 700; color: #ffd700; }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px; right: 20px;
+            background: rgba(102,126,234,0.9);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .save-indicator.show { opacity: 1; }
+
+        .tab-buttons {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 70px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 10px 6px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== PRESTIGE ===== */
+        .prestige-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.1));
+            border: 2px solid rgba(255,215,0,0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .prestige-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #ffd700;
+        }
+        .prestige-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.8);
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        .prestige-btn {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            color: #000;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .prestige-btn:active { transform: scale(0.95); }
+        .prestige-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .prestige-upgrade-item {
+            background: rgba(255,215,0,0.06);
+            border: 1px solid rgba(255,215,0,0.2);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .prestige-upgrade-info { flex: 1; }
+        .prestige-upgrade-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .prestige-upgrade-desc {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 4px;
+        }
+        .prestige-upgrade-cost {
+            font-size: 12px;
+            color: #ffaa00;
+            font-weight: 600;
+        }
+        .prestige-buy-btn {
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #000;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            white-space: nowrap;
+        }
+        .prestige-buy-btn:active { transform: scale(0.95); }
+        .prestige-buy-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ===== TELEGRAM BUTTON ===== */
+        #tgBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #0088cc, #0077b5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,136,204,0.4);
+            z-index: 900;
+            transition: transform 0.2s;
+            text-decoration: none;
+        }
+        #tgBtn:hover { transform: scale(1.1); }
+        #tgBtn:active { transform: scale(0.95); }
+        #tgBtn svg {
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+        }
+
+        /* ===== QUANTITY BUTTONS ===== */
+        .qty-selector {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+        .qty-btn {
+            padding: 6px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .qty-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+        }
+    </style>
 </head>
 <body>
+    <!-- ===== LOADING SCREEN ===== -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-logo">nb3game</div>
+        <div class="loading-spinner"></div>
+        <div class="loading-sub">Загрузка вселенной...</div>
+    </div>
 
-<!-- Auth overlay — register / login -->
-<div id="authOverlay">
-  <h1>Neubiva3mostb</h1>
-  <h2>P R O D U C T</h2>
+    <!-- ===== AUTH SCREEN ===== -->
+    <div class="auth-screen" id="authScreen" style="display:none">
+        <div class="auth-box">
+            <div class="auth-title" id="authTitle">Вход</div>
+            <div class="auth-subtitle">Космическая Империя</div>
+            <div class="auth-error" id="authError"></div>
+            <input class="auth-input" id="authEmail" type="email" placeholder="Email">
+            <input class="auth-input" id="authPassword" type="password" placeholder="Пароль">
+            <input class="auth-input" id="authName" type="text" placeholder="Имя игрока" style="display:none">
+            <button class="auth-btn" id="authSubmitBtn" onclick="authSubmit()">Войти</button>
+            <button class="auth-btn secondary" onclick="authGuest()">Играть без аккаунта</button>
+            <div class="auth-switch" id="authSwitch">
+                Нет аккаунта? <a onclick="toggleAuthMode()">Регистрация</a>
+            </div>
+        </div>
+    </div>
 
-  <div class="auth-tabs">
-    <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">ВХОД</button>
-    <button class="auth-tab"        id="tabReg"    onclick="switchTab('reg')">РЕГИСТРАЦИЯ</button>
-  </div>
+    <!-- ===== GAME ===== -->
+    <div id="gameContainer" style="display:none">
+        <div class="save-indicator" id="saveIndicator">Сохранено</div>
+        <div class="container">
+            <!-- User bar -->
+            <div class="auth-user-bar" id="userBar" style="display:none">
+                <span>Игрок: <strong id="userDisplayName">—</strong></span>
+                <button class="logout-btn" onclick="doLogout()">Выйти</button>
+            </div>
 
-  <!-- Single login field used for both reg and login -->
-  <input id="fieldLogin" class="auth-field" type="text" maxlength="32" placeholder="Логин" autocomplete="off" spellcheck="false" tabindex="1">
-  <!-- Password -->
-  <input id="fieldPass"  class="auth-field" type="password" maxlength="64" placeholder="Пароль" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done" tabindex="2">
+            <div class="header">
+                <h1>Космическая Империя</h1>
+            </div>
 
-  <div id="authError"></div>
-  <div id="authSuccess"></div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Монеты</div>
+                    <div class="stat-value" id="coins">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">В секунду</div>
+                    <div class="stat-value" id="perSecond">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">За клик</div>
+                    <div class="stat-value" id="perClick">1</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Престиж</div>
+                    <div class="stat-value" id="prestigePoints">0</div>
+                </div>
+            </div>
 
-  <button id="authBtn">✔ ВОЙТИ</button>
+            <div class="clicker-area">
+                <button class="click-button" id="clickButton">&#127980;</button>
+                <div class="click-text">Кликай на планету!</div>
+            </div>
 
-</div>
+            <div class="tab-buttons">
+                <button class="tab-btn active" onclick="switchTab('upgrades', this)">Улучшения</button>
+                <button class="tab-btn" onclick="switchTab('prestige', this)">Престиж</button>
+                <button class="tab-btn" onclick="switchTab('achievements', this)">Достижения</button>
+                <button class="tab-btn" onclick="switchTab('leaderboard', this)">Лидеры</button>
+            </div>
 
-<!-- Telegram button -->
-<a id="tgBtn" href="https://t.me/neubiva3mostb_product" target="_blank">
-  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.023 9.531c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.088 14.56l-2.948-.924c-.64-.203-.654-.64.136-.948l11.526-4.445c.534-.194 1.001.13.76.005z"/>
-  </svg>
-</a>
+            <!-- UPGRADES TAB -->
+            <div id="upgradesTab" class="tab-content active">
+                <div class="qty-selector">
+                    <button class="qty-btn active" onclick="setBuyQty(1, this)">x1</button>
+                    <button class="qty-btn" onclick="setBuyQty(5, this)">x5</button>
+                    <button class="qty-btn" onclick="setBuyQty(10, this)">x10</button>
+                    <button class="qty-btn" onclick="setBuyQty(100, this)">x100</button>
+                </div>
+                <div class="section">
+                    <div class="section-title">Генераторы дохода</div>
+                    <div id="generators"></div>
+                </div>
+                <div class="section">
+                    <div class="section-title">Улучшения клика</div>
+                    <div id="clickUpgrades"></div>
+                </div>
+            </div>
 
-<canvas id="c"></canvas>
+            <!-- PRESTIGE TAB -->
+            <div id="prestigeTab" class="tab-content">
+                <div id="prestigeSection"></div>
+                <div class="section">
+                    <div class="section-title" style="color:#ffd700;">Магазин престижа</div>
+                    <div id="prestigeShop"></div>
+                </div>
+            </div>
 
-<script>
-  // ─── Firebase (Realtime Database) ────────────────────────────
-  // ─── ВЕРСИЯ ИГРЫ ─────────────────────────────────────────────
-  // ⬇ Меняй это число каждый раз когда выпускаешь обновление
-  const GAME_VERSION = 9;
+            <!-- ACHIEVEMENTS TAB -->
+            <div id="achievementsTab" class="tab-content">
+                <div class="section">
+                    <div class="section-title">Достижения</div>
+                    <div id="achievements"></div>
+                </div>
+            </div>
 
-  // ─── АВТООБНОВЛЕНИЕ ──────────────────────────────────────────
-  // Замени ТВОЙ_НИК на твой GitHub логин и nb3game на название репозитория
-  const UPDATE_VERSION_URL = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/version.txt';
-  const UPDATE_HTML_URL    = 'https://raw.githubusercontent.com/canyo67f-collab/nb3game/refs/heads/main/game.html';
+            <!-- LEADERBOARD TAB -->
+            <div id="leaderboardTab" class="tab-content">
+                <div class="section">
+                    <div class="section-title">Топ игроков</div>
+                    <div id="leaderboardList">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  async function checkForUpdate() {
+    <!-- ===== TELEGRAM BUTTON ===== -->
+    <a id="tgBtn" href="https://t.me/neubiva3mostb_product" target="_blank">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248l-2.023 9.531c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.088 14.56l-2.948-.924c-.64-.203-.654-.64.136-.948l11.526-4.445c.534-.194 1.001.13.76.005z"/>
+        </svg>
+    </a>
+
+    <script>
+    // ==================== FIREBASE CONFIG ====================
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPl7h_9kTPqMCmn6XKGZWGJ0JU6lJVCeQ",
+        authDomain: "nb3game-space.firebaseapp.com",
+        projectId: "nb3game-space",
+        storageBucket: "nb3game-space.firebasestorage.app",
+        messagingSenderId: "000000000000",
+        appId: "1:000000000000:web:0000000000000000000000"
+    };
+
+    let firebaseReady = false;
+    let auth, db;
     try {
-      const res = await fetch(UPDATE_VERSION_URL + '?t=' + Date.now());
-      if (!res.ok) return;
-      const remoteVer = parseInt(await res.text());
-      if (remoteVer > GAME_VERSION) showUpdateOverlay(remoteVer);
-    } catch(e) {}
-  }
-
-  function showUpdateOverlay(newVer) {
-    const ov = document.createElement('div');
-    ov.id = 'updateOv';
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,5,16,0.97);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:Courier New,monospace;text-align:center;padding:24px;';
-    ov.innerHTML = `
-      <div style="color:#00ffcc;font-size:22px;letter-spacing:3px;text-shadow:0 0 20px #00ffcc">Neubiva3mostb</div>
-      <div style="color:#ff9944;font-size:13px;letter-spacing:4px">P R O D U C T</div>
-      <div style="font-size:48px;margin:8px 0;">🚨</div>
-      <div style="color:#ff2200;font-size:20px;font-weight:bold;letter-spacing:2px;text-shadow:0 0 20px #ff2200;line-height:1.4">СРОЧНОЕ ОБНОВЛЕНИЕ</div>
-      <div style="color:#ffffff;font-size:15px;letter-spacing:1px;line-height:1.6">СКАЧАТЬ В ТЕЛЕГРАМЕ<br><span style="color:#2aabee;font-size:18px;text-shadow:0 0 12px #2aabee">@neubiva3mostb_product</span></div>
-      <div id="upCountdown" style="color:#aaa;font-size:13px;margin-top:4px">Переход через <span id="upSec" style="color:#00ffcc;font-size:16px">5</span> сек...</div>
-    `;
-    document.body.appendChild(ov);
-
-    let sec = 5;
-    const iv = setInterval(() => {
-      sec--;
-      const el = document.getElementById('upSec');
-      if (el) el.textContent = sec;
-      if (sec <= 0) {
-        clearInterval(iv);
-        window.location.href = 'https://t.me/neubiva3mostb_product';
-      }
-    }, 1000);
-  }
-  // Используем Firebase REST API — не нужны npm/модули
-  const FB_URL = 'https://nb3game-default-rtdb.firebaseio.com/';
-
-  async function fbGet(path) {
-    try {
-      const r = await fetch(`${FB_URL}/${path}.json`);
-      return await r.json();
-    } catch(e) { return null; }
-  }
-  async function fbSet(path, data) {
-    try {
-      await fetch(`${FB_URL}/${path}.json`, {
-        method: 'PUT',
-        body: JSON.stringify(data)
-      });
-    } catch(e) {}
-  }
-
-  // ─── CANVAS SETUP ────────────────────────────────────────────
-  const canvas = document.getElementById('c');
-  const ctx = canvas.getContext('2d');
-  let W, H, SCALE;
-  function resize() {
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W; canvas.height = H;
-    SCALE = Math.min(W, 480) / 480;
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  // ─── LOCAL STORAGE ───────────────────────────────────────────
-  function loadLocal() {
-    try { return JSON.parse(localStorage.getItem('nb3_data')) || { coins: 0, nickname: '' }; }
-    catch(e) { return { coins: 0, nickname: '' }; }
-  }
-  function saveLocal(d) { localStorage.setItem('nb3_data', JSON.stringify(d)); }
-  let gameData = loadLocal();
-
-  // ─── GLOBAL LEADERBOARD ──────────────────────────────────────
-  let globalLB = []; // [{name, time}]
-
-  async function loadGlobalLB() {
-    const data = await fbGet('leaderboard');
-    if (!data) { globalLB = []; return; }
-    // data is object {name: time, ...}
-    globalLB = Object.entries(data)
-      .map(([name, time]) => ({ name, time }))
-      .sort((a, b) => b.time - a.time)
-      .slice(0, 3);
-  }
-
-  async function submitScore(name, time) {
-    // Get existing score for this player
-    const existing = await fbGet(`leaderboard/${encodeNick(name)}`);
-    if (!existing || time > existing) {
-      await fbSet(`leaderboard/${encodeNick(name)}`, time);
-    }
-    await loadGlobalLB();
-    // Keep only top 3 — delete anyone outside top 3
-    const all = await fbGet('leaderboard');
-    if (!all) return;
-    const sorted = Object.entries(all).sort((a,b) => b[1]-a[1]);
-    // Remove entries beyond top 3
-    for (let i = 3; i < sorted.length; i++) {
-      await fetch(`${FB_URL}/leaderboard/${sorted[i][0]}.json`, { method: 'DELETE' });
-    }
-    await loadGlobalLB();
-  }
-
-  function encodeNick(name) {
-    // Firebase keys can't have . # $ [ ]
-    return name.replace(/[.#$\[\]]/g, '_');
-  }
-
-  // ─── STATES ──────────────────────────────────────────────────
-  const STATE = { SPLASH: 0, MENU: 1, GAME: 2, GAMEOVER: 3 };
-  let state = STATE.SPLASH;
-
-  // ─── AUTH (HTML overlay) ─────────────────────────────────────
-  const authOverlay = document.getElementById('authOverlay');
-  const fieldNick = { value: '', style: {}, addEventListener: ()=>{} }; // removed from HTML
-  const fieldLogin  = document.getElementById('fieldLogin');
-  const fieldPass   = document.getElementById('fieldPass');
-  const authError   = document.getElementById('authError');
-  const authSuccess = document.getElementById('authSuccess');
-  const authBtn     = document.getElementById('authBtn');
-  const authHint    = document.getElementById('authHint');
-
-  let authMode = 'login'; // 'login' | 'reg'
-
-  function switchTab(mode) {
-    authMode = mode;
-    authError.textContent = '';
-    authSuccess.textContent = '';
-    if (mode === 'login') {
-      document.getElementById('tabLogin').classList.add('active');
-      document.getElementById('tabReg').classList.remove('active');
-      fieldLogin.style.display = 'block';
-      authBtn.textContent = '✔ ВОЙТИ';
-    } else {
-      document.getElementById('tabReg').classList.add('active');
-      document.getElementById('tabLogin').classList.remove('active');
-      fieldLogin.style.display = 'block';
-      authBtn.textContent = '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
-    }
-  }
-
-  // Simple non-crypto hash (good enough for a game, NOT production security)
-  async function hashPassword(pw) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw + 'nb3salt'));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
-  function cleanLogin(s) { return s.replace(/[.#$\[\]/]/g, '_'); }
-  function cleanNick(s)  { return s.replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, ''); }
-
-  function showAuthScreen() {
-    document.body.classList.add('auth-open');
-    canvas.style.pointerEvents = 'none';
-    authOverlay.classList.add('active');
-    // No auto-focus — causes focus-jump bug on Android WebView
-  }
-  function hideAuthScreen() {
-    authOverlay.classList.remove('active');
-    document.body.classList.remove('auth-open');
-    canvas.style.pointerEvents = '';
-  }
-
-  async function doAuth() {
-    if (authBtn.disabled) return;
-    authError.textContent = '';
-    authSuccess.textContent = '';
-
-    const login = cleanLogin(fieldLogin.value.trim());
-    const rawLogin = fieldLogin.value.trim();
-    const pass  = fieldPass.value;
-    const btnLabel = authMode === 'login' ? '✔ ВОЙТИ' : '✔ ЗАРЕГИСТРИРОВАТЬСЯ';
-
-    function fail(msg) {
-      authError.textContent = msg;
-      authBtn.disabled = false;
-      authBtn.textContent = btnLabel;
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        firebaseReady = true;
+    } catch (e) {
+        console.warn('Firebase init failed, running offline:', e);
     }
 
-    if (login.length < 2) { fail('Логин: минимум 2 символа!'); return; }
-    if (pass.length  < 4) { fail('Пароль: минимум 4 символа!'); return; }
+    // ==================== GAME STATE ====================
+    let game = {
+        coins: 0,
+        totalCoins: 0,
+        totalClicks: 0,
+        clickPower: 1,
+        coinsPerSecond: 0,
+        prestigePoints: 0,
+        prestigeSpent: 0,
+        prestigeUpgrades: {},
+        generators: [],
+        clickUpgrades: [],
+        achievements: [],
+        playerName: ''
+    };
 
-    authBtn.disabled = true;
-    authBtn.textContent = '⏳ ...';
+    let buyQty = 1;
+    let currentUser = null;
+    let isRegistering = false;
+    let autoClickInterval = null;
 
-    try {
-      const hash = await hashPassword(pass);
+    // ==================== CONSTANTS ====================
 
-      if (authMode === 'reg') {
-        const nick = login;
-        if (nick.length < 2)  { fail('Ник: минимум 2 символа!'); return; }
+    // Generators (Робот-шахтёр removed)
+    const generatorTypes = [
+        { id: 'factory',  name: 'Космофабрика',          icon: '&#127981;', basePrice: 50,        baseCPS: 0.5,   priceMultiplier: 1.15 },
+        { id: 'station',  name: 'Орбитальная станция',    icon: '&#128752;', basePrice: 300,       baseCPS: 3,     priceMultiplier: 1.15 },
+        { id: 'colony',   name: 'Марсианская колония',    icon: '&#127964;', basePrice: 2000,      baseCPS: 15,    priceMultiplier: 1.15 },
+        { id: 'fleet',    name: 'Звёздный флот',          icon: '&#128640;', basePrice: 15000,     baseCPS: 80,    priceMultiplier: 1.15 },
+        { id: 'dyson',    name: 'Сфера Дайсона',          icon: '&#9728;',   basePrice: 120000,    baseCPS: 450,   priceMultiplier: 1.15 },
+        { id: 'portal',   name: 'Квантовый портал',       icon: '&#127744;', basePrice: 1000000,   baseCPS: 2700,  priceMultiplier: 1.15 },
+        { id: 'galaxy',   name: 'Галактическая империя',  icon: '&#127756;', basePrice: 10000000,  baseCPS: 16000, priceMultiplier: 1.15 },
+        { id: 'universe', name: 'Мультивселенная',         icon: '&#128171;', basePrice: 100000000, baseCPS: 100000,priceMultiplier: 1.15 }
+    ];
 
-        const existing = await fbGet('users/' + login);
-        if (existing) { fail('Этот ник уже занят!'); return; }
+    // Click upgrades (now multi-purchasable)
+    const clickUpgradeTypes = [
+        { id: 'click1', name: 'Лучшая перчатка',     icon: '&#129508;',  basePrice: 100,    power: 1,    priceMultiplier: 1.8 },
+        { id: 'click2', name: 'Усилитель клика',      icon: '&#9889;',    basePrice: 500,    power: 5,    priceMultiplier: 1.8 },
+        { id: 'click3', name: 'Кибернетическая рука', icon: '&#129470;',  basePrice: 2500,   power: 25,   priceMultiplier: 1.8 },
+        { id: 'click4', name: 'Нано-перчатки',        icon: '&#10024;',   basePrice: 10000,  power: 100,  priceMultiplier: 1.8 },
+        { id: 'click5', name: 'Квантовый усилитель',  icon: '&#128171;',  basePrice: 50000,  power: 500,  priceMultiplier: 1.8 },
+        { id: 'click6', name: 'Божественная сила',    icon: '&#128081;',  basePrice: 250000, power: 2500, priceMultiplier: 1.8 }
+    ];
 
-        await fbSet('users/' + login, { nick, hash, coins: 0, createdAt: Date.now() });
+    // Achievements
+    const achievementsList = [
+        { id: 'clicks10',   name: 'Первые шаги',      desc: 'Сделать 10 кликов',            icon: '&#128070;', check: () => game.totalClicks >= 10 },
+        { id: 'clicks100',  name: 'Кликомастер',       desc: 'Сделать 100 кликов',           icon: '&#128433;', check: () => game.totalClicks >= 100 },
+        { id: 'clicks1000', name: 'Легенда кликов',    desc: 'Сделать 1000 кликов',          icon: '&#9889;',   check: () => game.totalClicks >= 1000 },
+        { id: 'coins1000',  name: 'Первая тысяча',     desc: 'Накопить 1 000 монет',         icon: '&#128176;', check: () => game.totalCoins >= 1000 },
+        { id: 'coins100k',  name: 'Богач',             desc: 'Накопить 100 000 монет',       icon: '&#128142;', check: () => game.totalCoins >= 100000 },
+        { id: 'coins1m',    name: 'Миллионер',         desc: 'Накопить 1 000 000 монет',     icon: '&#127942;', check: () => game.totalCoins >= 1000000 },
+        { id: 'coins1b',    name: 'Миллиардер',        desc: 'Накопить 1 000 000 000 монет', icon: '&#127775;', check: () => game.totalCoins >= 1000000000 },
+        { id: 'gen1',       name: 'Автоматизация',     desc: 'Купить первый генератор',      icon: '&#127981;', check: () => game.generators.some(g => g.count > 0) },
+        { id: 'gen10',      name: 'Производство',      desc: 'Иметь 10 генераторов',         icon: '&#128295;', check: () => game.generators.reduce((s, g) => s + g.count, 0) >= 10 },
+        { id: 'gen50',      name: 'Империя машин',     desc: 'Иметь 50 генераторов',         icon: '&#9881;',   check: () => game.generators.reduce((s, g) => s + g.count, 0) >= 50 },
+        { id: 'cps100',     name: 'Поток монет',       desc: 'Получать 100 монет/сек',       icon: '&#128168;', check: () => game.coinsPerSecond >= 100 },
+        { id: 'cps10k',     name: 'Золотая река',      desc: 'Получать 10 000 монет/сек',    icon: '&#127754;', check: () => game.coinsPerSecond >= 10000 },
+        { id: 'prestige1',  name: 'Возрождение',       desc: 'Сделать первый престиж',       icon: '&#11088;',  check: () => (game.prestigePoints + game.prestigeSpent) >= 1 },
+        { id: 'prestige10', name: 'Повелитель времени', desc: 'Накопить 10 очков престижа',   icon: '&#128302;', check: () => (game.prestigePoints + game.prestigeSpent) >= 10 }
+    ];
 
-        gameData.nickname = nick;
-        gameData.coins    = 0;
-        gameData.login    = login;
-        saveLocal(gameData);
+    // Prestige upgrades (buyable with prestige points, multi-purchase)
+    const prestigeUpgradeTypes = [
+        { id: 'p_click',   name: 'Космическая сила',    desc: 'x2 к силе клика',             icon: '&#128170;', baseCost: 1,  costMult: 3 },
+        { id: 'p_cps',     name: 'Ускоритель',          desc: 'x2 к доходу генераторов',      icon: '&#9889;',   baseCost: 2,  costMult: 3 },
+        { id: 'p_cheap',   name: 'Торговец',            desc: '-15% к ценам генераторов',      icon: '&#128176;', baseCost: 3,  costMult: 4 },
+        { id: 'p_auto',    name: 'Автокликер',          desc: '+1 авто-клик в секунду',        icon: '&#129302;', baseCost: 5,  costMult: 5 },
+        { id: 'p_start',   name: 'Стартовый капитал',   desc: '+500 монет после престижа',     icon: '&#127873;', baseCost: 2,  costMult: 2 },
+        { id: 'p_crit',    name: 'Критический удар',    desc: '10% шанс x5 клика',            icon: '&#128165;', baseCost: 4,  costMult: 5 }
+    ];
 
-        authSuccess.textContent = '✅ Аккаунт создан!';
-        setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
-
-      } else {
-        const userData = await fbGet('users/' + login);
-        if (!userData)              { fail('Аккаунт не найден!'); return; }
-        if (userData.hash !== hash) { fail('Неверный пароль!'); return; }
-
-        gameData.nickname = userData.nick;
-        gameData.coins    = userData.coins || 0;
-        gameData.login    = login;
-        saveLocal(gameData);
-
-        authSuccess.textContent = '✅ Добро пожаловать, ' + userData.nick + '!';
-        setTimeout(() => { hideAuthScreen(); state = STATE.MENU; loadGlobalLB(); }, 900);
-      }
-    } catch(e) {
-      fail('Ошибка: ' + e.message);
+    // ==================== AUTH ====================
+    function toggleAuthMode() {
+        isRegistering = !isRegistering;
+        document.getElementById('authTitle').textContent = isRegistering ? 'Регистрация' : 'Вход';
+        document.getElementById('authSubmitBtn').textContent = isRegistering ? 'Зарегистрироваться' : 'Войти';
+        document.getElementById('authName').style.display = isRegistering ? 'block' : 'none';
+        document.getElementById('authSwitch').innerHTML = isRegistering
+            ? 'Уже есть аккаунт? <a onclick="toggleAuthMode()">Войти</a>'
+            : 'Нет аккаунта? <a onclick="toggleAuthMode()">Регистрация</a>';
+        document.getElementById('authError').textContent = '';
     }
-  }
 
-  // Sync coins to Firebase after game over
-  async function syncCoinsToCloud() {
-    if (!gameData.login) return;
-    const existing = await fbGet(`users/${gameData.login}/coins`);
-    if (gameData.coins > (existing || 0)) {
-      await fbSet(`users/${gameData.login}/coins`, gameData.coins);
+    async function authSubmit() {
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const errEl = document.getElementById('authError');
+        errEl.textContent = '';
+
+        if (!email || !password) { errEl.textContent = 'Заполните все поля'; return; }
+        if (password.length < 6) { errEl.textContent = 'Пароль минимум 6 символов'; return; }
+
+        if (!firebaseReady) {
+            errEl.textContent = 'Firebase не настроен. Играйте как гость.';
+            return;
+        }
+
+        try {
+            if (isRegistering) {
+                const name = document.getElementById('authName').value.trim() || 'Игрок';
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                await cred.user.updateProfile({ displayName: name });
+                currentUser = cred.user;
+                game.playerName = name;
+            } else {
+                const cred = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = cred.user;
+                game.playerName = cred.user.displayName || 'Игрок';
+            }
+            startGame();
+        } catch (e) {
+            const msgs = {
+                'auth/email-already-in-use': 'Этот email уже используется',
+                'auth/invalid-email': 'Неверный формат email',
+                'auth/user-not-found': 'Пользователь не найден',
+                'auth/wrong-password': 'Неверный пароль',
+                'auth/invalid-credential': 'Неверный email или пароль'
+            };
+            errEl.textContent = msgs[e.code] || e.message;
+        }
     }
-  }
 
-  authBtn.addEventListener('click', doAuth);
-  [fieldLogin, fieldPass].forEach(f => {
-    f.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        doAuth();
-      }
+    function authGuest() {
+        currentUser = null;
+        game.playerName = 'Гость';
+        startGame();
+    }
+
+    function doLogout() {
+        if (firebaseReady && auth.currentUser) auth.signOut();
+        currentUser = null;
+        document.getElementById('gameContainer').style.display = 'none';
+        document.getElementById('authScreen').style.display = 'flex';
+    }
+
+    // ==================== GAME INIT ====================
+    function startGame() {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('gameContainer').style.display = 'block';
+
+        if (currentUser) {
+            document.getElementById('userBar').style.display = 'flex';
+            document.getElementById('userDisplayName').textContent = game.playerName;
+        } else {
+            document.getElementById('userBar').style.display = 'flex';
+            document.getElementById('userDisplayName').textContent = game.playerName;
+        }
+
+        initGame();
+    }
+
+    function initGame() {
+        game.generators = [];
+        game.clickUpgrades = [];
+        game.achievements = [];
+
+        generatorTypes.forEach(type => {
+            game.generators.push({ ...type, count: 0, currentPrice: type.basePrice });
+        });
+        clickUpgradeTypes.forEach(type => {
+            game.clickUpgrades.push({ ...type, count: 0, currentPrice: type.basePrice });
+        });
+        achievementsList.forEach(ach => {
+            game.achievements.push({ ...ach, unlocked: false });
+        });
+
+        if (!game.prestigeUpgrades || typeof game.prestigeUpgrades !== 'object') {
+            game.prestigeUpgrades = {};
+        }
+
+        loadGame();
+        renderAll();
+        startGameLoop();
+        setupAutoClick();
+    }
+
+    // ==================== GAME LOGIC ====================
+    function click() {
+        let clickValue = getClickValue();
+
+        // Critical hit check
+        const critLevel = game.prestigeUpgrades['p_crit'] || 0;
+        const critChance = critLevel * 0.10;
+        let isCrit = false;
+        if (critChance > 0 && Math.random() < critChance) {
+            clickValue *= 5;
+            isCrit = true;
+        }
+
+        game.coins += clickValue;
+        game.totalCoins += clickValue;
+        game.totalClicks++;
+
+        const button = document.getElementById('clickButton');
+        const rect = button.getBoundingClientRect();
+        const floatNum = document.createElement('div');
+        floatNum.className = 'float-number';
+        floatNum.textContent = (isCrit ? 'КРИТ! +' : '+') + formatNumber(clickValue);
+        if (isCrit) floatNum.style.color = '#ff4444';
+        floatNum.style.left = (rect.left + rect.width / 2 - 30) + 'px';
+        floatNum.style.top = (rect.top + rect.height / 2) + 'px';
+        document.body.appendChild(floatNum);
+        setTimeout(() => floatNum.remove(), 1000);
+
+        updateDisplay();
+        checkAchievements();
+    }
+
+    function getClickValue() {
+        const clickMultLevel = game.prestigeUpgrades['p_click'] || 0;
+        const clickMult = Math.pow(2, clickMultLevel);
+        return game.clickPower * clickMult;
+    }
+
+    function getCPSMultiplier() {
+        const cpsLevel = game.prestigeUpgrades['p_cps'] || 0;
+        return Math.pow(2, cpsLevel);
+    }
+
+    function getPriceDiscount() {
+        const cheapLevel = game.prestigeUpgrades['p_cheap'] || 0;
+        return Math.max(0.2, 1 - cheapLevel * 0.15);
+    }
+
+    function getAutoClickRate() {
+        return game.prestigeUpgrades['p_auto'] || 0;
+    }
+
+    function getStartCoins() {
+        const startLevel = game.prestigeUpgrades['p_start'] || 0;
+        return startLevel * 500;
+    }
+
+    function getPrestigeCost(type, level) {
+        return Math.ceil(type.baseCost * Math.pow(type.costMult, level));
+    }
+
+    function calcGenPrice(gen, qty) {
+        const discount = getPriceDiscount();
+        let total = 0;
+        let price = gen.currentPrice;
+        for (let i = 0; i < qty; i++) {
+            total += Math.floor(price * discount);
+            price = Math.floor(gen.basePrice * Math.pow(gen.priceMultiplier, gen.count + i + 1));
+        }
+        return total;
+    }
+
+    function buyGenerator(index) {
+        const gen = game.generators[index];
+        const discount = getPriceDiscount();
+        let bought = 0;
+
+        for (let i = 0; i < buyQty; i++) {
+            const cost = Math.floor(gen.currentPrice * discount);
+            if (game.coins >= cost) {
+                game.coins -= cost;
+                gen.count++;
+                gen.currentPrice = Math.floor(gen.basePrice * Math.pow(gen.priceMultiplier, gen.count));
+                bought++;
+            } else {
+                break;
+            }
+        }
+
+        if (bought > 0) {
+            calculateCPS();
+            updateDisplay();
+            renderGenerators();
+            checkAchievements();
+            saveGame();
+        }
+    }
+
+    function buyClickUpgrade(index) {
+        const upg = game.clickUpgrades[index];
+
+        let bought = 0;
+        for (let i = 0; i < buyQty; i++) {
+            if (game.coins >= upg.currentPrice) {
+                game.coins -= upg.currentPrice;
+                upg.count++;
+                game.clickPower += upg.power;
+                upg.currentPrice = Math.floor(upg.basePrice * Math.pow(upg.priceMultiplier, upg.count));
+                bought++;
+            } else {
+                break;
+            }
+        }
+
+        if (bought > 0) {
+            updateDisplay();
+            renderClickUpgrades();
+            saveGame();
+        }
+    }
+
+    function buyPrestigeUpgrade(id) {
+        const typeIndex = prestigeUpgradeTypes.findIndex(t => t.id === id);
+        if (typeIndex === -1) return;
+        const type = prestigeUpgradeTypes[typeIndex];
+        const currentLevel = game.prestigeUpgrades[id] || 0;
+        const cost = getPrestigeCost(type, currentLevel);
+
+        if (game.prestigePoints >= cost) {
+            game.prestigePoints -= cost;
+            game.prestigeSpent += cost;
+            game.prestigeUpgrades[id] = currentLevel + 1;
+            calculateCPS();
+            setupAutoClick();
+            renderPrestigeShop();
+            renderPrestige();
+            updateDisplay();
+            saveGame();
+        }
+    }
+
+    function calculateCPS() {
+        const cpsMult = getCPSMultiplier();
+        game.coinsPerSecond = game.generators.reduce((sum, gen) => {
+            return sum + (gen.count * gen.baseCPS * cpsMult);
+        }, 0);
+    }
+
+    function getPrestigeGain() {
+        return Math.floor(Math.sqrt(game.totalCoins / 500000));
+    }
+
+    function doPrestige() {
+        const gain = getPrestigeGain();
+        if (gain <= 0) return;
+
+        game.prestigePoints += gain;
+        game.coins = getStartCoins();
+        game.totalCoins = 0;
+        game.totalClicks = 0;
+        game.clickPower = 1;
+        game.coinsPerSecond = 0;
+
+        game.generators.forEach((gen, i) => {
+            gen.count = 0;
+            gen.currentPrice = generatorTypes[i].basePrice;
+        });
+
+        game.clickUpgrades.forEach((upg, i) => {
+            upg.count = 0;
+            upg.currentPrice = clickUpgradeTypes[i].basePrice;
+        });
+
+        calculateCPS();
+        renderAll();
+        updateDisplay();
+        saveGame();
+    }
+
+    function checkAchievements() {
+        let any = false;
+        game.achievements.forEach(ach => {
+            if (!ach.unlocked && typeof ach.check === 'function' && ach.check()) {
+                ach.unlocked = true;
+                any = true;
+            }
+        });
+        if (any) {
+            renderAchievements();
+            saveGame();
+        }
+    }
+
+    function setupAutoClick() {
+        if (autoClickInterval) clearInterval(autoClickInterval);
+        const rate = getAutoClickRate();
+        if (rate > 0) {
+            autoClickInterval = setInterval(() => {
+                for (let i = 0; i < rate; i++) click();
+            }, 1000);
+        }
+    }
+
+    function setBuyQty(qty, btn) {
+        buyQty = qty;
+        document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderGenerators();
+        renderClickUpgrades();
+    }
+
+    // ==================== GAME LOOP ====================
+    function startGameLoop() {
+        setInterval(() => {
+            const earned = game.coinsPerSecond / 10;
+            game.coins += earned;
+            game.totalCoins += earned;
+            updateDisplay();
+        }, 100);
+
+        setInterval(() => {
+            saveGame();
+            checkAchievements();
+            renderPrestige();
+        }, 5000);
+    }
+
+    // ==================== RENDERING ====================
+    function renderAll() {
+        renderGenerators();
+        renderClickUpgrades();
+        renderAchievements();
+        renderPrestige();
+        renderPrestigeShop();
+        updateDisplay();
+    }
+
+    function renderPrestige() {
+        const section = document.getElementById('prestigeSection');
+        const gain = getPrestigeGain();
+        const totalPrestige = game.prestigePoints + game.prestigeSpent;
+
+        let boostHTML = '';
+        const clickMult = Math.pow(2, game.prestigeUpgrades['p_click'] || 0);
+        const cpsMult = getCPSMultiplier();
+        const discount = Math.round((1 - getPriceDiscount()) * 100);
+        const autoRate = getAutoClickRate();
+        const startCoins = getStartCoins();
+        const critChance = (game.prestigeUpgrades['p_crit'] || 0) * 10;
+
+        if (totalPrestige > 0 || game.coins >= 500000) {
+            boostHTML = '<div style="text-align:left; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:12px;">';
+            if (clickMult > 1) boostHTML += 'Клик: x' + clickMult + '<br>';
+            if (cpsMult > 1) boostHTML += 'Доход: x' + cpsMult + '<br>';
+            if (discount > 0) boostHTML += 'Скидка: -' + discount + '%<br>';
+            if (autoRate > 0) boostHTML += 'Авто-клик: ' + autoRate + '/сек<br>';
+            if (startCoins > 0) boostHTML += 'Старт: +' + formatNumber(startCoins) + ' монет<br>';
+            if (critChance > 0) boostHTML += 'Крит: ' + critChance + '% шанс x5<br>';
+            boostHTML += '</div>';
+        }
+
+        if (game.coins >= 500000 || totalPrestige > 0) {
+            section.innerHTML = `
+                <div class="prestige-section">
+                    <div class="prestige-title">Престиж</div>
+                    <div class="prestige-desc">
+                        Перезапусти империю и получи очки престижа!<br>
+                        Очки можно потратить на мощные бусты.<br>
+                        Доступно: <strong>${game.prestigePoints}</strong> | Получишь: <strong>+${gain}</strong>
+                    </div>
+                    ${boostHTML}
+                    <button class="prestige-btn" onclick="doPrestige()" ${gain === 0 ? 'disabled' : ''}>
+                        Престиж ${gain > 0 ? '(+' + gain + ')' : '(нужно 500K монет)'}
+                    </button>
+                </div>
+            `;
+        } else {
+            section.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.4); padding:20px;">Накопи 500 000 монет для первого престижа</div>';
+        }
+    }
+
+    function renderPrestigeShop() {
+        const container = document.getElementById('prestigeShop');
+        container.innerHTML = prestigeUpgradeTypes.map(type => {
+            const level = game.prestigeUpgrades[type.id] || 0;
+            const cost = getPrestigeCost(type, level);
+            const canBuy = game.prestigePoints >= cost;
+            let effectText = type.desc;
+
+            if (type.id === 'p_click') effectText = 'Клик x' + Math.pow(2, level + 1) + ' (сейчас x' + Math.pow(2, level) + ')';
+            else if (type.id === 'p_cps') effectText = 'Доход x' + Math.pow(2, level + 1) + ' (сейчас x' + Math.pow(2, level) + ')';
+            else if (type.id === 'p_cheap') effectText = 'Скидка -' + ((level + 1) * 15) + '% (сейчас -' + (level * 15) + '%)';
+            else if (type.id === 'p_auto') effectText = 'Авто-клик ' + (level + 1) + '/сек (сейчас ' + level + '/сек)';
+            else if (type.id === 'p_start') effectText = 'Старт +' + formatNumber((level + 1) * 500) + ' (сейчас +' + formatNumber(level * 500) + ')';
+            else if (type.id === 'p_crit') effectText = 'Крит ' + ((level + 1) * 10) + '% (сейчас ' + (level * 10) + '%)';
+
+            return `
+                <div class="prestige-upgrade-item">
+                    <div class="prestige-upgrade-info">
+                        <div class="prestige-upgrade-name">
+                            ${type.icon} ${type.name}
+                            ${level > 0 ? '<span class="count-badge" style="background:rgba(255,215,0,0.2); color:#ffd700;">Ур. ' + level + '</span>' : ''}
+                        </div>
+                        <div class="prestige-upgrade-desc">${effectText}</div>
+                        <div class="prestige-upgrade-cost">Цена: ${cost} очков</div>
+                    </div>
+                    <button class="prestige-buy-btn" onclick="buyPrestigeUpgrade('${type.id}')" ${!canBuy ? 'disabled' : ''}>
+                        Купить
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderGenerators() {
+        const container = document.getElementById('generators');
+        const discount = getPriceDiscount();
+        const cpsMult = getCPSMultiplier();
+
+        container.innerHTML = game.generators.map((gen, index) => {
+            const price = Math.floor(gen.currentPrice * discount);
+            return `
+                <div class="upgrade-item">
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">
+                            ${gen.icon} ${gen.name}
+                            ${gen.count > 0 ? '<span class="count-badge">' + gen.count + '</span>' : ''}
+                        </div>
+                        <div class="upgrade-desc">${formatNumber(gen.baseCPS * cpsMult)} монет/сек каждый</div>
+                        <div class="upgrade-stats">Цена: ${formatNumber(price)}</div>
+                    </div>
+                    <button class="buy-button" onclick="buyGenerator(${index})" ${game.coins < price ? 'disabled' : ''}>
+                        Купить${buyQty > 1 ? ' x' + buyQty : ''}
+                    </button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderClickUpgrades() {
+        const container = document.getElementById('clickUpgrades');
+        container.innerHTML = game.clickUpgrades.map((upg, index) => `
+            <div class="upgrade-item">
+                <div class="upgrade-info">
+                    <div class="upgrade-name">
+                        ${upg.icon} ${upg.name}
+                        ${upg.count > 0 ? '<span class="count-badge">' + upg.count + '</span>' : ''}
+                    </div>
+                    <div class="upgrade-desc">+${upg.power} к силе клика</div>
+                    <div class="upgrade-stats">Цена: ${formatNumber(upg.currentPrice)}</div>
+                </div>
+                <button class="buy-button" onclick="buyClickUpgrade(${index})" ${game.coins < upg.currentPrice ? 'disabled' : ''}>
+                    Купить${buyQty > 1 ? ' x' + buyQty : ''}
+                </button>
+            </div>
+        `).join('');
+    }
+
+    function renderAchievements() {
+        const container = document.getElementById('achievements');
+        container.innerHTML = game.achievements.map(ach => `
+            <div class="achievement-item ${ach.unlocked ? '' : 'locked'}">
+                <div class="achievement-icon">${ach.icon}</div>
+                <div class="achievement-text">
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function updateDisplay() {
+        document.getElementById('coins').textContent = formatNumber(Math.floor(game.coins));
+        document.getElementById('perSecond').textContent = formatNumber(game.coinsPerSecond);
+        document.getElementById('perClick').textContent = formatNumber(getClickValue());
+        document.getElementById('prestigePoints').textContent = game.prestigePoints;
+
+        // Refresh buy button states
+        const discount = getPriceDiscount();
+        game.generators.forEach((gen, i) => {
+            const btn = document.querySelectorAll('#generators .buy-button')[i];
+            if (btn) btn.disabled = game.coins < Math.floor(gen.currentPrice * discount);
+        });
+        game.clickUpgrades.forEach((upg, i) => {
+            const btn = document.querySelectorAll('#clickUpgrades .buy-button')[i];
+            if (btn) btn.disabled = game.coins < upg.currentPrice;
+        });
+    }
+
+    // ==================== LEADERBOARD (Firebase) ====================
+    async function loadLeaderboard() {
+        const container = document.getElementById('leaderboardList');
+
+        if (!firebaseReady) {
+            container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:20px;">Firebase не настроен</div>';
+            return;
+        }
+
+        try {
+            const snapshot = await db.collection('leaderboard')
+                .orderBy('totalCoins', 'desc')
+                .limit(20)
+                .get();
+
+            if (snapshot.empty) {
+                container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:20px;">Пока нет игроков</div>';
+                return;
+            }
+
+            container.innerHTML = snapshot.docs.map((doc, index) => {
+                const data = doc.data();
+                const medal = index === 0 ? '&#129351;' : index === 1 ? '&#129352;' : index === 2 ? '&#129353;' : (index + 1);
+                return `
+                    <div class="leaderboard-item">
+                        <div class="leader-rank">${medal}</div>
+                        <div class="leader-name">${escapeHtml(data.name || 'Игрок')}</div>
+                        <div class="leader-coins">${formatNumber(data.totalCoins || 0)}</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (e) {
+            console.error('Leaderboard error:', e);
+            container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:20px;">Ошибка загрузки</div>';
+        }
+    }
+
+    async function updateLeaderboard() {
+        if (!firebaseReady || !currentUser) return;
+        try {
+            await db.collection('leaderboard').doc(currentUser.uid).set({
+                name: game.playerName,
+                totalCoins: Math.floor(game.totalCoins + game.coins),
+                prestigePoints: game.prestigePoints + game.prestigeSpent,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        } catch (e) {
+            console.error('Leaderboard update error:', e);
+        }
+    }
+
+    // ==================== SAVE / LOAD ====================
+    function getSaveKey() {
+        return currentUser ? 'nb3game_' + currentUser.uid : 'nb3game_guest';
+    }
+
+    function saveGame() {
+        try {
+            const saveData = {
+                coins: game.coins,
+                totalCoins: game.totalCoins,
+                totalClicks: game.totalClicks,
+                clickPower: game.clickPower,
+                prestigePoints: game.prestigePoints,
+                prestigeSpent: game.prestigeSpent,
+                prestigeUpgrades: game.prestigeUpgrades,
+                playerName: game.playerName,
+                generators: game.generators.map(g => ({ id: g.id, count: g.count, currentPrice: g.currentPrice })),
+                clickUpgrades: game.clickUpgrades.map(u => ({ id: u.id, count: u.count, currentPrice: u.currentPrice })),
+                achievements: game.achievements.map(a => ({ id: a.id, unlocked: a.unlocked }))
+            };
+            localStorage.setItem(getSaveKey(), JSON.stringify(saveData));
+
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 1000);
+
+            updateLeaderboard();
+        } catch (e) {
+            console.error('Save error:', e);
+        }
+    }
+
+    function loadGame() {
+        try {
+            const raw = localStorage.getItem(getSaveKey());
+            if (!raw) return;
+            const saved = JSON.parse(raw);
+
+            game.coins = saved.coins || 0;
+            game.totalCoins = saved.totalCoins || 0;
+            game.totalClicks = saved.totalClicks || 0;
+            game.clickPower = saved.clickPower || 1;
+            game.prestigePoints = saved.prestigePoints || 0;
+            game.prestigeSpent = saved.prestigeSpent || 0;
+            game.prestigeUpgrades = saved.prestigeUpgrades || {};
+            if (saved.playerName) game.playerName = saved.playerName;
+
+            if (saved.generators) {
+                saved.generators.forEach(sg => {
+                    const gen = game.generators.find(g => g.id === sg.id);
+                    if (gen) {
+                        gen.count = sg.count || 0;
+                        gen.currentPrice = sg.currentPrice || gen.basePrice;
+                    }
+                });
+            }
+
+            if (saved.clickUpgrades) {
+                saved.clickUpgrades.forEach(su => {
+                    const upg = game.clickUpgrades.find(u => u.id === su.id);
+                    if (upg) {
+                        upg.count = su.count || 0;
+                        upg.currentPrice = su.currentPrice || upg.basePrice;
+                    }
+                });
+            }
+
+            if (saved.achievements) {
+                saved.achievements.forEach(sa => {
+                    const ach = game.achievements.find(a => a.id === sa.id);
+                    if (ach) ach.unlocked = sa.unlocked || false;
+                });
+            }
+
+            calculateCPS();
+            setupAutoClick();
+        } catch (e) {
+            console.error('Load error:', e);
+        }
+    }
+
+    // ==================== UTILS ====================
+    function formatNumber(num) {
+        if (num < 0) return '0';
+        if (num < 1000) return Math.floor(num).toString();
+        if (num < 1000000) return (num / 1000).toFixed(1) + 'K';
+        if (num < 1000000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num < 1000000000000) return (num / 1000000000).toFixed(1) + 'B';
+        return (num / 1000000000000).toFixed(1) + 'T';
+    }
+
+    function switchTab(tab, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tabMap = {
+            'upgrades': 'upgradesTab',
+            'prestige': 'prestigeTab',
+            'achievements': 'achievementsTab',
+            'leaderboard': 'leaderboardTab'
+        };
+        document.getElementById(tabMap[tab]).classList.add('active');
+
+        if (tab === 'leaderboard') loadLeaderboard();
+        if (tab === 'prestige') { renderPrestige(); renderPrestigeShop(); }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ==================== BOOT ====================
+    document.getElementById('clickButton').addEventListener('click', click);
+
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const loading = document.getElementById('loadingScreen');
+            loading.classList.add('fade-out');
+            setTimeout(() => {
+                loading.style.display = 'none';
+                document.getElementById('authScreen').style.display = 'flex';
+            }, 600);
+        }, 1500);
     });
-    f.addEventListener('input', () => { authError.textContent = ''; });
-  });
-  // Live filtering removed — validation only on submit to prevent focus jumps
-
-  // ─── SPLASH ──────────────────────────────────────────────────
-  let splashTimer = 0;
-  const SPLASH_DURATION = 180;
-  let splashParticles = [];
-
-  function initSplash() {
-    splashTimer = 0; splashParticles = [];
-    const spread = Math.max(W, H) * 0.04;
-    for (let i = 0; i < 160; i++) {
-      // spread across full screen, not just from center
-      const startX = Math.random() < 0.5 ? W/2 : Math.random()*W;
-      const startY = Math.random() < 0.5 ? H/2 : Math.random()*H;
-      splashParticles.push({
-        x: startX, y: startY,
-        vx: (Math.random()-0.5)*spread, vy: (Math.random()-0.5)*spread,
-        life: Math.random()*100+60, maxLife: 160,
-        size: Math.random()*6+1, hue: Math.random()*60+180
-      });
-    }
-  }
-
-  // ─── MENU ────────────────────────────────────────────────────
-  let menuTab = 0; // 0=main 1=leaderboard
-  let menuAnim = 0;
-  let lbLoading = false;
-
-  // ─── GAME ────────────────────────────────────────────────────
-  let player, cubes, survivalTime, spawnInterval, cubeSpeed, spawnTimer, diffTick, coins;
-  let joystick = { active: false, startX:0, startY:0, dx:0, dy:0, id:null };
-  let trail = [];
-
-  function initGame() {
-    player = { x:W/2, y:H/2, w:28*SCALE, h:28*SCALE, speed:3.5*SCALE,
-               vx:0, vy:0, alive:true, animTick:0, invincible:0 };
-    cubes=[]; survivalTime=0; spawnInterval=90; cubeSpeed=1.4*SCALE;
-    spawnTimer=0; diffTick=0; coins=0; trail=[];
-  }
-
-  function spawnCube() {
-    let side=Math.floor(Math.random()*4), x, y;
-    const m=20;
-    if(side===0){x=Math.random()*W;y=-m;}
-    else if(side===1){x=W+m;y=Math.random()*H;}
-    else if(side===2){x=Math.random()*W;y=H+m;}
-    else{x=-m;y=Math.random()*H;}
-    const sz=(22+Math.random()*10)*SCALE;
-    const angle=Math.atan2(player.y-y,player.x-x);
-    const speed=cubeSpeed*(0.8+Math.random()*0.5);
-    cubes.push({x,y,sz,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,
-      rot:Math.random()*Math.PI*2,rotSpeed:(Math.random()-0.5)*0.1,
-      hue:Math.random()*30,pulsePhase:Math.random()*Math.PI*2});
-
-    // Ограничение количества кубиков на экране (максимум 20)
-    if (cubes.length > 20) {
-        cubes.shift(); // Удаляем самый старый кубик
-    }
-  }
-
-  // ─── GAME OVER ───────────────────────────────────────────────
-  let goAnim=0, goCoins=0;
-
-  // ─── INPUT ───────────────────────────────────────────────────
-  function isAuthOpen() { return authOverlay.classList.contains('active'); }
-
-  // Use document-level listeners so HTML inputs in overlay always receive native events
-  document.addEventListener('touchstart', e => {
-    if (isAuthOpen()) return;
-    e.preventDefault();
-    for(let t of e.changedTouches) handleDown(t.clientX, t.clientY, t.identifier);
-  }, {passive:false});
-  document.addEventListener('touchmove', e => {
-    if (isAuthOpen()) return;
-    e.preventDefault();
-    for(let t of e.changedTouches) handleMove(t.clientX, t.clientY, t.identifier);
-  }, {passive:false});
-  document.addEventListener('touchend', e => {
-    if (isAuthOpen()) return;
-    e.preventDefault();
-    for(let t of e.changedTouches) handleUp(t.identifier);
-  }, {passive:false});
-  canvas.addEventListener('mousedown',  e => { if (!isAuthOpen()) handleDown(e.clientX, e.clientY, 'mouse'); });
-  document.addEventListener('mousedown', e => { if (isAuthOpen() && !authOverlay.contains(e.target)) e.stopPropagation(); }, true);
-  canvas.addEventListener('mousemove',  e => { if (!isAuthOpen()) handleMove(e.clientX, e.clientY, 'mouse'); });
-  canvas.addEventListener('mouseup',    e => { if (!isAuthOpen()) handleUp('mouse'); });
-  const keys={};
-  window.addEventListener('keydown', e => keys[e.key]=true);
-  window.addEventListener('keyup',   e => keys[e.key]=false);
-
-  function handleDown(x, y, id) {
-    if (state === STATE.MENU) {
-      // logout button
-      if (x>W-70*SCALE&&x<W-10*SCALE&&y>10*SCALE&&y<38*SCALE) {
-        gameData = { coins: 0, nickname: '', login: '' };
-        saveLocal(gameData);
-        state = STATE.SPLASH; splashTimer = 0;
-        setTimeout(() => showAuthScreen(), 100);
-        return;
-      }
-      if (menuTab === 0) {
-        const bx=W/2-100*SCALE, bw=200*SCALE;
-        if (x>bx&&x<bx+bw&&y>H*0.55-25*SCALE&&y<H*0.55+25*SCALE) { state=STATE.GAME; initGame(); return; }
-        if (x>bx&&x<bx+bw&&y>H*0.67-25*SCALE&&y<H*0.67+25*SCALE) {
-          menuTab=1; lbLoading=true; loadGlobalLB().then(()=>lbLoading=false); return;
-        }
-      } else {
-        // Back button in leaderboard
-        const bx=W/2-80*SCALE, bw=160*SCALE, by=H*0.88-22*SCALE, bh=44*SCALE;
-        if (x>bx&&x<bx+bw&&y>by&&y<by+bh) { menuTab=0; return; }
-      }
-      return;
-    }
-    if (state === STATE.GAMEOVER) {
-      const bx=W/2-90*SCALE, bw=180*SCALE;
-      if (x>bx&&x<bx+bw&&y>H*0.72-22*SCALE&&y<H*0.72+22*SCALE) { state=STATE.MENU; menuTab=0; return; }
-      if (x>bx&&x<bx+bw&&y>H*0.82-22*SCALE&&y<H*0.82+22*SCALE) { state=STATE.GAME; initGame(); return; }
-      return;
-    }
-    if (state===STATE.GAME&&player.alive) {
-      joystick={active:true,startX:x,startY:y,dx:0,dy:0,id};
-    }
-  }
-  function handleMove(x,y,id) {
-    if(state===STATE.GAME&&joystick.active&&joystick.id===id){joystick.dx=x-joystick.startX;joystick.dy=y-joystick.startY;}
-  }
-  function handleUp(id) {
-    if(joystick.id===id){joystick.active=false;joystick.dx=0;joystick.dy=0;}
-  }
-
-  // ─── COLLISION ───────────────────────────────────────────────
-  function rectsOverlap(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
-
-  // ─── DRAW HELPERS ────────────────────────────────────────────
-  function roundRect(x,y,w,h,r){
-    ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-    ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
-    ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
-  }
-  function drawGlowText(text,x,y,size,color,glow,alpha=1){
-    ctx.save();ctx.globalAlpha=alpha;ctx.font=`bold ${size}px 'Courier New'`;
-    ctx.textAlign='center';ctx.shadowBlur=glow;ctx.shadowColor=color;ctx.fillStyle=color;
-    ctx.fillText(text,x,y);ctx.restore();
-  }
-  function drawButton(label,x,y,w,h){
-    ctx.save();
-    const g=ctx.createLinearGradient(x,y,x,y+h);g.addColorStop(0,'#00ccaa');g.addColorStop(1,'#004455');
-    roundRect(x,y,w,h,10*SCALE);ctx.fillStyle=g;ctx.fill();
-    ctx.strokeStyle='#009977';ctx.lineWidth=2;ctx.stroke();
-    ctx.font=`bold ${14*SCALE}px 'Courier New'`;ctx.textAlign='center';
-    ctx.fillStyle='#fff';ctx.shadowBlur=8;ctx.shadowColor='#00ffcc';
-    ctx.fillText(label,x+w/2,y+h/2+5*SCALE);ctx.restore();
-  }
-  function drawGrid(alpha=0.06){
-    ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle='#00ffcc';ctx.lineWidth=1;
-    const gs=40*SCALE;
-    for(let x=0;x<W;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    ctx.restore();
-  }
-  function formatTime(sec){
-    const m=Math.floor(sec/60),s=Math.floor(sec%60);
-    return m>0?`${m}:${s.toString().padStart(2,'0')}`:`${Math.floor(sec)}s`;
-  }
-
-  // ─── DRAW SPLASH ─────────────────────────────────────────────
-  function drawSplash(){
-    const t=splashTimer/SPLASH_DURATION;
-    ctx.clearRect(0,0,W,H);
-    const bg=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,W);
-    bg.addColorStop(0,`rgba(0,30,40,${Math.min(t*3,1)})`);bg.addColorStop(1,'#000005');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    for(let p of splashParticles){
-      const a=Math.max(0,1-p.life/p.maxLife);
-      ctx.save();ctx.globalAlpha=a*0.7;ctx.fillStyle=`hsl(${p.hue},100%,60%)`;
-      ctx.shadowBlur=10;ctx.shadowColor=`hsl(${p.hue},100%,70%)`;
-      ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);ctx.restore();
-      p.x+=p.vx;p.y+=p.vy;p.vx*=0.97;p.vy*=0.97;p.life--;
-    }
-    drawGrid(0.06*Math.min(t*2,1));
-    let ta=0;
-    if(t>0.15)ta=Math.min((t-0.15)/0.3,1);
-    if(t>0.85)ta=Math.max(0,1-(t-0.85)/0.15);
-    const ls=0.6+0.4*Math.min((t-0.1)/0.4,1);
-    ctx.save();ctx.translate(W/2,H/2);ctx.scale(ls,ls);ctx.translate(-W/2,-H/2);
-    const pulse=1+0.03*Math.sin(splashTimer*0.12);
-    ctx.save();ctx.translate(W/2,H/2);ctx.scale(pulse,pulse);ctx.translate(-W/2,-H/2);
-    ctx.globalAlpha=ta;
-    ctx.font=`bold ${32*SCALE}px 'Courier New'`;ctx.textAlign='center';
-    ctx.shadowBlur=30;ctx.shadowColor='#00ffcc';ctx.fillStyle='#00ffcc';
-    ctx.fillText('Neubiva3mostb',W/2,H/2-20*SCALE);
-    ctx.font=`bold ${20*SCALE}px 'Courier New'`;ctx.shadowColor='#ff6600';ctx.fillStyle='#ff9944';
-    ctx.fillText('P R O D U C T',W/2,H/2+20*SCALE);
-    ctx.strokeStyle='#00ffcc';ctx.lineWidth=2*SCALE;ctx.globalAlpha=ta*0.5;
-    ctx.beginPath();ctx.moveTo(W/2-120*SCALE,H/2-35*SCALE);ctx.lineTo(W/2+120*SCALE,H/2-35*SCALE);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(W/2-120*SCALE,H/2+35*SCALE);ctx.lineTo(W/2+120*SCALE,H/2+35*SCALE);ctx.stroke();
-    ctx.restore();ctx.restore();
-    if(t>0.5){
-      const ba=Math.min((t-0.5)/0.2,1),bw=200*SCALE,bh=6*SCALE,bx=W/2-bw/2,by=H*0.7;
-      ctx.save();ctx.globalAlpha=ba*0.4;roundRect(bx,by,bw,bh,3*SCALE);ctx.fillStyle='#003344';ctx.fill();
-      ctx.globalAlpha=ba;roundRect(bx,by,bw*Math.min((t-0.5)*2,1),bh,3*SCALE);
-      const lg=ctx.createLinearGradient(bx,0,bx+bw,0);lg.addColorStop(0,'#00ffcc');lg.addColorStop(1,'#0088ff');
-      ctx.fillStyle=lg;ctx.shadowBlur=10;ctx.shadowColor='#00ffcc';ctx.fill();ctx.restore();
-    }
-  }
-
-  // ─── DRAW MENU ───────────────────────────────────────────────
-  function drawMenu(){
-    menuAnim++;ctx.clearRect(0,0,W,H);
-    const bg=ctx.createLinearGradient(0,0,0,H);bg.addColorStop(0,'#000510');bg.addColorStop(1,'#001520');
-    ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    drawGrid(0.05);
-    for(let i=0;i<5;i++){
-      const a=(menuAnim*0.003+i*1.2)%(Math.PI*2),r=(60+i*30)*SCALE;
-      const x=W/2+Math.cos(a)*r,y=H*0.25+Math.sin(a*0.7)*r*0.4,s=(12+i*4)*SCALE;
-      ctx.save();ctx.globalAlpha=0.15;ctx.translate(x,y);ctx.rotate(menuAnim*0.02+i);
-      ctx.fillStyle=`hsl(${i*40},100%,60%)`;ctx.shadowBlur=15;ctx.shadowColor=`hsl(${i*40},100%,60%)`;
-      ctx.fillRect(-s/2,-s/2,s,s);ctx.restore();
-    }
-    const pulse=1+0.015*Math.sin(menuAnim*0.05);
-    drawGlowText('Neubiva3mostb',W/2,H*0.18,26*SCALE*pulse,'#00ffcc',20);
-    drawGlowText('P R O D U C T',W/2,H*0.25,16*SCALE,'#ff9944',15);
-    drawGlowText(`👤 ${gameData.nickname||'???'}`,W/2,H*0.33,14*SCALE,'#aaffee',6);
-    drawGlowText(`💰 ${gameData.coins}`,W/2,H*0.40,18*SCALE,'#ffdd44',10);
-    // logout
-    drawButton('⎋ ВЫЙТИ',W-70*SCALE,10*SCALE,60*SCALE,28*SCALE);
-
-    if(menuTab===0){
-      drawButton('▶  ИГРАТЬ',W/2-100*SCALE,H*0.55-25*SCALE,200*SCALE,50*SCALE);
-      drawButton('🏆  РЕКОРДЫ',W/2-100*SCALE,H*0.67-25*SCALE,200*SCALE,50*SCALE);
-    } else {
-      drawGlowText('🏆 МИРОВОЙ ТОП-3',W/2,H*0.44,17*SCALE,'#ffdd44',12);
-      if(lbLoading){
-        drawGlowText('Загрузка...',W/2,H*0.55,14*SCALE,'#888',6);
-      } else if(globalLB.length===0){
-        drawGlowText('Пока нет рекордов',W/2,H*0.55,13*SCALE,'#888',5);
-      } else {
-        const medals=['🥇','🥈','🥉'];
-        const cols=['#ffd700','#c0c0c0','#cd7f32'];
-        for(let i=0;i<globalLB.length;i++){
-          const e=globalLB[i],y=H*0.50+i*32*SCALE;
-          drawGlowText(`${medals[i]} ${e.name}`,W/2-20*SCALE,y,13*SCALE,cols[i],i===0?10:0);
-          drawGlowText(formatTime(e.time),W/2+80*SCALE,y,13*SCALE,cols[i],0);
-        }
-      }
-      drawButton('← НАЗАД',W/2-80*SCALE,H*0.88-22*SCALE,160*SCALE,44*SCALE);
-    }
-  }
-
-  // ─── DRAW GAME ───────────────────────────────────────────────
-  function drawGame(){
-    ctx.clearRect(0,0,W,H);ctx.fillStyle='#05080f';ctx.fillRect(0,0,W,H);
-    const gs=40*SCALE,offX=(survivalTime*0.5)%gs;
-    ctx.save();ctx.globalAlpha=0.07;ctx.strokeStyle='#00ffcc';ctx.lineWidth=1;
-    for(let x=-offX;x<W+gs;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<H;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    ctx.restore();
-    for(let i=0;i<trail.length;i++){
-      const tp=trail[i],a=(i/trail.length)*0.3;
-      ctx.save();ctx.globalAlpha=a;ctx.fillStyle='#00ffcc';
-      ctx.fillRect(tp.x-player.w*0.3,tp.y-player.h*0.3,player.w*0.6,player.h*0.6);ctx.restore();
-    }
-    for(let c of cubes){
-      const pulse=0.15*Math.sin(survivalTime*0.05+c.pulsePhase);
-      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);
-      ctx.shadowBlur=20+pulse*20;ctx.shadowColor=`hsl(${c.hue},100%,50%)`;
-      const cg=ctx.createLinearGradient(-c.sz/2,-c.sz/2,c.sz/2,c.sz/2);
-      cg.addColorStop(0,`hsl(${c.hue+20},100%,70%)`);cg.addColorStop(1,`hsl(${c.hue},100%,40%)`);
-      ctx.fillStyle=cg;ctx.fillRect(-c.sz/2,-c.sz/2,c.sz,c.sz);
-      ctx.strokeStyle=`hsl(${c.hue+30},100%,80%)`;ctx.lineWidth=2*SCALE;ctx.strokeRect(-c.sz/2,-c.sz/2,c.sz,c.sz);
-      ctx.restore();
-    }
-    if(player.alive){
-      player.animTick++;
-      const bobY=Math.sin(player.animTick*0.15)*2*SCALE;
-      const facing=player.vx<0?-1:1;
-      ctx.save();ctx.translate(player.x,player.y+bobY);ctx.scale(facing,1);
-      if(player.invincible>0&&Math.floor(player.invincible/4)%2===0)ctx.globalAlpha=0.5;
-      ctx.save();ctx.globalAlpha*=0.3;ctx.fillStyle='#000';ctx.beginPath();
-      ctx.ellipse(0,player.h/2,player.w*0.4,4*SCALE,0,0,Math.PI*2);ctx.fill();ctx.restore();
-      ctx.shadowBlur=15;ctx.shadowColor='#00ffcc';
-      ctx.fillStyle='#00ccaa';roundRect(-player.w*0.3,-player.h*0.15,player.w*0.6,player.h*0.5,4*SCALE);ctx.fill();
-      ctx.fillStyle='#ffddaa';ctx.shadowColor='#ffddaa';ctx.shadowBlur=5;
-      ctx.beginPath();ctx.arc(0,-player.h*0.3,player.w*0.28,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#222';ctx.beginPath();ctx.arc(player.w*0.08,-player.h*0.33,3*SCALE,0,Math.PI*2);ctx.fill();
-      const legA=Math.sin(player.animTick*0.25)*8*SCALE;ctx.shadowBlur=0;ctx.fillStyle='#0088aa';
-      ctx.fillRect(-player.w*0.25,player.h*0.28,player.w*0.22,player.h*0.28+legA*0.3);
-      ctx.fillRect(player.w*0.03,player.h*0.28,player.w*0.22,player.h*0.28-legA*0.3);
-      ctx.fillStyle='#00ccaa';const armA=Math.sin(player.animTick*0.25+1)*6*SCALE;
-      ctx.fillRect(-player.w*0.5,-player.h*0.12+armA,player.w*0.2,player.h*0.3);
-      ctx.fillRect(player.w*0.3,-player.h*0.12-armA,player.w*0.2,player.h*0.3);
-      ctx.restore();
-    }
-    // HUD
-    ctx.save();ctx.fillStyle='rgba(0,0,0,0.5)';roundRect(W/2-80*SCALE,10*SCALE,160*SCALE,36*SCALE,8*SCALE);ctx.fill();
-    drawGlowText(`⏱ ${formatTime(survivalTime/60)}`,W/2,34*SCALE,18*SCALE,'#ffffff',8);ctx.restore();
-    drawGlowText(`💰 ${coins}`,55*SCALE,34*SCALE,14*SCALE,'#ffdd44',6);
-    drawGlowText(`LV ${Math.floor(diffTick/15)+1}`,W-40*SCALE,34*SCALE,14*SCALE,'#ff6644',6);
-    if(joystick.active){
-      ctx.save();ctx.globalAlpha=0.3;ctx.strokeStyle='#00ffcc';ctx.lineWidth=2*SCALE;
-      ctx.beginPath();ctx.arc(joystick.startX,joystick.startY,40*SCALE,0,Math.PI*2);ctx.stroke();
-      const len=Math.min(Math.hypot(joystick.dx,joystick.dy),40*SCALE),ang=Math.atan2(joystick.dy,joystick.dx);
-      ctx.globalAlpha=0.6;ctx.fillStyle='#00ffcc';ctx.beginPath();
-      ctx.arc(joystick.startX+Math.cos(ang)*len,joystick.startY+Math.sin(ang)*len,12*SCALE,0,Math.PI*2);ctx.fill();ctx.restore();
-    }
-  }
-
-  // ─── DRAW GAMEOVER ───────────────────────────────────────────
-  function drawGameOver(){
-    goAnim++;ctx.clearRect(0,0,W,H);ctx.fillStyle='rgba(5,8,15,0.95)';ctx.fillRect(0,0,W,H);
-    if(goAnim<60){
-      const r=goAnim*12*SCALE;ctx.save();ctx.globalAlpha=Math.max(0,1-goAnim/60)*0.5;
-      ctx.strokeStyle='#ff2200';ctx.lineWidth=4*SCALE;ctx.beginPath();ctx.arc(W/2,H/2,r,0,Math.PI*2);ctx.stroke();ctx.restore();
-    }
-    const a=Math.min(goAnim/30,1);
-    drawGlowText('GAME OVER',W/2,H*0.2,36*SCALE,'#ff2200',25,a);
-    drawGlowText(`Выжил: ${formatTime(survivalTime/60)}`,W/2,H*0.32,16*SCALE,'#ffffff',8,a);
-    drawGlowText(`Монеты: +${goCoins} 💰`,W/2,H*0.40,20*SCALE,'#ffdd44',12,a);
-    drawGlowText(`Итого: ${gameData.coins} 💰`,W/2,H*0.48,14*SCALE,'#aaaaaa',5,a);
-    if(globalLB.length>0) drawGlowText(`Рекорд: ${formatTime(globalLB[0].time)} (${globalLB[0].name})`,W/2,H*0.56,12*SCALE,'#ffd700',10,a);
-    if(goAnim>20){
-      drawButton('🏠 МЕНЮ',W/2-90*SCALE,H*0.72-22*SCALE,180*SCALE,44*SCALE);
-      drawButton('▶ ЕЩЁ РАЗ',W/2-90*SCALE,H*0.82-22*SCALE,180*SCALE,44*SCALE);
-    }
-  }
-
-  // ─── UPDATE ──────────────────────────────────────────────────
-  function update(){
-    if(state===STATE.SPLASH){
-      splashTimer++;
-      if(splashTimer>=SPLASH_DURATION){
-        if(!gameData.nickname || !gameData.login){ showAuthScreen(); }
-        else { state=STATE.MENU; loadGlobalLB(); }
-      }
-    }
-    if(state===STATE.GAME&&player.alive){
-      survivalTime++;diffTick=survivalTime/60;
-      let dx=0,dy=0;
-      if(joystick.active){const len=Math.hypot(joystick.dx,joystick.dy);if(len>5){dx=joystick.dx/Math.max(len,40*SCALE);dy=joystick.dy/Math.max(len,40*SCALE);}}
-      if(keys['ArrowLeft']||keys['a']||keys['A'])dx-=1;if(keys['ArrowRight']||keys['d']||keys['D'])dx+=1;
-      if(keys['ArrowUp']||keys['w']||keys['W'])dy-=1;if(keys['ArrowDown']||keys['s']||keys['S'])dy+=1;
-      const spd=Math.hypot(dx,dy);if(spd>0){dx/=spd;dy/=spd;}
-      player.vx=dx*player.speed;player.vy=dy*player.speed;
-      player.x=Math.max(player.w/2,Math.min(W-player.w/2,player.x+player.vx));
-      player.y=Math.max(player.h/2,Math.min(H-player.h/2,player.y+player.vy));
-      trail.push({x:player.x,y:player.y});if(trail.length>12)trail.shift();
-      const secAlive=survivalTime/60;
-      const spawnLevel=Math.floor(secAlive/15);spawnInterval=Math.max(20,90-spawnLevel*8);
-      const speedLevel=Math.floor(secAlive/20);cubeSpeed=(1.4+speedLevel*0.3)*SCALE;
-      for(let c of cubes){
-        const ang=Math.atan2(player.y-c.y,player.x-c.x);const spd2=cubeSpeed;
-        c.vx+=(Math.cos(ang)*spd2-c.vx)*0.04;c.vy+=(Math.sin(ang)*spd2-c.vy)*0.04;
-        c.x+=c.vx;c.y+=c.vy;c.rot+=c.rotSpeed;c.pulsePhase+=0.05;
-      }
-      cubes=cubes.filter(c=>c.x>-100*SCALE&&c.x<W+100*SCALE&&c.y>-100*SCALE&&c.y<H+100*SCALE);
-      spawnTimer++;if(spawnTimer>=spawnInterval){spawnTimer=0;spawnCube();if(spawnLevel>3)spawnCube();if(spawnLevel>6)spawnCube();}
-      if(player.invincible<=0){
-        for(let c of cubes){
-          if(rectsOverlap(player.x-player.w*0.35,player.y-player.h*0.35,player.w*0.7,player.h*0.7,c.x-c.sz*0.45,c.y-c.sz*0.45,c.sz*0.9,c.sz*0.9)){
-            player.alive=false;
-            const sec2=survivalTime/60;
-            goCoins=Math.floor(sec2*10);gameData.coins+=goCoins;saveLocal(gameData);
-            goAnim=0;state=STATE.GAMEOVER;
-            submitScore(gameData.nickname||'Player', sec2);
-            syncCoinsToCloud();
-            break;
-          }
-        }
-      }
-      if(player.invincible>0)player.invincible--;
-    }
-  }
-
-  // ─── LOOP ────────────────────────────────────────────────────
-  function loop(){
-    update();
-    switch(state){
-      case STATE.SPLASH: drawSplash(); break;
-      case STATE.MENU:   drawMenu();   break;
-      case STATE.GAME:   drawGame();   break;
-      case STATE.GAMEOVER: drawGameOver(); break;
-    }
-    requestAnimationFrame(loop);
-  }
-
-  checkForUpdate();
-  initSplash();
-  loop();
-</script>
+    </script>
 </body>
 </html>
