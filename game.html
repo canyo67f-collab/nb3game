@@ -6,7 +6,7 @@
     <title>nb3game — Космическая Империя</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -690,7 +690,7 @@
     try {
         firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
-        db = firebase.firestore();
+        db = firebase.database();
         firebaseReady = true;
     } catch (e) {
         console.warn('Firebase init failed, running offline:', e);
@@ -1273,18 +1273,19 @@
         }
 
         try {
-            const snapshot = await db.collection('leaderboard')
-                .orderBy('totalCoins', 'desc')
-                .limit(20)
-                .get();
+            const snapshot = await db.ref('leaderboard')
+                .orderByChild('totalCoins')
+                .limitToLast(20)
+                .once('value');
 
-            if (snapshot.empty) {
+            const val = snapshot.val();
+            if (!val) {
                 container.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.5); padding:20px;">Пока нет игроков</div>';
                 return;
             }
 
-            container.innerHTML = snapshot.docs.map((doc, index) => {
-                const data = doc.data();
+            const players = Object.values(val).sort((a, b) => (b.totalCoins || 0) - (a.totalCoins || 0));
+            container.innerHTML = players.map((data, index) => {
                 const medal = index === 0 ? '&#129351;' : index === 1 ? '&#129352;' : index === 2 ? '&#129353;' : (index + 1);
                 return `
                     <div class="leaderboard-item">
@@ -1303,12 +1304,12 @@
     async function updateLeaderboard() {
         if (!firebaseReady || !currentUser) return;
         try {
-            await db.collection('leaderboard').doc(currentUser.uid).set({
+            await db.ref('leaderboard/' + currentUser.uid).set({
                 name: game.playerName,
                 totalCoins: Math.floor(game.totalCoins + game.coins),
                 prestigePoints: game.prestigePoints + game.prestigeSpent,
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, { merge: true });
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            });
         } catch (e) {
             console.error('Leaderboard update error:', e);
         }
