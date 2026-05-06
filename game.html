@@ -560,6 +560,17 @@
         <div class="loading-sub">Загрузка вселенной...</div>
     </div>
 
+    <!-- ===== UPDATE REQUIRED SCREEN ===== -->
+    <div class="auth-screen" id="updateScreen" style="display:none">
+        <div class="auth-box" style="text-align:center;">
+            <div style="font-size:48px; margin-bottom:16px;">&#128640;</div>
+            <div class="auth-title">Обновление</div>
+            <div class="auth-subtitle" style="margin-bottom:16px;">Доступна новая версия Space Clicker!<br>Обновитесь, чтобы продолжить играть.</div>
+            <div id="updateMessage" style="color:rgba(255,255,255,0.6); font-size:13px; margin-bottom:20px;"></div>
+            <a id="updateLink" href="#" target="_blank" class="auth-btn" style="display:inline-block; text-decoration:none; text-align:center;">Обновить</a>
+        </div>
+    </div>
+
     <!-- ===== AUTH SCREEN ===== -->
     <div class="auth-screen" id="authScreen" style="display:none">
         <div class="auth-box">
@@ -686,6 +697,8 @@
         appId: "1:486659617536:web:2a43e52ad0e8ef3b5879e5",
         measurementId: "G-ZWZCCD7LWQ"
     };
+
+    const APP_VERSION = 1;
 
     let firebaseReady = false;
     let auth, db;
@@ -1434,13 +1447,38 @@
     // ==================== BOOT ====================
     document.getElementById('clickButton').addEventListener('click', click);
 
+    async function checkForUpdate() {
+        if (!firebaseReady) return false;
+        try {
+            const snap = await db.ref('config/minVersion').once('value');
+            const minVersion = snap.val();
+            if (minVersion && APP_VERSION < minVersion) {
+                const msgSnap = await db.ref('config/updateMessage').once('value');
+                const linkSnap = await db.ref('config/updateUrl').once('value');
+                const msg = msgSnap.val() || '';
+                const url = linkSnap.val() || '#';
+                if (msg) document.getElementById('updateMessage').textContent = msg;
+                document.getElementById('updateLink').href = url;
+                return true;
+            }
+        } catch (e) {
+            console.warn('Update check failed:', e);
+        }
+        return false;
+    }
+
     window.addEventListener('load', () => {
-        setTimeout(() => {
+        setTimeout(async () => {
             const loading = document.getElementById('loadingScreen');
             loading.classList.add('fade-out');
-            setTimeout(() => {
+            setTimeout(async () => {
                 loading.style.display = 'none';
-                document.getElementById('authScreen').style.display = 'flex';
+                const needsUpdate = await checkForUpdate();
+                if (needsUpdate) {
+                    document.getElementById('updateScreen').style.display = 'flex';
+                } else {
+                    document.getElementById('authScreen').style.display = 'flex';
+                }
             }, 600);
         }, 1500);
     });
