@@ -1049,9 +1049,13 @@
         }, 0);
     }
 
+    function getPrestigeCostCoins() {
+        const done = game.totalPrestiges || 0;
+        return Math.floor(1000000 * Math.pow(2.5, done));
+    }
+
     function getPrestigeGain() {
-        // Prestige always gives exactly 1 point
-        if (game.totalCoins >= 1000000) return 1;
+        if (game.totalCoins >= getPrestigeCostCoins()) return 1;
         return 0;
     }
 
@@ -1154,7 +1158,9 @@
         const startCoins = getStartCoins();
         const critChance = (game.prestigeUpgrades['p_crit'] || 0) * 5;
 
-        if (totalPrestige > 0 || game.coins >= 1000000) {
+        const prestigeCost = getPrestigeCostCoins();
+
+        if (totalPrestige > 0 || game.totalCoins >= prestigeCost * 0.5) {
             boostHTML = '<div style="text-align:left; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:12px;">';
             if (clickMult > 1) boostHTML += 'Клик: x' + clickMult.toFixed(1) + '<br>';
             if (cpsMult > 1) boostHTML += 'Доход: x' + cpsMult.toFixed(1) + '<br>';
@@ -1165,23 +1171,24 @@
             boostHTML += '</div>';
         }
 
-        if (game.coins >= 1000000 || totalPrestige > 0) {
+        if (game.totalCoins >= prestigeCost * 0.5 || totalPrestige > 0) {
             section.innerHTML = `
                 <div class="prestige-section">
                     <div class="prestige-title">Престиж</div>
                     <div class="prestige-desc">
                         Перезапусти империю и получи 1 очко престижа!<br>
                         Очки можно потратить на бусты.<br>
-                        Очков: <strong>${game.prestigePoints}</strong> | Престижей: <strong>${game.totalPrestiges || 0}</strong>
+                        Очков: <strong>${game.prestigePoints}</strong> | Престижей: <strong>${game.totalPrestiges || 0}</strong><br>
+                        Цена: <strong>${formatNumber(prestigeCost)}</strong> монет
                     </div>
                     ${boostHTML}
                     <button class="prestige-btn" onclick="doPrestige()" ${gain === 0 ? 'disabled' : ''}>
-                        Престиж ${gain > 0 ? '(+1 очко)' : '(нужно 1M монет)'}
+                        Престиж ${gain > 0 ? '(+1 очко)' : '(нужно ' + formatNumber(prestigeCost) + ')'}
                     </button>
                 </div>
             `;
         } else {
-            section.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.4); padding:20px;">Накопи 1 000 000 монет для первого престижа</div>';
+            section.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.4); padding:20px;">Накопи ' + formatNumber(prestigeCost) + ' монет для престижа</div>';
         }
     }
 
