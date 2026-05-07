@@ -616,7 +616,7 @@
                     <div class="stat-value" id="perClick">1</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Престижей</div>
+                    <div class="stat-label">Престиж</div>
                     <div class="stat-value" id="prestigePoints">0</div>
                 </div>
             </div>
@@ -725,7 +725,6 @@
         coinsPerSecond: 0,
         prestigePoints: 0,
         prestigeSpent: 0,
-        totalPrestiges: 0,
         prestigeUpgrades: {},
         generators: [],
         clickUpgrades: [],
@@ -740,29 +739,26 @@
 
     // ==================== CONSTANTS ====================
 
-    // Generators — rebalanced prices
+    // Generators (Робот-шахтёр removed)
     const generatorTypes = [
-        { id: 'factory',  name: 'Космофабрика',          icon: '&#127981;', basePrice: 100,        baseCPS: 0.5,   priceMultiplier: 1.18 },
-        { id: 'station',  name: 'Орбитальная станция',    icon: '&#128752;', basePrice: 800,       baseCPS: 3,     priceMultiplier: 1.18 },
-        { id: 'colony',   name: 'Марсианская колония',    icon: '&#127964;', basePrice: 5000,      baseCPS: 12,    priceMultiplier: 1.18 },
-        { id: 'fleet',    name: 'Звёздный флот',          icon: '&#128640;', basePrice: 35000,     baseCPS: 60,    priceMultiplier: 1.18 },
-        { id: 'dyson',    name: 'Сфера Дайсона',          icon: '&#9728;',   basePrice: 250000,    baseCPS: 300,   priceMultiplier: 1.18 },
-        { id: 'portal',   name: 'Квантовый портал',       icon: '&#127744;', basePrice: 2000000,   baseCPS: 1800,  priceMultiplier: 1.18 },
-        { id: 'galaxy',   name: 'Галактическая империя',  icon: '&#127756;', basePrice: 20000000,  baseCPS: 10000, priceMultiplier: 1.18 },
-        { id: 'universe', name: 'Мультивселенная',         icon: '&#128171;', basePrice: 200000000, baseCPS: 60000, priceMultiplier: 1.18 }
+        { id: 'factory',  name: 'Космофабрика',          icon: '&#127981;', basePrice: 50,        baseCPS: 0.5,   priceMultiplier: 1.15 },
+        { id: 'station',  name: 'Орбитальная станция',    icon: '&#128752;', basePrice: 300,       baseCPS: 3,     priceMultiplier: 1.15 },
+        { id: 'colony',   name: 'Марсианская колония',    icon: '&#127964;', basePrice: 2000,      baseCPS: 15,    priceMultiplier: 1.15 },
+        { id: 'fleet',    name: 'Звёздный флот',          icon: '&#128640;', basePrice: 15000,     baseCPS: 80,    priceMultiplier: 1.15 },
+        { id: 'dyson',    name: 'Сфера Дайсона',          icon: '&#9728;',   basePrice: 120000,    baseCPS: 450,   priceMultiplier: 1.15 },
+        { id: 'portal',   name: 'Квантовый портал',       icon: '&#127744;', basePrice: 1000000,   baseCPS: 2700,  priceMultiplier: 1.15 },
+        { id: 'galaxy',   name: 'Галактическая империя',  icon: '&#127756;', basePrice: 10000000,  baseCPS: 16000, priceMultiplier: 1.15 },
+        { id: 'universe', name: 'Мультивселенная',         icon: '&#128171;', basePrice: 100000000, baseCPS: 100000,priceMultiplier: 1.15 }
     ];
 
-    // Click upgrades — rebalanced + new ones
+    // Click upgrades (now multi-purchasable)
     const clickUpgradeTypes = [
-        { id: 'click1', name: 'Лучшая перчатка',     icon: '&#129508;',  basePrice: 200,      power: 1,     priceMultiplier: 2.0 },
-        { id: 'click2', name: 'Усилитель клика',      icon: '&#9889;',    basePrice: 1500,     power: 5,     priceMultiplier: 2.0 },
-        { id: 'click3', name: 'Кибернетическая рука', icon: '&#129470;',  basePrice: 8000,     power: 20,    priceMultiplier: 2.0 },
-        { id: 'click4', name: 'Нано-перчатки',        icon: '&#10024;',   basePrice: 40000,    power: 80,    priceMultiplier: 2.0 },
-        { id: 'click5', name: 'Квантовый усилитель',  icon: '&#128171;',  basePrice: 200000,   power: 350,   priceMultiplier: 2.0 },
-        { id: 'click6', name: 'Божественная сила',    icon: '&#128081;',  basePrice: 1000000,  power: 1500,  priceMultiplier: 2.0 },
-        { id: 'click7', name: 'Тёмная материя',       icon: '&#127761;',  basePrice: 5000000,  power: 6000,  priceMultiplier: 2.2 },
-        { id: 'click8', name: 'Палец бога',           icon: '&#9996;',    basePrice: 30000000, power: 25000, priceMultiplier: 2.2 },
-        { id: 'click9', name: 'Сила Большого Взрыва', icon: '&#128165;',  basePrice: 200000000,power: 100000,priceMultiplier: 2.5 }
+        { id: 'click1', name: 'Лучшая перчатка',     icon: '&#129508;',  basePrice: 100,    power: 1,    priceMultiplier: 1.8 },
+        { id: 'click2', name: 'Усилитель клика',      icon: '&#9889;',    basePrice: 500,    power: 5,    priceMultiplier: 1.8 },
+        { id: 'click3', name: 'Кибернетическая рука', icon: '&#129470;',  basePrice: 2500,   power: 25,   priceMultiplier: 1.8 },
+        { id: 'click4', name: 'Нано-перчатки',        icon: '&#10024;',   basePrice: 10000,  power: 100,  priceMultiplier: 1.8 },
+        { id: 'click5', name: 'Квантовый усилитель',  icon: '&#128171;',  basePrice: 50000,  power: 500,  priceMultiplier: 1.8 },
+        { id: 'click6', name: 'Божественная сила',    icon: '&#128081;',  basePrice: 250000, power: 2500, priceMultiplier: 1.8 }
     ];
 
     // Achievements
@@ -779,18 +775,18 @@
         { id: 'gen50',      name: 'Империя машин',     desc: 'Иметь 50 генераторов',         icon: '&#9881;',   check: () => game.generators.reduce((s, g) => s + g.count, 0) >= 50 },
         { id: 'cps100',     name: 'Поток монет',       desc: 'Получать 100 монет/сек',       icon: '&#128168;', check: () => game.coinsPerSecond >= 100 },
         { id: 'cps10k',     name: 'Золотая река',      desc: 'Получать 10 000 монет/сек',    icon: '&#127754;', check: () => game.coinsPerSecond >= 10000 },
-        { id: 'prestige1',  name: 'Возрождение',       desc: 'Сделать первый престиж',       icon: '&#11088;',  check: () => (game.totalPrestiges || 0) >= 1 },
-        { id: 'prestige10', name: 'Повелитель времени', desc: 'Сделать 10 престижей',         icon: '&#128302;', check: () => (game.totalPrestiges || 0) >= 10 }
+        { id: 'prestige1',  name: 'Возрождение',       desc: 'Сделать первый престиж',       icon: '&#11088;',  check: () => (game.prestigePoints + game.prestigeSpent) >= 1 },
+        { id: 'prestige10', name: 'Повелитель времени', desc: 'Накопить 10 очков престижа',   icon: '&#128302;', check: () => (game.prestigePoints + game.prestigeSpent) >= 10 }
     ];
 
-    // Prestige upgrades — rebalanced (more expensive)
+    // Prestige upgrades (buyable with prestige points, multi-purchase)
     const prestigeUpgradeTypes = [
-        { id: 'p_click',   name: 'Космическая сила',    desc: 'x1.5 к силе клика',            icon: '&#128170;', baseCost: 2,  costMult: 4 },
-        { id: 'p_cps',     name: 'Ускоритель',          desc: 'x1.5 к доходу генераторов',     icon: '&#9889;',   baseCost: 3,  costMult: 4 },
-        { id: 'p_cheap',   name: 'Торговец',            desc: '-10% к ценам генераторов',       icon: '&#128176;', baseCost: 4,  costMult: 5 },
-        { id: 'p_auto',    name: 'Автокликер',          desc: '+1 авто-клик в секунду',        icon: '&#129302;', baseCost: 6,  costMult: 6 },
-        { id: 'p_start',   name: 'Стартовый капитал',   desc: '+500 монет после престижа',     icon: '&#127873;', baseCost: 3,  costMult: 3 },
-        { id: 'p_crit',    name: 'Критический удар',    desc: '5% шанс x3 клика',             icon: '&#128165;', baseCost: 5,  costMult: 6 }
+        { id: 'p_click',   name: 'Космическая сила',    desc: 'x2 к силе клика',             icon: '&#128170;', baseCost: 1,  costMult: 3 },
+        { id: 'p_cps',     name: 'Ускоритель',          desc: 'x2 к доходу генераторов',      icon: '&#9889;',   baseCost: 2,  costMult: 3 },
+        { id: 'p_cheap',   name: 'Торговец',            desc: '-15% к ценам генераторов',      icon: '&#128176;', baseCost: 3,  costMult: 4 },
+        { id: 'p_auto',    name: 'Автокликер',          desc: '+1 авто-клик в секунду',        icon: '&#129302;', baseCost: 5,  costMult: 5 },
+        { id: 'p_start',   name: 'Стартовый капитал',   desc: '+500 монет после престижа',     icon: '&#127873;', baseCost: 2,  costMult: 2 },
+        { id: 'p_crit',    name: 'Критический удар',    desc: '10% шанс x5 клика',            icon: '&#128165;', baseCost: 4,  costMult: 5 }
     ];
 
     // ==================== AUTH ====================
@@ -907,10 +903,10 @@
 
         // Critical hit check
         const critLevel = game.prestigeUpgrades['p_crit'] || 0;
-        const critChance = critLevel * 0.05;
+        const critChance = critLevel * 0.10;
         let isCrit = false;
         if (critChance > 0 && Math.random() < critChance) {
-            clickValue *= 3;
+            clickValue *= 5;
             isCrit = true;
         }
 
@@ -935,18 +931,18 @@
 
     function getClickValue() {
         const clickMultLevel = game.prestigeUpgrades['p_click'] || 0;
-        const clickMult = Math.pow(1.5, clickMultLevel);
-        return Math.floor(game.clickPower * clickMult);
+        const clickMult = Math.pow(2, clickMultLevel);
+        return game.clickPower * clickMult;
     }
 
     function getCPSMultiplier() {
         const cpsLevel = game.prestigeUpgrades['p_cps'] || 0;
-        return Math.pow(1.5, cpsLevel);
+        return Math.pow(2, cpsLevel);
     }
 
     function getPriceDiscount() {
         const cheapLevel = game.prestigeUpgrades['p_cheap'] || 0;
-        return Math.max(0.5, 1 - cheapLevel * 0.10);
+        return Math.max(0.2, 1 - cheapLevel * 0.15);
     }
 
     function getAutoClickRate() {
@@ -1049,14 +1045,8 @@
         }, 0);
     }
 
-    function getPrestigeCostCoins() {
-        const done = game.totalPrestiges || 0;
-        return Math.floor(1000000 * Math.pow(2.5, done));
-    }
-
     function getPrestigeGain() {
-        if (game.totalCoins >= getPrestigeCostCoins()) return 1;
-        return 0;
+        return Math.floor(Math.sqrt(game.totalCoins / 500000));
     }
 
     function doPrestige() {
@@ -1064,7 +1054,6 @@
         if (gain <= 0) return;
 
         game.prestigePoints += gain;
-        game.totalPrestiges = (game.totalPrestiges || 0) + 1;
         game.coins = getStartCoins();
         game.totalCoins = 0;
         game.totalClicks = 0;
@@ -1151,44 +1140,41 @@
         const totalPrestige = game.prestigePoints + game.prestigeSpent;
 
         let boostHTML = '';
-        const clickMult = Math.pow(1.5, game.prestigeUpgrades['p_click'] || 0);
+        const clickMult = Math.pow(2, game.prestigeUpgrades['p_click'] || 0);
         const cpsMult = getCPSMultiplier();
         const discount = Math.round((1 - getPriceDiscount()) * 100);
         const autoRate = getAutoClickRate();
         const startCoins = getStartCoins();
-        const critChance = (game.prestigeUpgrades['p_crit'] || 0) * 5;
+        const critChance = (game.prestigeUpgrades['p_crit'] || 0) * 10;
 
-        const prestigeCost = getPrestigeCostCoins();
-
-        if (totalPrestige > 0 || game.totalCoins >= prestigeCost * 0.5) {
+        if (totalPrestige > 0 || game.coins >= 500000) {
             boostHTML = '<div style="text-align:left; font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:12px;">';
-            if (clickMult > 1) boostHTML += 'Клик: x' + clickMult.toFixed(1) + '<br>';
-            if (cpsMult > 1) boostHTML += 'Доход: x' + cpsMult.toFixed(1) + '<br>';
+            if (clickMult > 1) boostHTML += 'Клик: x' + clickMult + '<br>';
+            if (cpsMult > 1) boostHTML += 'Доход: x' + cpsMult + '<br>';
             if (discount > 0) boostHTML += 'Скидка: -' + discount + '%<br>';
             if (autoRate > 0) boostHTML += 'Авто-клик: ' + autoRate + '/сек<br>';
             if (startCoins > 0) boostHTML += 'Старт: +' + formatNumber(startCoins) + ' монет<br>';
-            if (critChance > 0) boostHTML += 'Крит: ' + critChance + '% шанс x3<br>';
+            if (critChance > 0) boostHTML += 'Крит: ' + critChance + '% шанс x5<br>';
             boostHTML += '</div>';
         }
 
-        if (game.totalCoins >= prestigeCost * 0.5 || totalPrestige > 0) {
+        if (game.coins >= 500000 || totalPrestige > 0) {
             section.innerHTML = `
                 <div class="prestige-section">
                     <div class="prestige-title">Престиж</div>
                     <div class="prestige-desc">
-                        Перезапусти империю и получи 1 очко престижа!<br>
-                        Очки можно потратить на бусты.<br>
-                        Очков: <strong>${game.prestigePoints}</strong> | Престижей: <strong>${game.totalPrestiges || 0}</strong><br>
-                        Цена: <strong>${formatNumber(prestigeCost)}</strong> монет
+                        Перезапусти империю и получи очки престижа!<br>
+                        Очки можно потратить на мощные бусты.<br>
+                        Доступно: <strong>${game.prestigePoints}</strong> | Получишь: <strong>+${gain}</strong>
                     </div>
                     ${boostHTML}
                     <button class="prestige-btn" onclick="doPrestige()" ${gain === 0 ? 'disabled' : ''}>
-                        Престиж ${gain > 0 ? '(+1 очко)' : '(нужно ' + formatNumber(prestigeCost) + ')'}
+                        Престиж ${gain > 0 ? '(+' + gain + ')' : '(нужно 500K монет)'}
                     </button>
                 </div>
             `;
         } else {
-            section.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.4); padding:20px;">Накопи ' + formatNumber(prestigeCost) + ' монет для престижа</div>';
+            section.innerHTML = '<div style="text-align:center; color:rgba(255,255,255,0.4); padding:20px;">Накопи 500 000 монет для первого престижа</div>';
         }
     }
 
@@ -1286,7 +1272,7 @@
         document.getElementById('coins').textContent = formatNumber(Math.floor(game.coins));
         document.getElementById('perSecond').textContent = formatNumber(game.coinsPerSecond);
         document.getElementById('perClick').textContent = formatNumber(getClickValue());
-        document.getElementById('prestigePoints').textContent = game.totalPrestiges || 0;
+        document.getElementById('prestigePoints').textContent = game.prestigePoints;
 
         // Refresh buy button states
         const discount = getPriceDiscount();
@@ -1362,7 +1348,6 @@
                 clickPower: game.clickPower,
                 prestigePoints: game.prestigePoints,
                 prestigeSpent: game.prestigeSpent,
-                totalPrestiges: game.totalPrestiges || 0,
                 prestigeUpgrades: game.prestigeUpgrades || {},
                 playerName: game.playerName,
                 generators: game.generators.map(g => ({ id: g.id, count: g.count, currentPrice: g.currentPrice })),
@@ -1389,7 +1374,6 @@
             game.clickPower = saved.clickPower || 1;
             game.prestigePoints = saved.prestigePoints || 0;
             game.prestigeSpent = saved.prestigeSpent || 0;
-            game.totalPrestiges = saved.totalPrestiges || 0;
             game.prestigeUpgrades = saved.prestigeUpgrades || {};
             if (saved.playerName) game.playerName = saved.playerName;
 
@@ -1441,7 +1425,6 @@
                 clickPower: game.clickPower,
                 prestigePoints: game.prestigePoints,
                 prestigeSpent: game.prestigeSpent,
-                totalPrestiges: game.totalPrestiges || 0,
                 prestigeUpgrades: game.prestigeUpgrades,
                 playerName: game.playerName,
                 generators: game.generators.map(g => ({ id: g.id, count: g.count, currentPrice: g.currentPrice })),
@@ -1473,7 +1456,6 @@
             game.clickPower = saved.clickPower || 1;
             game.prestigePoints = saved.prestigePoints || 0;
             game.prestigeSpent = saved.prestigeSpent || 0;
-            game.totalPrestiges = saved.totalPrestiges || 0;
             game.prestigeUpgrades = saved.prestigeUpgrades || {};
             if (saved.playerName) game.playerName = saved.playerName;
 
@@ -1573,38 +1555,22 @@
             loading.classList.add('fade-out');
             setTimeout(async () => {
                 loading.style.display = 'none';
-
-                let needsUpdate = false;
-                try {
-                    needsUpdate = await checkForUpdate();
-                } catch (e) {
-                    console.warn('Update check error:', e);
-                }
+                const needsUpdate = await checkForUpdate();
                 if (needsUpdate) {
                     document.getElementById('updateScreen').style.display = 'flex';
                     return;
                 }
 
                 if (firebaseReady) {
-                    let authHandled = false;
                     auth.onAuthStateChanged(user => {
-                        if (authHandled) return;
-                        authHandled = true;
                         if (user && !currentUser) {
                             currentUser = user;
                             game.playerName = user.displayName || 'Игрок';
                             startGame();
-                        } else if (!user) {
+                        } else if (!user && !currentUser) {
                             document.getElementById('authScreen').style.display = 'flex';
                         }
                     });
-                    // Fallback: if onAuthStateChanged doesn't fire within 3s, show auth
-                    setTimeout(() => {
-                        if (!authHandled) {
-                            authHandled = true;
-                            document.getElementById('authScreen').style.display = 'flex';
-                        }
-                    }, 3000);
                 } else {
                     document.getElementById('authScreen').style.display = 'flex';
                 }
