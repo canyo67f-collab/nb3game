@@ -1,0 +1,3 @@
+# Hello World on NB3Lang
+print("Hello, World!")
+print("Welcome to NB3Lang!")

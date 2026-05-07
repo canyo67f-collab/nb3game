@@ -1,0 +1,5 @@
+# Calculator - the example from the user
+a = input("Enter first number: ")
+b = input("Enter second number: ")
+c = a + b
+print(a + " + " + b + " = " + c)

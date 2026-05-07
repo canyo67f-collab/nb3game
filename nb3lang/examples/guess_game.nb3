@@ -1,0 +1,16 @@
+# Guess the Number Game
+secret = randint(1, 100)
+attempts = 0
+print("I picked a number from 1 to 100. Try to guess!")
+
+while true:
+    guess = input("Your guess: ")
+    attempts += 1
+
+    if guess == secret:
+        print("Correct! You guessed in " + attempts + " attempts!")
+        break
+    elif guess < secret:
+        print("Too low! Try again.")
+    else:
+        print("Too high! Try again.")
