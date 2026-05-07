@@ -1,0 +1,25 @@
+# Lists and loops in NB3Lang
+
+scores = [100, 250, 75, 300, 150]
+print("Scores: " + scores)
+
+# Find the best score
+best = 0
+for s in scores:
+    if s > best:
+        best = s
+print("Best score: " + best)
+
+# Add a new score
+scores.append(400)
+print("After adding 400: " + scores)
+
+# Sort
+scores.sort()
+print("Sorted: " + scores)
+
+# Use range
+print("Countdown:")
+for i in range(5, 0, -1):
+    print(i + "...")
+print("Go!")

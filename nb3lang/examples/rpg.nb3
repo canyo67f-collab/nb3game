@@ -1,0 +1,40 @@
+# Simple RPG Combat - NB3Lang game example
+
+player_hp = 100
+player_atk = 15
+enemy_hp = 80
+enemy_atk = 10
+enemy_name = "Goblin"
+
+print("=== RPG BATTLE ===")
+print("You vs " + enemy_name)
+print("")
+
+round_num = 1
+while player_hp > 0 and enemy_hp > 0:
+    print("--- Round " + round_num + " ---")
+    print("Your HP: " + player_hp + " | " + enemy_name + " HP: " + enemy_hp)
+
+    # Player attacks
+    dmg = randint(player_atk - 5, player_atk + 5)
+    enemy_hp -= dmg
+    print("You deal " + dmg + " damage!")
+
+    if enemy_hp <= 0:
+        print("")
+        print("You defeated the " + enemy_name + "!")
+        print("Victory in " + round_num + " rounds!")
+        break
+
+    # Enemy attacks
+    dmg = randint(enemy_atk - 3, enemy_atk + 3)
+    player_hp -= dmg
+    print(enemy_name + " deals " + dmg + " damage!")
+
+    if player_hp <= 0:
+        print("")
+        print("You were defeated by the " + enemy_name + "...")
+        break
+
+    round_num += 1
+    print("")
