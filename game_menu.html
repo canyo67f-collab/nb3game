@@ -76,10 +76,35 @@
 
         .main-content {
             flex: 1;
-            padding: 32px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-width: 0;
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .home-screen {
+            padding: 32px;
+        }
+
+        .home-screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .inventory-screen.active {
+            display: flex;
+            flex-direction: column;
         }
 
         .player-info {
@@ -329,18 +354,9 @@
             font-size: 12px;
         }
 
-        /* ── Inventory overlay ───────────────────────── */
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(8, 6, 16, 0.92);
-            display: none;
-            flex-direction: column;
-            z-index: 30;
-        }
-
-        .overlay.active {
-            display: flex;
+        /* ── Inventory screen ───────────────────────── */
+        .inventory-screen {
+            background: linear-gradient(135deg, #2d2540 0%, #1a1625 100%);
         }
 
         .overlay-header {
@@ -381,25 +397,6 @@
             color: #fff;
             background: linear-gradient(135deg, rgba(229, 57, 53, 0.85) 0%, rgba(198, 40, 40, 0.85) 100%);
             box-shadow: 0 2px 8px rgba(229, 57, 53, 0.3);
-        }
-
-        .overlay-close {
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.8);
-            width: 38px;
-            height: 38px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .overlay-close:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
         }
 
         .overlay-body {
@@ -751,6 +748,7 @@
         </div>
 
         <div class="main-content">
+            <div class="screen home-screen active" id="homeScreen">
             <div class="player-info">
                 <div class="player-avatar">D</div>
 
@@ -823,11 +821,9 @@
 
                 <button class="play-button">Играть</button>
             </div>
-        </div>
-    </div>
+            </div>
 
-    <!-- Inventory / Shop overlay -->
-    <div class="overlay" id="inventoryOverlay">
+            <div class="screen inventory-screen" id="inventoryScreen">
         <div class="overlay-header">
             <div class="overlay-tabs">
                 <button class="overlay-tab active" data-panel="inventory">Инвентарь</button>
@@ -839,7 +835,6 @@
                     <span class="currency-icon">C</span>
                     <span class="currency-value" id="silverValueOverlay">1000</span>
                 </div>
-                <button class="overlay-close" id="overlayClose" title="Закрыть">✕</button>
             </div>
         </div>
         <div class="overlay-body">
@@ -866,6 +861,8 @@
                     </svg>
                     <div>Рынок в разработке</div>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -959,8 +956,9 @@
             return SKIN_POOL[SKIN_POOL.length - 1];
         }
 
-        // ── Menu / overlay navigation ───────────────────────────
-        const overlay = document.getElementById('inventoryOverlay');
+        // ── Menu / screen navigation ────────────────────────────
+        const homeScreen = document.getElementById('homeScreen');
+        const inventoryScreen = document.getElementById('inventoryScreen');
         const overlayTabs = document.querySelectorAll('.overlay-tab');
         const panelInventory = document.getElementById('panelInventory');
         const panelShop = document.getElementById('panelShop');
@@ -973,17 +971,11 @@
 
                 const screen = this.dataset.screen;
                 if (screen === 'inventory') {
-                    openOverlay('inventory');
+                    showInventory('inventory');
                 } else if (screen === 'home') {
-                    closeOverlay();
+                    showHome();
                 }
             });
-        });
-
-        document.getElementById('overlayClose').addEventListener('click', () => {
-            closeOverlay();
-            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
-            document.querySelector('.menu-btn[data-screen="home"]').classList.add('active');
         });
 
         overlayTabs.forEach(tab => {
@@ -997,8 +989,9 @@
             });
         });
 
-        function openOverlay(initialTab) {
-            overlay.classList.add('active');
+        function showInventory(initialTab) {
+            homeScreen.classList.remove('active');
+            inventoryScreen.classList.add('active');
             renderInventory();
             renderShop();
             updateSilverDisplay();
@@ -1012,8 +1005,9 @@
             }
         }
 
-        function closeOverlay() {
-            overlay.classList.remove('active');
+        function showHome() {
+            inventoryScreen.classList.remove('active');
+            homeScreen.classList.add('active');
         }
 
         // ── Rendering: inventory & shop grids ───────────────────
