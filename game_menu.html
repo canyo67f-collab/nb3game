@@ -1155,6 +1155,93 @@
             font-size: 12px;
         }
 
+        /* Hide PC-only lock hint on touch devices */
+        .is-touch .lock-hint .pc-only { display: none; }
+        .is-touch .lock-hint .touch-only { display: block; }
+        .lock-hint .touch-only { display: none; }
+
+        /* ── Mobile touch controls ───────────────────── */
+        .mobile-controls {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: none;
+        }
+        .is-touch .mobile-controls { display: block; }
+
+        .joystick {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(8, 6, 16, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .joystick.left { left: 20px; bottom: 90px; }
+        .joystick.right { right: 20px; bottom: 90px; }
+
+        .joystick .stick {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .action-btn {
+            position: absolute;
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            background: rgba(8, 6, 16, 0.55);
+            color: #fff;
+            font: 700 14px/1 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
+        .action-btn.fire {
+            right: 175px;
+            bottom: 170px;
+            width: 92px;
+            height: 92px;
+            background: rgba(220, 60, 50, 0.55);
+            border-color: rgba(255, 120, 110, 0.55);
+            font-size: 15px;
+        }
+        .action-btn.jump {
+            right: 30px;
+            bottom: 250px;
+        }
+        .action-btn.reload {
+            right: 120px;
+            bottom: 260px;
+            width: 60px;
+            height: 60px;
+            font-size: 13px;
+        }
+        .action-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .action-btn.fire:active {
+            background: rgba(220, 60, 50, 0.85);
+        }
+
         /* ── Results screen ─────────────────────────── */
         .results-screen {
             position: fixed;
@@ -1465,8 +1552,17 @@
 
             <div class="lock-hint" id="lockHint">
                 <h3>Нажмите чтобы начать</h3>
-                <div>WASD — движение · Мышь — обзор · ЛКМ — стрелять · R — перезарядка · Space — прыжок · Shift — присесть · ESC — выход</div>
-                <small>Захват курсора (Pointer Lock)</small>
+                <div class="pc-only">WASD — движение · Мышь — обзор · ЛКМ — стрелять · R — перезарядка · Space — прыжок · Shift — присесть · ESC — выход</div>
+                <div class="touch-only">Левый стик — движение · Правый стик — обзор · Огонь / Прыжок / R — кнопки справа</div>
+                <small class="pc-only">Захват курсора (Pointer Lock)</small>
+            </div>
+
+            <div class="mobile-controls" id="mobileControls">
+                <div class="joystick left" id="joyMove"><div class="stick" id="joyMoveStick"></div></div>
+                <div class="joystick right" id="joyLook"><div class="stick" id="joyLookStick"></div></div>
+                <button class="action-btn fire" id="btnFire">Огонь</button>
+                <button class="action-btn jump" id="btnJump">Прыжок</button>
+                <button class="action-btn reload" id="btnReload">R</button>
             </div>
         </div>
     </div>
@@ -2034,8 +2130,27 @@
             spawnsRed: [],
             killsLog: [],
             me: null,
-            settings: null
+            settings: null,
+            // Touch / unified input
+            touch: {
+                move: { x: 0, y: 0 },
+                look: { x: 0, y: 0 },
+                fire: false,
+                jumpQueued: false
+            },
+            // Viewmodel (first-person weapon attached to camera)
+            viewmodel: null,
+            viewmodelKick: 0,
+            viewmodelBob: 0,
+            muzzleFlash: null,
+            muzzleFlashUntil: 0
         };
+
+        const IS_TOUCH = (typeof window !== 'undefined') && (
+            ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)
+        );
+        if (IS_TOUCH) document.body.classList.add('is-touch');
 
         const PLAYER_HEIGHT = 1.7;
         const PLAYER_RADIUS = 0.35;
@@ -2188,8 +2303,118 @@
             G.scene.add(new THREE.AmbientLight(0xffffff, 0.25));
 
             buildArena();
+            buildViewmodel();
 
             window.addEventListener('resize', onWindowResize);
+        }
+
+        // First-person viewmodel: a small weapon attached to the camera
+        function buildViewmodel() {
+            // Remove previous viewmodel if rebuilding (e.g. weapon changed)
+            if (G.viewmodel) {
+                G.camera.remove(G.viewmodel);
+                G.viewmodel = null;
+                G.muzzleFlash = null;
+            }
+            const wpKey = (G.me && G.me.weaponKey) || 'pistol';
+            const isHeavy = ['akr', 'm4', 'fnfal'].includes(wpKey);
+            const isSmg = ['p90', 'ump45', 'tec9'].includes(wpKey);
+
+            const root = new THREE.Group();
+            const matGun = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.45, metalness: 0.6 });
+            const matAccent = new THREE.MeshStandardMaterial({ color: 0x444452, roughness: 0.5, metalness: 0.4 });
+            const matGrip = new THREE.MeshStandardMaterial({ color: 0x0e0e14, roughness: 0.85, metalness: 0.05 });
+            const matHand = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.8, metalness: 0.0 });
+
+            // Body (longer for rifles)
+            const bodyLen = isHeavy ? 0.55 : (isSmg ? 0.42 : 0.32);
+            const bodyH = isHeavy ? 0.08 : 0.07;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, bodyH, bodyLen), matGun);
+            body.position.set(0, 0, -bodyLen / 2 - 0.05);
+            root.add(body);
+
+            // Barrel
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 10), matAccent);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.set(0, 0.005, -bodyLen - 0.09);
+            root.add(barrel);
+
+            // Sight rail
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, bodyLen * 0.6), matAccent);
+            rail.position.set(0, bodyH / 2 + 0.012, -bodyLen / 2 - 0.05);
+            root.add(rail);
+
+            // Magazine (for full-auto)
+            if (isHeavy || isSmg) {
+                const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.07), matAccent);
+                mag.position.set(0, -0.10, -bodyLen / 2);
+                root.add(mag);
+            }
+
+            // Grip
+            const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.06), matGrip);
+            grip.position.set(0, -0.10, -0.05);
+            grip.rotation.x = 0.25;
+            root.add(grip);
+
+            // Hands
+            const handGeom = new THREE.SphereGeometry(0.045, 10, 8);
+            const handR = new THREE.Mesh(handGeom, matHand);
+            handR.position.set(0, -0.16, -0.05);
+            root.add(handR);
+            const handL = new THREE.Mesh(handGeom, matHand);
+            handL.position.set(-0.02, -0.05, -bodyLen + 0.02);
+            root.add(handL);
+
+            // Muzzle flash (hidden by default) — bright cross
+            const flashMat = new THREE.MeshBasicMaterial({ color: 0xffe39a, transparent: true, opacity: 0, depthWrite: false });
+            const flash = new THREE.Group();
+            const f1 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.18), flashMat);
+            const f2 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.18), flashMat);
+            f2.rotation.z = Math.PI / 4;
+            flash.add(f1); flash.add(f2);
+            flash.position.set(0, 0.01, -bodyLen - 0.20);
+            flash.visible = false;
+            root.add(flash);
+            G.muzzleFlash = flash;
+            G.muzzleFlashMat = flashMat;
+
+            // Position viewmodel relative to camera (right-hand, down-forward)
+            root.position.set(0.18, -0.18, -0.30);
+            root.rotation.y = -0.06;
+            root.renderOrder = 1000;
+            // Disable depth test issues — render the viewmodel above scene
+            root.traverse(o => {
+                if (o.isMesh) {
+                    o.renderOrder = 1000;
+                    if (o.material && o.material !== flashMat) {
+                        o.material.depthTest = true;
+                    }
+                }
+            });
+            G.camera.add(root);
+            G.scene.add(G.camera);
+            G.viewmodel = root;
+            G.viewmodelBasePos = root.position.clone();
+            G.viewmodelKick = 0;
+        }
+
+        // Animate humanoid mesh based on movement velocity
+        function animateHumanoid(pl, tMs) {
+            if (!pl.parts) return;
+            const speed = Math.hypot(pl.vel.x, pl.vel.z);
+            const moving = speed > 0.3;
+            const t = tMs * 0.001;
+            const stride = moving ? Math.sin(t * 8) * Math.min(1, speed / 5.0) * 0.7 : 0;
+            pl.parts.legL.rotation.x =  stride;
+            pl.parts.legR.rotation.x = -stride;
+            pl.parts.bootL.position.z = 0.05 + stride * 0.25;
+            pl.parts.bootR.position.z = 0.05 - stride * 0.25;
+            // Subtle arm sway opposite to legs
+            pl.parts.shoulderL.rotation.x = -stride * 0.25;
+            pl.parts.shoulderR.rotation.x =  stride * 0.25;
+            // Head bob
+            pl.parts.head.position.y = 1.58 + (moving ? Math.abs(Math.sin(t * 8)) * 0.025 : 0);
         }
 
         function onWindowResize() {
@@ -2277,38 +2502,117 @@
             });
         }
 
+        function rebuildLocalViewmodel() {
+            if (!G.scene || !G.camera) return;
+            buildViewmodel();
+        }
+
         function buildPlayerMeshes() {
-            const blueMat = new THREE.MeshStandardMaterial({ color: 0x4a8cff, roughness: 0.6, metalness: 0.1 });
-            const redMat = new THREE.MeshStandardMaterial({ color: 0xff5a3c, roughness: 0.6, metalness: 0.1 });
+            const blueShirt = new THREE.MeshStandardMaterial({ color: 0x3068c8, roughness: 0.7, metalness: 0.05 });
+            const redShirt = new THREE.MeshStandardMaterial({ color: 0xc8402c, roughness: 0.7, metalness: 0.05 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1f2030, roughness: 0.85, metalness: 0.05 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.75, metalness: 0.0 });
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.4 });
+            const bootMat = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.9, metalness: 0.05 });
+            const gunMat = new THREE.MeshStandardMaterial({ color: 0x18181f, roughness: 0.5, metalness: 0.5 });
+
             G.players.forEach(pl => {
                 if (pl.isLocal) {
-                    pl.mesh = null; // local is just camera
+                    pl.mesh = null; // local is just camera + viewmodel
                     return;
                 }
-                // Body capsule
-                const geom = new THREE.CapsuleGeometry(PLAYER_RADIUS, 1.0, 6, 12);
-                const m = new THREE.Mesh(geom, pl.team === 'blue' ? blueMat : redMat);
-                m.castShadow = true;
-                m.receiveShadow = false;
-                m.position.set(0, PLAYER_HEIGHT / 2, 0);
-                // Add head
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 12, 8),
-                    new THREE.MeshStandardMaterial({ color: 0xd0c2a0 }));
-                head.position.set(0, 0.85, 0);
+                const shirtMat = pl.team === 'blue' ? blueShirt : redShirt;
+
+                // Root group whose origin is at the FEET. PLAYER_HEIGHT total.
+                const root = new THREE.Group();
+                root.castShadow = true;
+
+                // Legs (two boxes side-by-side, 0.0 .. 0.85)
+                const legGeom = new THREE.BoxGeometry(0.18, 0.85, 0.22);
+                const legL = new THREE.Mesh(legGeom, pantsMat);
+                const legR = new THREE.Mesh(legGeom, pantsMat);
+                legL.position.set(-0.12, 0.425, 0);
+                legR.position.set( 0.12, 0.425, 0);
+                legL.castShadow = legR.castShadow = true;
+                root.add(legL); root.add(legR);
+
+                // Boots
+                const bootGeom = new THREE.BoxGeometry(0.22, 0.10, 0.32);
+                const bootL = new THREE.Mesh(bootGeom, bootMat);
+                const bootR = new THREE.Mesh(bootGeom, bootMat);
+                bootL.position.set(-0.12, 0.05, 0.05);
+                bootR.position.set( 0.12, 0.05, 0.05);
+                bootL.castShadow = bootR.castShadow = true;
+                root.add(bootL); root.add(bootR);
+
+                // Torso (0.85 .. 1.40)
+                const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.55, 0.28), shirtMat);
+                torso.position.set(0, 1.125, 0);
+                torso.castShadow = true;
+                root.add(torso);
+
+                // Neck (small)
+                const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.08, 8), skinMat);
+                neck.position.set(0, 1.44, 0);
+                neck.castShadow = true;
+                root.add(neck);
+
+                // Head (sphere centered at 1.58)
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skinMat);
+                head.position.set(0, 1.58, 0);
                 head.castShadow = true;
-                m.add(head);
-                // Gun in hand (simple box)
-                const gun = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.55),
-                    new THREE.MeshStandardMaterial({ color: 0x202028 }));
-                gun.position.set(0.25, 0.15, -0.25);
-                m.add(gun);
-                pl.mesh = m;
-                G.scene.add(m);
+                root.add(head);
+
+                // Eyes
+                const eyeGeom = new THREE.SphereGeometry(0.025, 8, 6);
+                const eyeL = new THREE.Mesh(eyeGeom, eyeMat);
+                const eyeR = new THREE.Mesh(eyeGeom, eyeMat);
+                eyeL.position.set(-0.05, 1.60, 0.14);
+                eyeR.position.set( 0.05, 1.60, 0.14);
+                root.add(eyeL); root.add(eyeR);
+
+                // Arms: shoulder joints + upper arms angled forward to grip gun
+                const armGeom = new THREE.BoxGeometry(0.13, 0.50, 0.16);
+                const armL = new THREE.Mesh(armGeom, shirtMat);
+                const armR = new THREE.Mesh(armGeom, shirtMat);
+                armL.castShadow = armR.castShadow = true;
+
+                const shoulderL = new THREE.Group();
+                const shoulderR = new THREE.Group();
+                shoulderL.position.set(-0.30, 1.36, 0);
+                shoulderR.position.set( 0.30, 1.36, 0);
+                armL.position.set(0, -0.20, 0.05);
+                armR.position.set(0, -0.20, 0.05);
+                armL.rotation.x = -0.6;
+                armR.rotation.x = -0.6;
+                shoulderL.add(armL); shoulderR.add(armR);
+                root.add(shoulderL); root.add(shoulderR);
+
+                // Hands at end of arms
+                const handGeom = new THREE.SphereGeometry(0.08, 10, 8);
+                const handL = new THREE.Mesh(handGeom, skinMat);
+                const handR = new THREE.Mesh(handGeom, skinMat);
+                handL.position.set(0, -0.42, 0.32);
+                handR.position.set(0, -0.42, 0.32);
+                shoulderL.add(handL); shoulderR.add(handR);
+
+                // Gun held forward at chest height
+                const gun = new THREE.Group();
+                const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.10, 0.55), gunMat);
+                const gunGrip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.08), gunMat);
+                gunGrip.position.set(0, -0.10, 0.08);
+                gun.add(gunBody); gun.add(gunGrip);
+                gun.position.set(0.08, 1.18, 0.42);
+                root.add(gun);
+
+                pl.mesh = root;
+                pl.parts = { legL, legR, bootL, bootR, shoulderL, shoulderR, head, gun };
+                G.scene.add(root);
 
                 // Nameplate sprite
                 pl.nameSprite = makeNameSprite(pl.nick, pl.team);
-                pl.nameSprite.position.set(0, 1.55, 0);
-                m.add(pl.nameSprite);
+                pl.nameSprite.position.set(0, 2.05, 0);
+                root.add(pl.nameSprite);
             });
         }
 
@@ -2365,8 +2669,7 @@
                 updateCameraRotation();
             } else if (pl.mesh) {
                 pl.mesh.visible = true;
-                pl.mesh.position.copy(pl.pos);
-                pl.mesh.position.y = pl.pos.y - PLAYER_HEIGHT / 2;
+                pl.mesh.position.set(pl.pos.x, pl.pos.y - PLAYER_HEIGHT, pl.pos.z);
                 pl.mesh.rotation.y = pl.yaw;
             }
         }
@@ -2407,6 +2710,7 @@
 
         document.addEventListener('mousedown', e => {
             if (!G.running) return;
+            if (IS_TOUCH) return; // touch handled via buttons
             if (!G.pointerLocked) {
                 G.canvas.requestPointerLock();
                 return;
@@ -2416,9 +2720,10 @@
             }
         });
 
-        // Auto-fire when holding LMB
+        // Auto-fire when holding LMB (desktop only)
         let autoFireHandle = null;
         document.addEventListener('mousedown', e => {
+            if (IS_TOUCH) return;
             if (e.button !== 0 || !G.pointerLocked) return;
             if (autoFireHandle) clearInterval(autoFireHandle);
             autoFireHandle = setInterval(() => {
@@ -2433,6 +2738,113 @@
             if (e.button !== 0) return;
             if (autoFireHandle) clearInterval(autoFireHandle);
             autoFireHandle = null;
+        });
+
+        // ─── Touch input: joysticks + buttons ─────────────────────
+        function initJoystick(baseId, stickId, onChange) {
+            const base = document.getElementById(baseId);
+            const stick = document.getElementById(stickId);
+            if (!base || !stick) return;
+            let activeId = null;
+            let cx = 0, cy = 0;
+            const maxR = 50;
+            function setStick(dx, dy) {
+                const len = Math.hypot(dx, dy);
+                let nx = dx, ny = dy;
+                if (len > maxR) { nx = dx * maxR / len; ny = dy * maxR / len; }
+                stick.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+                onChange(nx / maxR, ny / maxR);
+            }
+            function reset() {
+                stick.style.transform = 'translate(-50%, -50%)';
+                onChange(0, 0);
+            }
+            base.addEventListener('touchstart', e => {
+                e.preventDefault();
+                if (activeId !== null) return;
+                const t0 = e.changedTouches[0];
+                activeId = t0.identifier;
+                const r = base.getBoundingClientRect();
+                cx = r.left + r.width / 2;
+                cy = r.top + r.height / 2;
+                setStick(t0.clientX - cx, t0.clientY - cy);
+            }, { passive: false });
+            window.addEventListener('touchmove', e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier !== activeId) continue;
+                    setStick(t.clientX - cx, t.clientY - cy);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            const endHandler = e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        activeId = null;
+                        reset();
+                    }
+                }
+            };
+            window.addEventListener('touchend', endHandler);
+            window.addEventListener('touchcancel', endHandler);
+        }
+
+        function initActionBtn(id, onDown, onUp) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let activeId = null;
+            el.addEventListener('touchstart', e => {
+                e.preventDefault();
+                if (activeId !== null) return;
+                activeId = e.changedTouches[0].identifier;
+                onDown && onDown();
+            }, { passive: false });
+            const endHandler = e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        activeId = null;
+                        onUp && onUp();
+                    }
+                }
+            };
+            el.addEventListener('touchend', endHandler);
+            el.addEventListener('touchcancel', endHandler);
+            // Mouse fallback for desktop testing of the touch UI
+            el.addEventListener('mousedown', e => { e.preventDefault(); onDown && onDown(); });
+            el.addEventListener('mouseup',   e => { e.preventDefault(); onUp && onUp(); });
+            el.addEventListener('mouseleave', e => { onUp && onUp(); });
+        }
+
+        if (IS_TOUCH || true) {
+            // Wire joysticks/buttons. They are hidden via CSS unless body.is-touch.
+            initJoystick('joyMove', 'joyMoveStick', (x, y) => { G.touch.move.x = x; G.touch.move.y = y; });
+            initJoystick('joyLook', 'joyLookStick', (x, y) => { G.touch.look.x = x; G.touch.look.y = y; });
+            initActionBtn('btnFire',
+                () => {
+                    if (!G.running) return;
+                    G.touch.fire = true;
+                    tryShoot(getLocalPlayer2(), true);
+                },
+                () => { G.touch.fire = false; }
+            );
+            initActionBtn('btnJump', () => { if (G.running) G.touch.jumpQueued = true; });
+            initActionBtn('btnReload', () => { if (G.running) tryReload(getLocalPlayer2()); });
+        }
+
+        // Hide lock hint when touch UI starts a match (no pointer lock on mobile)
+        function dismissLockHint() {
+            if (G.lockHint) G.lockHint.style.display = 'none';
+        }
+        document.addEventListener('touchstart', () => {
+            if (G.running && IS_TOUCH) dismissLockHint();
+        });
+        // On touch devices, tapping the lock hint just dismisses it
+        document.addEventListener('click', e => {
+            if (!G.running || !IS_TOUCH) return;
+            const lh = document.getElementById('lockHint');
+            if (lh && lh.contains(e.target)) dismissLockHint();
         });
 
         document.addEventListener('pointerlockchange', () => {
@@ -2464,6 +2876,14 @@
                 G.pitch += wp.recoil * (0.6 + Math.random() * 0.6);
                 if (G.pitch > Math.PI / 2 - 0.05) G.pitch = Math.PI / 2 - 0.05;
                 updateCameraRotation();
+                // Viewmodel kick + muzzle flash
+                G.viewmodelKick = Math.min(1.2, (G.viewmodelKick || 0) + 1);
+                if (G.muzzleFlash) {
+                    G.muzzleFlash.visible = true;
+                    G.muzzleFlash.rotation.z = Math.random() * Math.PI * 2;
+                    if (G.muzzleFlashMat) G.muzzleFlashMat.opacity = 1.0;
+                    G.muzzleFlashUntil = now + 55;
+                }
             } else {
                 origin = shooter.pos.clone();
                 origin.y = shooter.pos.y - 0.1;
@@ -2820,6 +3240,17 @@
                 endMatch();
             }
 
+            // Touch look — apply continuous yaw/pitch from right-stick offset
+            if (IS_TOUCH && (G.touch.look.x !== 0 || G.touch.look.y !== 0)) {
+                const lookSens = 2.6;
+                G.yaw -= G.touch.look.x * lookSens * dt;
+                G.pitch -= G.touch.look.y * lookSens * dt;
+                const lim = Math.PI / 2 - 0.05;
+                if (G.pitch > lim) G.pitch = lim;
+                if (G.pitch < -lim) G.pitch = -lim;
+                updateCameraRotation();
+            }
+
             // Update local player
             const me = getLocalPlayer2();
             if (me) {
@@ -2827,8 +3258,13 @@
                 if (me.alive) {
                     me.yaw = G.yaw;
                     me.pitch = G.pitch;
-                    const inputFwd = (G.keys['KeyW'] ? 1 : 0) - (G.keys['KeyS'] ? 1 : 0);
-                    const inputRight = (G.keys['KeyD'] ? 1 : 0) - (G.keys['KeyA'] ? 1 : 0);
+                    const kFwd   = (G.keys['KeyW'] ? 1 : 0) - (G.keys['KeyS'] ? 1 : 0);
+                    const kRight = (G.keys['KeyD'] ? 1 : 0) - (G.keys['KeyA'] ? 1 : 0);
+                    // Left stick: y up = forward (so invert), x right = strafe right
+                    let inputFwd   = kFwd   + (IS_TOUCH ? -G.touch.move.y : 0);
+                    let inputRight = kRight + (IS_TOUCH ? G.touch.move.x : 0);
+                    if (inputFwd > 1) inputFwd = 1; if (inputFwd < -1) inputFwd = -1;
+                    if (inputRight > 1) inputRight = 1; if (inputRight < -1) inputRight = -1;
                     const sprint = !!G.keys['ShiftLeft'] || !!G.keys['ShiftRight'];
                     me.crouching = !!G.keys['ControlLeft'];
                     const speed = me.crouching ? CROUCH_SPEED : (sprint ? SPRINT_SPEED : MOVE_SPEED);
@@ -2840,16 +3276,52 @@
                     if (mv.lengthSq() > 0) mv.normalize();
                     me.vel.x = mv.x * speed;
                     me.vel.z = mv.z * speed;
-                    if (G.keys['Space'] && me.onGround) {
+                    const wantJump = G.keys['Space'] || G.touch.jumpQueued;
+                    if (wantJump && me.onGround) {
                         me.vel.y = JUMP_SPEED;
                         me.onGround = false;
                     }
+                    G.touch.jumpQueued = false;
                     moveAndCollide(me, dt);
                     G.camera.position.copy(me.pos);
+                    // Touch auto-fire while fire button held
+                    if (IS_TOUCH && G.touch.fire) {
+                        const wp = WEAPONS[me.weaponKey];
+                        if (wp.full || (now - (me.lastShotAt || 0) > 60000 / wp.rpm)) {
+                            tryShoot(me, false);
+                        }
+                    }
                 } else {
                     // Dead — wait for respawn
                     if (now >= me.respawnAt) {
                         spawnPlayer(me, false);
+                    }
+                }
+            }
+
+            // Viewmodel animation: recoil kick decay + muzzle flash fade + walk bob
+            if (G.viewmodel && G.viewmodelBasePos) {
+                const kick = G.viewmodelKick || 0;
+                const decay = Math.max(0, kick - dt * 6);
+                G.viewmodelKick = decay;
+                const mePos = me ? me.pos : null;
+                const speed2 = mePos ? Math.hypot(me.vel.x, me.vel.z) : 0;
+                const bobAmp = Math.min(1, speed2 / 5.0) * 0.012;
+                const bobY = Math.sin(t * 0.012) * bobAmp;
+                const bobX = Math.cos(t * 0.006) * bobAmp * 0.5;
+                G.viewmodel.position.set(
+                    G.viewmodelBasePos.x + bobX,
+                    G.viewmodelBasePos.y + bobY,
+                    G.viewmodelBasePos.z + kick * 0.08
+                );
+                G.viewmodel.rotation.x = -kick * 0.20;
+                if (G.muzzleFlash) {
+                    if (now >= G.muzzleFlashUntil) {
+                        G.muzzleFlash.visible = false;
+                        if (G.muzzleFlashMat) G.muzzleFlashMat.opacity = 0;
+                    } else if (G.muzzleFlashMat) {
+                        const remain = (G.muzzleFlashUntil - now) / 55;
+                        G.muzzleFlashMat.opacity = Math.max(0, remain);
                     }
                 }
             }
@@ -2862,8 +3334,9 @@
                     botThink(pl, dt, now);
                     moveAndCollide(pl, dt);
                     if (pl.mesh) {
-                        pl.mesh.position.set(pl.pos.x, pl.pos.y - PLAYER_HEIGHT / 2, pl.pos.z);
+                        pl.mesh.position.set(pl.pos.x, pl.pos.y - PLAYER_HEIGHT, pl.pos.z);
                         pl.mesh.rotation.y = pl.yaw;
+                        animateHumanoid(pl, t);
                     }
                 } else {
                     if (now >= pl.respawnAt) {
