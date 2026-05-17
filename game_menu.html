@@ -1140,6 +1140,7 @@
             text-align: center;
             pointer-events: auto;
             cursor: pointer;
+            display: none;
         }
 
         .lock-hint h3 {
@@ -1330,6 +1331,191 @@
         }
 
         .results-back:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4); }
+
+        /* ── Menu 3D character canvas ─────────────── */
+        .menu-char-canvas {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+        .menu-char-canvas:active { cursor: grabbing; }
+
+        /* ── Auth & nickname modals ───────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 6, 16, 0.78);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 800;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: linear-gradient(180deg, #1f1f28 0%, #14141c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 16px;
+            padding: 32px 36px;
+            min-width: 360px;
+            max-width: 460px;
+            color: #fff;
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.55);
+            text-align: center;
+        }
+        .modal-card h2 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .modal-card p.sub {
+            margin: 0 0 22px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+        .modal-card label {
+            display: block;
+            text-align: left;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            margin: 14px 4px 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .modal-card input[type="text"], .modal-card input[type="email"] {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+        }
+        .modal-card input:focus {
+            border-color: rgba(255, 152, 0, 0.6);
+            background: rgba(255,255,255,0.07);
+        }
+        .modal-card .err {
+            color: #ef6e6e;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 16px;
+            text-align: left;
+        }
+        .modal-card .btn-primary {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .modal-card .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255, 152, 0, 0.35); }
+        .modal-card .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-google {
+            margin-top: 16px;
+            width: 100%;
+            padding: 13px 14px;
+            background: #fff;
+            color: #3c4043;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: inherit;
+        }
+        .btn-google:hover { background: #f7f8fa; }
+        .btn-google svg { width: 20px; height: 20px; flex: 0 0 20px; }
+        .modal-card .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0 0;
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .modal-card .divider::before, .modal-card .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.10);
+        }
+
+        /* ── Pause menu (ESC during match) ───────── */
+        .pause-menu {
+            position: absolute;
+            inset: 0;
+            background: rgba(8, 6, 16, 0.72);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 220;
+        }
+        .pause-menu.active { display: flex; }
+        .pause-card {
+            background: linear-gradient(180deg, rgba(31,31,40,0.96) 0%, rgba(20,20,28,0.96) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 18px;
+            padding: 32px 30px;
+            min-width: 320px;
+            color: #fff;
+            text-align: center;
+            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+        }
+        .pause-card h2 {
+            margin: 0 0 22px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ffd58a;
+        }
+        .pause-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .pause-btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.18); }
+        .pause-btn.primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-color: transparent;
+        }
+        .pause-btn.danger {
+            background: linear-gradient(135deg, #c62828 0%, #a01818 100%);
+            border-color: transparent;
+        }
     </style>
 </head>
 <body>
@@ -1364,7 +1550,7 @@
 
                 <div class="player-details">
                     <div class="player-header">
-                        <span class="player-name">[CLAN] Danil</span>
+                        <span class="player-name" id="playerName">Danil</span>
                         <div class="player-level">
                             <span class="icon-trophy"></span>27
                         </div>
@@ -1392,32 +1578,11 @@
                 <div class="character-container">
                     <div class="character-frame">
                         <div class="character-glow"></div>
-
-                        <svg class="character-svg" width="140" height="180" viewBox="0 0 140 180">
-                            <ellipse cx="70" cy="25" rx="18" ry="24" fill="#D4A574" opacity="0.9"/>
-
-                            <circle cx="65" cy="20" r="3" fill="#2C2C2A"/>
-                            <circle cx="75" cy="20" r="3" fill="#2C2C2A"/>
-
-                            <rect x="50" y="45" width="40" height="70" rx="8" fill="#FF7043" opacity="0.95"/>
-                            <rect x="52" y="48" width="36" height="20" rx="4" fill="#E64A19" opacity="0.6"/>
-
-                            <rect x="35" y="50" width="15" height="50" rx="6" fill="#FF7043" opacity="0.9"/>
-                            <rect x="90" y="50" width="15" height="50" rx="6" fill="#FF7043" opacity="0.9"/>
-
-                            <rect x="30" y="95" width="20" height="8" rx="4" fill="#5D4E37" opacity="0.8"/>
-                            <rect x="90" y="95" width="20" height="8" rx="4" fill="#5D4E37" opacity="0.8"/>
-
-                            <rect x="55" y="115" width="14" height="60" rx="6" fill="#78909C" opacity="0.9"/>
-                            <rect x="71" y="115" width="14" height="60" rx="6" fill="#78909C" opacity="0.9"/>
-
-                            <rect x="52" y="170" width="18" height="10" rx="4" fill="#5D4E37" opacity="0.85"/>
-                            <rect x="70" y="170" width="18" height="10" rx="4" fill="#5D4E37" opacity="0.85"/>
-                        </svg>
+                        <canvas id="menuCharCanvas" class="menu-char-canvas" width="280" height="420"></canvas>
                     </div>
 
                     <div class="character-info">
-                        <span class="character-name">Danil</span>
+                        <span class="character-name" id="characterName">Danil</span>
                         <div class="character-level">27</div>
                     </div>
                 </div>
@@ -1564,6 +1729,45 @@
                 <button class="action-btn jump" id="btnJump">Прыжок</button>
                 <button class="action-btn reload" id="btnReload">R</button>
             </div>
+
+            <!-- Pause menu (ESC during match) -->
+            <div class="pause-menu" id="pauseMenu">
+                <div class="pause-card">
+                    <h2>Пауза</h2>
+                    <button class="pause-btn primary" id="pauseContinue">Продолжить игру</button>
+                    <button class="pause-btn" id="pauseSettings">Настройки</button>
+                    <button class="pause-btn danger" id="pauseExit">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth modal: shown on first launch (no saved email/nick) -->
+    <div class="modal-overlay" id="authOverlay">
+        <div class="modal-card">
+            <h2>Добро пожаловать</h2>
+            <p class="sub">Войдите, чтобы продолжить</p>
+            <button class="btn-google" id="googleSignIn">
+                <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.4l-6.5-5.5C29.6 34.6 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.5C41.4 35.6 44 30.2 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+                Войти через Google
+            </button>
+            <div class="divider">или</div>
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" placeholder="you@gmail.com" autocomplete="email">
+            <div class="err" id="authErr"></div>
+            <button class="btn-primary" id="authSubmit">Продолжить</button>
+        </div>
+    </div>
+
+    <!-- Nickname prompt: shown after registration if no nickname saved yet -->
+    <div class="modal-overlay" id="nickOverlay">
+        <div class="modal-card">
+            <h2>Введите ник</h2>
+            <p class="sub">Так вас будут видеть в матчах</p>
+            <label for="nickInput">Никнейм</label>
+            <input type="text" id="nickInput" placeholder="Ваш ник" maxlength="20" autocomplete="off">
+            <div class="err" id="nickErr"></div>
+            <button class="btn-primary" id="nickSubmit">Сохранить</button>
         </div>
     </div>
 
@@ -1588,7 +1792,7 @@
         const SKIN_POOL = [
             { id: 'p90_jungle',      name: 'P90 "JUNGLE"',      rarity: 'common',    weight: 60, img: 'assets/p90_jungle.png' },
             { id: 'akr_worm',        name: 'AKR "WORM"',        rarity: 'uncommon',  weight: 25, img: 'assets/akr_worm.png' },
-            { id: 'ump45_cerberus',  name: 'UMP45 "CERBERUS"',  rarity: 'epic',      weight: 8,  img: 'assets/ump45_cerberus.png' },
+            { id: 'ump45_cerberus',  name: 'UMP45',             rarity: 'epic',      weight: 8,  img: 'assets/ump45_cerberus.png' },
             { id: 'usp_pisces',      name: 'USP "PISCES"',      rarity: 'epic',      weight: 8,  img: 'assets/usp_pisces.png' },
             { id: 'fnfal_tactical',  name: 'FNFAL "TACTICAL"',  rarity: 'epic',      weight: 8,  img: 'assets/fnfal_tactical.png' },
             { id: 'm4_lizard',       name: 'M4 "LIZARD"',       rarity: 'legendary', weight: 3,  img: 'assets/m4_lizard.png' },
@@ -1947,18 +2151,101 @@
         // ─────────────────────────────────────────────────────────────
         //                       PLAYER IDENTITY
         // ─────────────────────────────────────────────────────────────
+        function loadAccount() {
+            try { return JSON.parse(localStorage.getItem('nb3_data')) || {}; } catch (e) { return {}; }
+        }
+        function saveAccount(patch) {
+            const cur = loadAccount();
+            const next = Object.assign(cur, patch);
+            try { localStorage.setItem('nb3_data', JSON.stringify(next)); } catch (e) {}
+            return next;
+        }
         function getLocalPlayer() {
-            let data = {};
-            try { data = JSON.parse(localStorage.getItem('nb3_data')) || {}; } catch (e) {}
+            let data = loadAccount();
             if (!data.guestId) {
                 data.guestId = 'g_' + Math.random().toString(36).slice(2, 9);
-                try { localStorage.setItem('nb3_data', JSON.stringify(data)); } catch (e) {}
+                saveAccount({ guestId: data.guestId });
             }
+            const id = (data.email || data.login || data.guestId).replace(/[.#$\[\]\/]/g, '_');
             return {
-                id: (data.login || data.guestId).replace(/[.#$\[\]\/]/g, '_'),
+                id,
                 nick: data.nickname || data.login || 'Гость-' + data.guestId.slice(-4)
             };
         }
+        function refreshMenuIdentity() {
+            const acc = loadAccount();
+            const nick = acc.nickname || acc.login || (acc.guestId ? 'Гость-' + acc.guestId.slice(-4) : 'Игрок');
+            const nameEl = document.getElementById('playerName');
+            if (nameEl) nameEl.textContent = nick;
+            const charNameEl = document.getElementById('characterName');
+            if (charNameEl) charNameEl.textContent = nick;
+            const avatarEl = document.querySelector('.player-avatar');
+            if (avatarEl) avatarEl.textContent = (nick.charAt(0) || '?').toUpperCase();
+        }
+
+        // ── Auth + nickname modals ───────────────────────────────
+        const authOverlay = document.getElementById('authOverlay');
+        const nickOverlay = document.getElementById('nickOverlay');
+        function openAuthIfNeeded() {
+            const acc = loadAccount();
+            if (acc.email || acc.login) {
+                if (!acc.nickname) openNickPrompt();
+                return;
+            }
+            authOverlay.classList.add('active');
+            setTimeout(() => { const e = document.getElementById('authEmail'); if (e) e.focus(); }, 60);
+        }
+        function openNickPrompt() {
+            const acc = loadAccount();
+            const input = document.getElementById('nickInput');
+            if (input) input.value = acc.nickname || '';
+            nickOverlay.classList.add('active');
+            setTimeout(() => { if (input) input.focus(); }, 60);
+        }
+        function finishAuth(email, login) {
+            saveAccount({ email: email || null, login: login || null });
+            authOverlay.classList.remove('active');
+            const acc = loadAccount();
+            refreshMenuIdentity();
+            if (!acc.nickname) openNickPrompt();
+        }
+        function submitAuthFromForm() {
+            const e = document.getElementById('authEmail');
+            const err = document.getElementById('authErr');
+            const v = (e.value || '').trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+                err.textContent = 'Введите корректный email';
+                return;
+            }
+            err.textContent = '';
+            finishAuth(v, null);
+        }
+        function submitNick() {
+            const e = document.getElementById('nickInput');
+            const err = document.getElementById('nickErr');
+            const v = (e.value || '').trim();
+            if (v.length < 2) { err.textContent = 'Минимум 2 символа'; return; }
+            if (v.length > 20) { err.textContent = 'Максимум 20 символов'; return; }
+            err.textContent = '';
+            saveAccount({ nickname: v });
+            nickOverlay.classList.remove('active');
+            refreshMenuIdentity();
+        }
+        document.getElementById('authSubmit').addEventListener('click', submitAuthFromForm);
+        document.getElementById('authEmail').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuthFromForm(); });
+        document.getElementById('nickSubmit').addEventListener('click', submitNick);
+        document.getElementById('nickInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitNick(); });
+        document.getElementById('googleSignIn').addEventListener('click', () => {
+            // Honest stub: real Google OAuth requires a backend with a Client ID.
+            // We approximate it: prefill the email field and let the user edit/confirm.
+            // To enable real Google Sign-In, integrate Google Identity Services with a client_id
+            // (https://developers.google.com/identity/gsi/web) and call finishAuth(email) on credential.
+            const e = document.getElementById('authEmail');
+            if (e && !e.value) e.value = 'you@gmail.com';
+            if (e) e.focus();
+            const err = document.getElementById('authErr');
+            err.textContent = 'Введите ваш Google email и нажмите «Продолжить».';
+        });
 
         // ─────────────────────────────────────────────────────────────
         //                       MATCHMAKING
@@ -2157,6 +2444,7 @@
         const GRAVITY = 18;
         const JUMP_SPEED = 7.0;
         const MOVE_SPEED = 5.4;
+        const INFINITE_RESERVE = 999;
         const CROUCH_SPEED = 2.8;
         const SPRINT_SPEED = 7.4;
         const MAX_HP = 100;
@@ -2165,7 +2453,7 @@
             pistol:  { name: 'Pistol',           dmg: 22, rpm: 360, range: 60, spread: 0.018, mag: 12, reserve: 48, reload: 1.2, recoil: 0.003, full: false },
             p90:     { name: 'P90 "JUNGLE"',     dmg: 17, rpm: 850, range: 55, spread: 0.030, mag: 50, reserve: 100, reload: 2.4, recoil: 0.0025, full: true },
             akr:     { name: 'AKR "WORM"',       dmg: 28, rpm: 600, range: 80, spread: 0.025, mag: 30, reserve: 90, reload: 2.6, recoil: 0.0045, full: true },
-            ump45:   { name: 'UMP45 "CERBERUS"', dmg: 24, rpm: 600, range: 60, spread: 0.024, mag: 25, reserve: 75, reload: 2.5, recoil: 0.0035, full: true },
+            ump45:   { name: 'UMP45',            dmg: 24, rpm: 600, range: 60, spread: 0.024, mag: 25, reserve: 75, reload: 2.5, recoil: 0.0035, full: true },
             usp:     { name: 'USP "PISCES"',     dmg: 30, rpm: 280, range: 70, spread: 0.012, mag: 12, reserve: 48, reload: 1.4, recoil: 0.004, full: false },
             fnfal:   { name: 'FNFAL "TACTICAL"', dmg: 38, rpm: 520, range: 90, spread: 0.022, mag: 20, reserve: 60, reload: 2.8, recoil: 0.006, full: true },
             m4:      { name: 'M4 "LIZARD"',      dmg: 26, rpm: 720, range: 80, spread: 0.022, mag: 30, reserve: 90, reload: 2.4, recoil: 0.0035, full: true },
@@ -2245,8 +2533,9 @@
 
             G.players.forEach(pl => {
                 const wp = WEAPONS[pl.weaponKey];
-                pl.ammo = wp.mag;
-                pl.reserve = wp.reserve;
+                // Override per user request: every match always starts with 25/999 (999 = infinite)
+                pl.ammo = Math.min(25, wp.mag);
+                pl.reserve = INFINITE_RESERVE;
             });
 
             initThreeScene();
@@ -2257,7 +2546,9 @@
 
             matchScreen.classList.add('active');
             G.lockHint = document.getElementById('lockHint');
-            G.lockHint.style.display = 'block';
+            // Per user request: do not show the initial lock-hint banner.
+            // ESC opens the pause menu instead.
+            if (G.lockHint) G.lockHint.style.display = 'none';
             G.canvas.focus();
 
             updateHud();
@@ -2397,6 +2688,153 @@
             G.viewmodel = root;
             G.viewmodelBasePos = root.position.clone();
             G.viewmodelKick = 0;
+        }
+
+        // Build a small held-gun group used for non-local players (parented to the right shoulder).
+        // Matches the viewmodel's design (body + barrel + sight rail + magazine + grip) at a slightly
+        // smaller scale so the other players' weapon looks as polished as the local viewmodel.
+        function buildHeldGun(fallbackMat) {
+            const root = new THREE.Group();
+            const matGun = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.45, metalness: 0.6 });
+            const matAccent = new THREE.MeshStandardMaterial({ color: 0x444452, roughness: 0.5, metalness: 0.4 });
+            const matGrip = new THREE.MeshStandardMaterial({ color: 0x0e0e14, roughness: 0.85, metalness: 0.05 });
+
+            const bodyLen = 0.40;
+            const bodyH = 0.07;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, bodyH, bodyLen), matGun);
+            body.position.set(0, 0, -bodyLen / 2 - 0.03);
+            root.add(body);
+
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 10), matAccent);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.set(0, 0.005, -bodyLen - 0.07);
+            root.add(barrel);
+
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, bodyLen * 0.6), matAccent);
+            rail.position.set(0, bodyH / 2 + 0.012, -bodyLen / 2 - 0.03);
+            root.add(rail);
+
+            const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.06), matAccent);
+            mag.position.set(0, -0.09, -bodyLen / 2);
+            root.add(mag);
+
+            const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.06), matGrip);
+            grip.position.set(0, -0.09, -0.03);
+            grip.rotation.x = 0.25;
+            root.add(grip);
+
+            root.traverse(o => { if (o.isMesh) o.castShadow = true; });
+            return root;
+        }
+
+        // ─── Menu 3D character ───────────────────────────────────
+        // Rotating humanoid on the home-screen frame. Replaces the static SVG.
+        const Menu3D = {
+            renderer: null, scene: null, camera: null, root: null,
+            rafId: 0, autoRot: true, dragging: false, lastX: 0, yaw: 0
+        };
+        function initMenuCharacter() {
+            const canvas = document.getElementById('menuCharCanvas');
+            if (!canvas || typeof THREE === 'undefined') return;
+            try {
+                Menu3D.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            } catch (e) { return; }
+            const w = canvas.clientWidth || 280, h = canvas.clientHeight || 420;
+            Menu3D.renderer.setPixelRatio(window.devicePixelRatio || 1);
+            Menu3D.renderer.setSize(w, h, false);
+            Menu3D.scene = new THREE.Scene();
+            Menu3D.camera = new THREE.PerspectiveCamera(28, w / h, 0.1, 50);
+            Menu3D.camera.position.set(0, 1.1, 4.4);
+            Menu3D.camera.lookAt(0, 1.0, 0);
+
+            const amb = new THREE.AmbientLight(0xffffff, 0.55);
+            const dir = new THREE.DirectionalLight(0xffe2b3, 0.9);
+            dir.position.set(3, 5, 4);
+            const rim = new THREE.DirectionalLight(0xff8a4a, 0.45);
+            rim.position.set(-3, 2, -2);
+            Menu3D.scene.add(amb); Menu3D.scene.add(dir); Menu3D.scene.add(rim);
+
+            // Floor disc as visual anchor
+            const disc = new THREE.Mesh(
+                new THREE.CircleGeometry(0.9, 32),
+                new THREE.MeshStandardMaterial({ color: 0x1a1620, roughness: 1.0 })
+            );
+            disc.rotation.x = -Math.PI / 2;
+            disc.position.y = 0.0;
+            Menu3D.scene.add(disc);
+
+            // Character group
+            const root = new THREE.Group();
+            const shirt = new THREE.MeshStandardMaterial({ color: 0xff7043, roughness: 0.7, metalness: 0.05 });
+            const pants = new THREE.MeshStandardMaterial({ color: 0x2c3038, roughness: 0.85, metalness: 0.05 });
+            const skin = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.75, metalness: 0 });
+            const eyes = new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.4 });
+            const boots = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.9, metalness: 0.05 });
+
+            const legGeom = new THREE.BoxGeometry(0.18, 0.85, 0.22);
+            const legL = new THREE.Mesh(legGeom, pants); legL.position.set(-0.12, 0.425, 0); root.add(legL);
+            const legR = new THREE.Mesh(legGeom, pants); legR.position.set( 0.12, 0.425, 0); root.add(legR);
+            const bootGeom = new THREE.BoxGeometry(0.22, 0.10, 0.32);
+            root.add(Object.assign(new THREE.Mesh(bootGeom, boots), { position: new THREE.Vector3(-0.12, 0.05, 0.05) }));
+            root.add(Object.assign(new THREE.Mesh(bootGeom, boots), { position: new THREE.Vector3( 0.12, 0.05, 0.05) }));
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.55, 0.28), shirt);
+            torso.position.set(0, 1.125, 0); root.add(torso);
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.08, 8), skin);
+            neck.position.set(0, 1.44, 0); root.add(neck);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
+            head.position.set(0, 1.58, 0); root.add(head);
+            const eyeGeom = new THREE.SphereGeometry(0.025, 8, 6);
+            root.add(Object.assign(new THREE.Mesh(eyeGeom, eyes), { position: new THREE.Vector3(-0.05, 1.60, 0.14) }));
+            root.add(Object.assign(new THREE.Mesh(eyeGeom, eyes), { position: new THREE.Vector3( 0.05, 1.60, 0.14) }));
+            const armGeom = new THREE.BoxGeometry(0.13, 0.50, 0.16);
+            const sL = new THREE.Group(); sL.position.set(-0.30, 1.36, 0);
+            const sR = new THREE.Group(); sR.position.set( 0.30, 1.36, 0);
+            const aL = new THREE.Mesh(armGeom, shirt); aL.position.set(0, -0.20, 0.05); aL.rotation.x = -0.25; sL.add(aL);
+            const aR = new THREE.Mesh(armGeom, shirt); aR.position.set(0, -0.20, 0.05); aR.rotation.x = -0.25; sR.add(aR);
+            root.add(sL); root.add(sR);
+
+            root.position.y = 0;
+            Menu3D.root = root;
+            Menu3D.scene.add(root);
+
+            // Drag-to-rotate
+            const onDown = e => {
+                Menu3D.dragging = true;
+                Menu3D.autoRot = false;
+                Menu3D.lastX = (e.touches ? e.touches[0].clientX : e.clientX);
+            };
+            const onMove = e => {
+                if (!Menu3D.dragging) return;
+                const x = (e.touches ? e.touches[0].clientX : e.clientX);
+                Menu3D.yaw += (x - Menu3D.lastX) * 0.01;
+                Menu3D.lastX = x;
+            };
+            const onUp = () => { Menu3D.dragging = false; };
+            canvas.addEventListener('mousedown', onDown);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            canvas.addEventListener('touchstart', onDown, { passive: true });
+            canvas.addEventListener('touchmove', onMove, { passive: true });
+            canvas.addEventListener('touchend', onUp);
+
+            // Render loop
+            let last = performance.now();
+            function tick(t) {
+                Menu3D.rafId = requestAnimationFrame(tick);
+                const dt = Math.min(0.1, (t - last) / 1000); last = t;
+                if (Menu3D.autoRot && !Menu3D.dragging) Menu3D.yaw += dt * 0.55;
+                if (Menu3D.root) Menu3D.root.rotation.y = Menu3D.yaw;
+                Menu3D.renderer.render(Menu3D.scene, Menu3D.camera);
+            }
+            tick(performance.now());
+
+            // Stop spinning while in a match (saves perf) — match screen sits on top anyway
+            const obs = new MutationObserver(() => {
+                const inMatch = document.getElementById('matchScreen').classList.contains('active');
+                Menu3D.autoRot = !inMatch;
+            });
+            obs.observe(document.getElementById('matchScreen'), { attributes: true, attributeFilter: ['class'] });
         }
 
         // Animate humanoid mesh based on movement velocity
@@ -2589,21 +3027,20 @@
                 root.add(shoulderL); root.add(shoulderR);
 
                 // Hands at end of arms
-                const handGeom = new THREE.SphereGeometry(0.08, 10, 8);
+                const handGeom = new THREE.SphereGeometry(0.07, 10, 8);
                 const handL = new THREE.Mesh(handGeom, skinMat);
                 const handR = new THREE.Mesh(handGeom, skinMat);
                 handL.position.set(0, -0.42, 0.32);
                 handR.position.set(0, -0.42, 0.32);
                 shoulderL.add(handL); shoulderR.add(handR);
 
-                // Gun held forward at chest height
-                const gun = new THREE.Group();
-                const gunBody = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.10, 0.55), gunMat);
-                const gunGrip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.08), gunMat);
-                gunGrip.position.set(0, -0.10, 0.08);
-                gun.add(gunBody); gun.add(gunGrip);
-                gun.position.set(0.08, 1.18, 0.42);
-                root.add(gun);
+                // Gun in the RIGHT HAND (parented to right shoulder so it follows arm sway).
+                // Geometry mirrors the local viewmodel: body + barrel + sight rail + magazine + grip.
+                const gun = buildHeldGun(gunMat);
+                // Place it at the right hand: same offset as handR but slightly forward.
+                gun.position.set(0, -0.42, 0.36);
+                gun.rotation.x = 0.10;
+                shoulderR.add(gun);
 
                 pl.mesh = root;
                 pl.parts = { legL, legR, bootL, bootR, shoulderL, shoulderR, head, gun };
@@ -2655,8 +3092,8 @@
             pl.onGround = true;
             pl.reloading = false;
             const wp = WEAPONS[pl.weaponKey];
-            pl.ammo = wp.mag;
-            pl.reserve = wp.reserve;
+            pl.ammo = Math.min(25, wp.mag);
+            pl.reserve = INFINITE_RESERVE;
             // Face toward arena center
             const dx = -pl.pos.x;
             const dz = -pl.pos.z;
@@ -2685,11 +3122,14 @@
         // ─── Input ────────────────────────────────────────────────
         window.addEventListener('keydown', e => {
             if (!G.running) return;
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                togglePauseMenu();
+                return;
+            }
+            if (G.paused) return;
             G.keys[e.code] = true;
             if (e.code === 'KeyR') tryReload(getLocalPlayer2());
-            if (e.code === 'Escape') {
-                if (document.pointerLockElement) document.exitPointerLock();
-            }
         });
         window.addEventListener('keyup', e => { G.keys[e.code] = false; });
 
@@ -2849,8 +3289,67 @@
 
         document.addEventListener('pointerlockchange', () => {
             G.pointerLocked = document.pointerLockElement === G.canvas;
-            if (G.lockHint) G.lockHint.style.display = G.pointerLocked ? 'none' : 'block';
+            // Lock-hint banner is suppressed; pause menu replaces it.
+            if (G.lockHint) G.lockHint.style.display = 'none';
+            // If the user lost pointer lock unexpectedly while in-game, open the pause menu.
+            if (!G.pointerLocked && G.running && !G.paused && !IS_TOUCH) {
+                openPauseMenu();
+            }
         });
+
+        // ─── Pause menu (ESC) ──────────────────────────────────────
+        const pauseMenuEl = document.getElementById('pauseMenu');
+        function openPauseMenu() {
+            if (!G.running || G.paused) return;
+            G.paused = true;
+            G.keys = {};
+            G.touch.fire = false;
+            G.touch.move.x = 0; G.touch.move.y = 0;
+            G.touch.look.x = 0; G.touch.look.y = 0;
+            pauseMenuEl.classList.add('active');
+            if (document.pointerLockElement) document.exitPointerLock();
+        }
+        function closePauseMenu() {
+            if (!G.paused) return;
+            G.paused = false;
+            pauseMenuEl.classList.remove('active');
+            // Reset frame timing so dt doesn't jump after a long pause
+            G.lastTime = performance.now();
+            if (!IS_TOUCH && G.canvas) G.canvas.requestPointerLock();
+        }
+        function togglePauseMenu() {
+            if (G.paused) closePauseMenu(); else openPauseMenu();
+        }
+        document.getElementById('pauseContinue').addEventListener('click', closePauseMenu);
+        document.getElementById('pauseSettings').addEventListener('click', () => {
+            // Placeholder: settings screen not implemented yet (per user request).
+        });
+        document.getElementById('pauseExit').addEventListener('click', () => {
+            G.paused = false;
+            pauseMenuEl.classList.remove('active');
+            exitToMenu();
+        });
+        function exitToMenu() {
+            // Tear down the active match without showing the results screen.
+            G.running = false;
+            G.paused = false;
+            if (document.pointerLockElement) document.exitPointerLock();
+            matchScreen.classList.remove('active');
+            if (G.renderer) {
+                try { G.renderer.dispose(); } catch (e) {}
+                G.renderer = null;
+            }
+            G.scene = null;
+            G.players = [];
+            G.collidables = [];
+            // Make sure the home screen is selected.
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            const homeBtn = document.querySelector('.menu-btn[data-screen="home"]');
+            if (homeBtn) homeBtn.classList.add('active');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const home = document.getElementById('homeScreen');
+            if (home) home.classList.add('active');
+        }
 
         // ─── Shooting ─────────────────────────────────────────────
         function tryShoot(shooter, firstClick) {
@@ -2984,6 +3483,8 @@
 
         function applyDamage(shooter, target, dmg) {
             if (!target.alive) return;
+            // Friendly fire disabled: same-team shots deal no damage and don't credit anything.
+            if (shooter && shooter !== target && shooter.team === target.team) return;
             target.hp -= dmg;
             if (target.isLocal) {
                 flashDamage();
@@ -3042,7 +3543,8 @@
             const need = wp.mag - pl.ammo;
             const give = Math.min(need, pl.reserve);
             pl.ammo += give;
-            pl.reserve -= give;
+            // Infinite reserve: never decrement when at INFINITE_RESERVE sentinel
+            if (pl.reserve !== INFINITE_RESERVE) pl.reserve -= give;
             pl.reloading = false;
         }
 
@@ -3106,6 +3608,28 @@
                     pl.vel.z = 0;
                 }
             }
+            // Player↔player collision: cylinders in the XZ plane (resolve per-axis).
+            const minDist = PLAYER_RADIUS * 2;
+            for (const other of G.players) {
+                if (other === pl || !other.alive) continue;
+                const op = other.isLocal ? G.camera.position : other.pos;
+                // Vertical overlap check (skip if one is jumping over the other)
+                const aTop = top, aBot = bottom;
+                const bTop = op.y - 0.05, bBot = op.y - PLAYER_HEIGHT;
+                if (aTop < bBot || aBot > bTop) continue;
+                const dx = pl.pos.x - op.x;
+                const dz = pl.pos.z - op.z;
+                const d = Math.hypot(dx, dz);
+                if (d >= minDist || d < 1e-6) continue;
+                const push = minDist - d + 0.001;
+                if (axis === 'x') {
+                    pl.pos.x += (dx / d) * push;
+                    if ((pl.vel.x > 0 && dx < 0) || (pl.vel.x < 0 && dx > 0)) pl.vel.x = 0;
+                } else {
+                    pl.pos.z += (dz / d) * push;
+                    if ((pl.vel.z > 0 && dz < 0) || (pl.vel.z < 0 && dz > 0)) pl.vel.z = 0;
+                }
+            }
             // Outer arena
             const LIM = 29.4;
             if (pl.pos.x > LIM) { pl.pos.x = LIM; pl.vel.x = 0; }
@@ -3163,33 +3687,39 @@
             const toTgt = new THREE.Vector3().subVectors(tgtPos, pl.pos);
             toTgt.y = 0;
             const dist = toTgt.length();
-            toTgt.normalize();
-            // Face target
-            pl.yaw = Math.atan2(-toTgt.x, -toTgt.z) + Math.PI;
+            const tgtDir = toTgt.clone().normalize();
+            // Smoothly rotate yaw toward target (instead of snapping). This makes the
+            // "don't shoot from behind" rule actually matter: turning takes a moment.
+            const targetYaw = Math.atan2(-tgtDir.x, -tgtDir.z) + Math.PI;
+            const dyaw = ((targetYaw - pl.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+            const turnSpeed = 4.0; // rad/sec
+            pl.yaw += Math.max(-turnSpeed * dt, Math.min(turnSpeed * dt, dyaw));
             // Pitch toward target Y
             const dy = tgtPos.y - pl.pos.y + 0.4;
             const horiz = Math.hypot(tgtPos.x - pl.pos.x, tgtPos.z - pl.pos.z);
             pl.pitch = Math.atan2(dy, Math.max(horiz, 0.1)) * 0.6;
 
-            // LOS check
-            const seeTarget = hasLineOfSight(pl, pl.target);
-
-            // Movement: strafe / approach
-            const wp = WEAPONS[pl.weaponKey];
-            const idealDist = Math.min(wp.range * 0.55, 18);
-            let speed = MOVE_SPEED * 0.8;
+            // Forward vector based on current yaw (so a bot whose back is to the
+            // target has a NEGATIVE dot with tgtDir).
             const fwd = new THREE.Vector3(-Math.sin(pl.yaw), 0, -Math.cos(pl.yaw));
             const right = new THREE.Vector3(Math.cos(pl.yaw), 0, -Math.sin(pl.yaw));
 
+            // LOS + facing check: don't shoot when target is behind us or blocked.
+            const facing = fwd.dot(tgtDir); // 1 = perfectly facing target, -1 = back to target
+            const seeTarget = hasLineOfSight(pl, pl.target);
+            const canShoot = seeTarget && facing > 0.7; // ~45° forward cone
+
+            // Movement: strafe / approach + separation from other players (no clumping).
+            const wp = WEAPONS[pl.weaponKey];
+            const idealDist = Math.min(wp.range * 0.55, 18);
+            let speed = MOVE_SPEED * 0.8;
             let mv = new THREE.Vector3();
             if (seeTarget) {
                 if (dist > idealDist + 2) mv.add(fwd);
                 else if (dist < idealDist - 4) mv.sub(fwd);
-                // strafe
                 const strafe = (Math.sin(now * 0.002 + pl.id.length) > 0) ? 1 : -1;
                 mv.add(right.clone().multiplyScalar(strafe * 0.6));
             } else {
-                // Move toward wander point or target
                 let goal = pl.wanderTarget || tgtPos;
                 const to = new THREE.Vector3().subVectors(goal, pl.pos);
                 to.y = 0;
@@ -3197,12 +3727,31 @@
                 to.normalize();
                 mv.copy(to);
             }
+            // Separation: push away from any other player closer than SEP_RADIUS
+            const SEP_RADIUS = 1.6;
+            const sep = new THREE.Vector3();
+            for (const other of G.players) {
+                if (other === pl || !other.alive) continue;
+                const op = other.isLocal ? G.camera.position : other.pos;
+                const dx = pl.pos.x - op.x;
+                const dz = pl.pos.z - op.z;
+                const d2 = dx * dx + dz * dz;
+                if (d2 > SEP_RADIUS * SEP_RADIUS || d2 < 1e-6) continue;
+                const d = Math.sqrt(d2);
+                const w = (SEP_RADIUS - d) / SEP_RADIUS; // 0..1
+                sep.x += (dx / d) * w;
+                sep.z += (dz / d) * w;
+            }
+            if (sep.lengthSq() > 0) {
+                sep.normalize();
+                mv.add(sep.multiplyScalar(1.4));
+            }
             if (mv.lengthSq() > 0) mv.normalize();
             pl.vel.x = mv.x * speed;
             pl.vel.z = mv.z * speed;
 
-            // Shoot
-            if (seeTarget && dist < wp.range) {
+            // Shoot only when we can actually see the target AND we're facing it.
+            if (canShoot && dist < wp.range) {
                 if (pl.ammo === 0) tryReload(pl);
                 else tryShoot(pl, false);
             } else if (pl.ammo < wp.mag * 0.3 && pl.reserve > 0) {
@@ -3229,6 +3778,11 @@
         function gameLoop(t) {
             if (!G.running) return;
             requestAnimationFrame(gameLoop);
+            if (G.paused) {
+                G.lastTime = t;
+                if (G.renderer && G.scene && G.camera) G.renderer.render(G.scene, G.camera);
+                return;
+            }
             const dt = Math.min(0.05, (t - G.lastTime) / 1000);
             G.lastTime = t;
             const now = t;
@@ -3431,6 +3985,9 @@
 
         // Initial paint
         updateSilverDisplay();
+        refreshMenuIdentity();
+        openAuthIfNeeded();
+        if (typeof initMenuCharacter === 'function') initMenuCharacter();
     </script>
 </body>
 </html>
