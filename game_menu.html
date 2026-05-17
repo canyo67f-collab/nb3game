@@ -2775,8 +2775,8 @@
             const legL = new THREE.Mesh(legGeom, pants); legL.position.set(-0.12, 0.425, 0); root.add(legL);
             const legR = new THREE.Mesh(legGeom, pants); legR.position.set( 0.12, 0.425, 0); root.add(legR);
             const bootGeom = new THREE.BoxGeometry(0.22, 0.10, 0.32);
-            root.add(Object.assign(new THREE.Mesh(bootGeom, boots), { position: new THREE.Vector3(-0.12, 0.05, 0.05) }));
-            root.add(Object.assign(new THREE.Mesh(bootGeom, boots), { position: new THREE.Vector3( 0.12, 0.05, 0.05) }));
+            const bootL = new THREE.Mesh(bootGeom, boots); bootL.position.set(-0.12, 0.05, 0.05); root.add(bootL);
+            const bootR = new THREE.Mesh(bootGeom, boots); bootR.position.set( 0.12, 0.05, 0.05); root.add(bootR);
 
             const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.55, 0.28), shirt);
             torso.position.set(0, 1.125, 0); root.add(torso);
@@ -2785,8 +2785,8 @@
             const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
             head.position.set(0, 1.58, 0); root.add(head);
             const eyeGeom = new THREE.SphereGeometry(0.025, 8, 6);
-            root.add(Object.assign(new THREE.Mesh(eyeGeom, eyes), { position: new THREE.Vector3(-0.05, 1.60, 0.14) }));
-            root.add(Object.assign(new THREE.Mesh(eyeGeom, eyes), { position: new THREE.Vector3( 0.05, 1.60, 0.14) }));
+            const eyeL = new THREE.Mesh(eyeGeom, eyes); eyeL.position.set(-0.05, 1.60, 0.14); root.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeom, eyes); eyeR.position.set( 0.05, 1.60, 0.14); root.add(eyeR);
             const armGeom = new THREE.BoxGeometry(0.13, 0.50, 0.16);
             const sL = new THREE.Group(); sL.position.set(-0.30, 1.36, 0);
             const sR = new THREE.Group(); sR.position.set( 0.30, 1.36, 0);
