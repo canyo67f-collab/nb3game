@@ -2532,9 +2532,9 @@
             }));
 
             G.players.forEach(pl => {
-                const wp = WEAPONS[pl.weaponKey];
-                // Override per user request: every match always starts with 25/999 (999 = infinite)
-                pl.ammo = Math.min(25, wp.mag);
+                // Override per user request: every match always starts with 25/999 (999 = infinite).
+                // We load 25 rounds in the magazine regardless of the weapon's natural mag size.
+                pl.ammo = 25;
                 pl.reserve = INFINITE_RESERVE;
             });
 
@@ -3091,8 +3091,8 @@
             pl.alive = true;
             pl.onGround = true;
             pl.reloading = false;
-            const wp = WEAPONS[pl.weaponKey];
-            pl.ammo = Math.min(25, wp.mag);
+            // Always 25 in the mag, infinite reserve — same rule as at match start.
+            pl.ammo = 25;
             pl.reserve = INFINITE_RESERVE;
             // Face toward arena center
             const dx = -pl.pos.x;
