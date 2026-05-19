@@ -1,0 +1,4518 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>ColdLine</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d2540 0%, #1a1625 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        .left-panel {
+            width: 90px;
+            background: rgba(20, 16, 30, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 0;
+            gap: 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .menu-btn {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+        }
+
+        .menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .menu-btn:active {
+            transform: scale(0.95);
+        }
+
+        .menu-btn.active {
+            background: rgba(76, 175, 80, 0.15);
+            border-color: rgba(76, 175, 80, 0.4);
+            color: #4CAF50;
+        }
+
+        .menu-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .menu-btn.settings {
+            margin-top: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .home-screen {
+            padding: 32px;
+        }
+
+        .home-screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .inventory-screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .player-avatar {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.2) 0%, rgba(255, 87, 34, 0.2) 100%);
+            border: 2px solid rgba(255, 152, 0, 0.5);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            font-size: 20px;
+            color: #FFB74D;
+        }
+
+        .player-details {
+            flex: 1;
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .player-name {
+            font-size: 18px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .player-level {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.4);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #FFC107;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .xp-bar {
+            background: rgba(255, 255, 255, 0.08);
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .xp-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 65%;
+            background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+        }
+
+        .xp-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .currency-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .currency {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .currency-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .currency.silver .currency-icon {
+            background: linear-gradient(135deg, #d8d8d8 0%, #9a9a9a 100%);
+            color: #2b2b2b;
+        }
+
+        .currency.silver .currency-value {
+            color: #e8e8e8;
+        }
+
+        .character-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .character-container {
+            text-align: center;
+        }
+
+        .character-frame {
+            width: 280px;
+            height: 420px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(255, 152, 0, 0.08) 0%, transparent 70%);
+        }
+
+        .character-svg {
+            position: relative;
+            z-index: 1;
+        }
+
+        .character-info {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .character-name {
+            font-size: 15px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .character-level {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 152, 0, 0.15);
+            border: 1.5px solid rgba(255, 152, 0, 0.4);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: #FFB74D;
+        }
+
+        .bottom-controls {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .mode-selector {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 14px 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-selector:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .mode-text {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .play-button {
+            padding: 14px 48px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
+        }
+
+        .play-button:active {
+            transform: scale(0.95);
+        }
+
+        .icon-trophy::before {
+            content: "🏆";
+            margin-right: 4px;
+        }
+
+        .icon-chevron::before {
+            content: "▼";
+            font-size: 12px;
+        }
+
+        /* ── Inventory screen ───────────────────────── */
+        .inventory-screen {
+            background: linear-gradient(135deg, #2d2540 0%, #1a1625 100%);
+        }
+
+        .overlay-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            background: rgba(20, 16, 30, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .overlay-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .overlay-tab {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border: none;
+            padding: 10px 22px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .overlay-tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .overlay-tab.active {
+            color: #fff;
+            background: linear-gradient(135deg, rgba(229, 57, 53, 0.85) 0%, rgba(198, 40, 40, 0.85) 100%);
+            box-shadow: 0 2px 8px rgba(229, 57, 53, 0.3);
+        }
+
+        .overlay-body {
+            flex: 1;
+            overflow: auto;
+            padding: 24px 32px;
+        }
+
+        .panel {
+            display: none;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 16px;
+        }
+
+        .item-card {
+            position: relative;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 193, 7, 0.45);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+        }
+
+        .item-card .item-img-wrap {
+            background: linear-gradient(135deg, #3a2f54 0%, #261c3d 100%);
+            aspect-ratio: 16 / 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .item-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .item-meta {
+            padding: 10px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: rgba(15, 10, 25, 0.7);
+        }
+
+        .item-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .item-sub {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .item-price {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #e8e8e8;
+            font-weight: 700;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 14px;
+            padding: 80px 0;
+            gap: 8px;
+        }
+
+        .empty-state svg {
+            opacity: 0.45;
+            width: 56px;
+            height: 56px;
+        }
+
+        /* ── Item modal (buy / open) ────────────────── */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 24px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: linear-gradient(180deg, #2a1f44 0%, #1a1330 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            max-width: 420px;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .modal-card img {
+            width: 220px;
+            max-width: 100%;
+            border-radius: 10px;
+            margin: 0 auto 16px;
+            display: block;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 18px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.4px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            font-family: inherit;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 16px rgba(76, 175, 80, 0.45);
+        }
+
+        .btn-primary[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .price-line {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 14px;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* ── Box opening animation ──────────────────── */
+        .open-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, #2a1f44 0%, #0a0613 70%);
+            z-index: 60;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .open-screen.active {
+            display: flex;
+        }
+
+        .reel-window {
+            position: relative;
+            width: min(90vw, 720px);
+            height: 220px;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 40px rgba(255, 152, 0, 0.15);
+        }
+
+        .reel-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            display: flex;
+            gap: 4px;
+            will-change: transform;
+        }
+
+        .reel-item {
+            flex: 0 0 200px;
+            height: 100%;
+            background: linear-gradient(135deg, #3a2f54 0%, #261c3d 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+
+        .reel-item img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .reel-marker {
+            position: absolute;
+            top: -10px;
+            bottom: -10px;
+            left: 50%;
+            width: 3px;
+            background: #FFC107;
+            box-shadow: 0 0 12px #FFC107;
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+
+        .open-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFC107;
+            margin-bottom: 18px;
+            letter-spacing: 1px;
+            text-shadow: 0 0 14px rgba(255, 193, 7, 0.55);
+        }
+
+        .open-result {
+            margin-top: 24px;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .open-result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .open-result .rarity {
+            font-size: 13px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .open-result .name {
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .rarity-common    { color: #b0bec5; }
+        .rarity-uncommon  { color: #66bb6a; }
+        .rarity-epic      { color: #ba68c8; }
+        .rarity-legendary { color: #ffb74d; }
+
+        .open-actions {
+            margin-top: 22px;
+            display: flex;
+            gap: 12px;
+        }
+
+        /* ── Matchmaking screen ─────────────────────── */
+        .matchmaking-screen {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #1a1422 0%, #0a0810 100%);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            color: #fff;
+        }
+
+        .matchmaking-screen.active { display: flex; }
+
+        .mm-title {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .mm-mode {
+            font-size: 16px;
+            color: #b294ff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+
+        .mm-spinner {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #e53935;
+            animation: mmspin 1.2s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes mmspin {
+            to { transform: rotate(360deg); }
+        }
+
+        .mm-count {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .mm-count strong {
+            color: #ffd84a;
+            font-weight: 700;
+        }
+
+        .mm-elapsed {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            margin-bottom: 24px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .mm-slots {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-bottom: 32px;
+            min-width: 560px;
+        }
+
+        .mm-slot {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 13px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.55);
+            min-height: 56px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mm-slot.filled {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.18), rgba(56, 142, 60, 0.12));
+            border-color: rgba(76, 175, 80, 0.6);
+            color: #fff;
+        }
+
+        .mm-slot.bot {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.16), rgba(244, 81, 30, 0.10));
+            border-color: rgba(255, 152, 0, 0.55);
+            color: #ffd6a0;
+        }
+
+        .mm-slot .slot-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mm-cancel {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.85);
+            padding: 12px 32px;
+            border-radius: 10px;
+            font-size: 14px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: inherit;
+        }
+
+        .mm-cancel:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ── Match (game) screen ────────────────────── */
+        .match-screen {
+            position: fixed;
+            inset: 0;
+            background: #0a0a10;
+            display: none;
+            z-index: 300;
+        }
+
+        .match-screen.active { display: block; }
+
+        #gameCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .hud {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        .hud-top {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            background: rgba(8, 6, 16, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hud-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud-score .team-blue { color: #5cc6ff; }
+        .hud-score .team-red { color: #ff7757; }
+        .hud-score .sep { color: rgba(255, 255, 255, 0.4); font-size: 16px; }
+
+        .hud-timer {
+            font-variant-numeric: tabular-nums;
+            min-width: 64px;
+            text-align: center;
+            color: #ffd84a;
+        }
+
+        .hud-bottom-left {
+            position: absolute;
+            left: 24px;
+            bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .hud-hp {
+            background: rgba(8, 6, 16, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 16px;
+            min-width: 140px;
+        }
+
+        .hud-hp-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .hud-hp-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .hud-hp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            transition: width 0.2s ease;
+        }
+
+        .hud-hp-text {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .hud-bottom-right {
+            position: absolute;
+            right: 24px;
+            bottom: 22px;
+            background: rgba(8, 6, 16, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 10px 18px;
+            min-width: 140px;
+            text-align: right;
+        }
+
+        .hud-weapon {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .hud-ammo {
+            font-size: 28px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hud-ammo .reserve {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 18px;
+            font-weight: 500;
+            margin-left: 4px;
+        }
+
+        .hud-top-right {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 200px;
+        }
+
+        .hud-team-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(8, 6, 16, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .hud-team-row.dead {
+            opacity: 0.35;
+            text-decoration: line-through;
+        }
+
+        .hud-team-row.you {
+            border-color: rgba(255, 216, 74, 0.6);
+        }
+
+        .hud-team-row .name { flex: 1; }
+        .hud-team-row .kd { color: rgba(255, 255, 255, 0.7); font-variant-numeric: tabular-nums; }
+
+        .hud-team-blue .hud-team-row { border-left: 3px solid #5cc6ff; }
+        .hud-team-red .hud-team-row { border-left: 3px solid #ff7757; }
+
+        .hud-killfeed {
+            position: absolute;
+            top: 80px;
+            right: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .killfeed-row {
+            background: rgba(8, 6, 16, 0.6);
+            padding: 4px 10px;
+            border-radius: 4px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            opacity: 0;
+            animation: killfeed-in 0.2s ease forwards, killfeed-out 0.3s ease 4.5s forwards;
+        }
+
+        @keyframes killfeed-in {
+            from { transform: translateX(20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes killfeed-out {
+            to { opacity: 0; }
+        }
+
+        .killfeed-row .killer { color: #5cc6ff; font-weight: 600; }
+        .killfeed-row .killer.red { color: #ff7757; }
+        .killfeed-row .victim { color: #ff7757; }
+        .killfeed-row .victim.blue { color: #5cc6ff; }
+        .killfeed-row .arrow { color: rgba(255,255,255,0.5); }
+
+        .crosshair {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            width: 22px;
+            height: 22px;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: #ffffffcc;
+            box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .crosshair::before {
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .crosshair::after {
+            top: 50%;
+            left: 0;
+            height: 2px;
+            width: 100%;
+            transform: translateY(-50%);
+        }
+
+        .hit-marker {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .hit-marker.show {
+            animation: hitmark 0.25s ease;
+        }
+
+        @keyframes hitmark {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
+            to { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .hit-marker svg { width: 100%; height: 100%; }
+
+        .damage-flash {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(circle, transparent 30%, rgba(220, 30, 30, 0.4) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .damage-flash.show {
+            opacity: 1;
+            transition: opacity 0s;
+        }
+
+        .lock-hint {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(8, 6, 16, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 22px 30px;
+            font-size: 16px;
+            color: #fff;
+            text-align: center;
+            pointer-events: auto;
+            cursor: pointer;
+            display: none;
+        }
+
+        .lock-hint h3 {
+            margin: 0 0 6px;
+            font-size: 20px;
+            color: #ffd84a;
+        }
+
+        .lock-hint small {
+            display: block;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 12px;
+        }
+
+        /* Hide PC-only lock hint on touch devices */
+        .is-touch .lock-hint .pc-only { display: none; }
+        .is-touch .lock-hint .touch-only { display: block; }
+        .lock-hint .touch-only { display: none; }
+
+        /* ── Mobile touch controls ───────────────────── */
+        .mobile-controls {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            display: none;
+        }
+        .is-touch .mobile-controls { display: block; }
+
+        .joystick {
+            position: absolute;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(8, 6, 16, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .joystick.left { left: 20px; bottom: 90px; }
+        .joystick.right { right: 20px; bottom: 90px; }
+
+        .joystick .stick {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .action-btn {
+            position: absolute;
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            background: rgba(8, 6, 16, 0.55);
+            color: #fff;
+            font: 700 14px/1 'Segoe UI', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: pointer;
+        }
+        .action-btn.fire {
+            right: 175px;
+            bottom: 170px;
+            width: 92px;
+            height: 92px;
+            background: rgba(220, 60, 50, 0.55);
+            border-color: rgba(255, 120, 110, 0.55);
+            font-size: 15px;
+        }
+        .action-btn.jump {
+            right: 30px;
+            bottom: 250px;
+        }
+        .action-btn.reload {
+            right: 120px;
+            bottom: 260px;
+            width: 60px;
+            height: 60px;
+            font-size: 13px;
+        }
+        .action-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .action-btn.fire:active {
+            background: rgba(220, 60, 50, 0.85);
+        }
+
+        /* ── Results screen ─────────────────────────── */
+        .results-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 6, 16, 0.92);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            color: #fff;
+        }
+
+        .results-screen.active { display: flex; }
+
+        .results-title {
+            font-size: 56px;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .results-title.win { color: #4caf50; text-shadow: 0 0 24px rgba(76, 175, 80, 0.6); }
+        .results-title.lose { color: #ef4444; text-shadow: 0 0 24px rgba(239, 68, 68, 0.6); }
+        .results-title.draw { color: #ffd84a; }
+
+        .results-final-score {
+            font-size: 26px;
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 28px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .results-table {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 26px;
+            min-width: 460px;
+        }
+
+        .results-table h4 {
+            margin: 0 0 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.55);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .results-row {
+            display: grid;
+            grid-template-columns: 1fr 70px 70px;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .results-row:last-child { border-bottom: none; }
+
+        .results-row.head {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .results-row .num { text-align: right; font-variant-numeric: tabular-nums; }
+        .results-row.you { color: #ffd84a; }
+        .results-row.you .name::before { content: '★ '; }
+
+        .results-back {
+            padding: 14px 36px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: inherit;
+        }
+
+        .results-back:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4); }
+
+        /* ── Menu 3D character canvas ─────────────── */
+        .menu-char-canvas {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: block;
+            cursor: grab;
+        }
+        .menu-char-canvas:active { cursor: grabbing; }
+
+        /* ── Auth & nickname modals ───────────────── */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8, 6, 16, 0.78);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 800;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: linear-gradient(180deg, #1f1f28 0%, #14141c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 16px;
+            padding: 32px 36px;
+            min-width: 360px;
+            max-width: 460px;
+            color: #fff;
+            box-shadow: 0 16px 64px rgba(0, 0, 0, 0.55);
+            text-align: center;
+        }
+        .modal-card h2 {
+            margin: 0 0 6px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+        .modal-card p.sub {
+            margin: 0 0 22px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+        }
+        .modal-card label {
+            display: block;
+            text-align: left;
+            font-size: 12px;
+            color: rgba(255,255,255,0.7);
+            margin: 14px 4px 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .modal-card input[type="text"], .modal-card input[type="email"] {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            outline: none;
+            font-family: inherit;
+        }
+        .modal-card input:focus {
+            border-color: rgba(255, 152, 0, 0.6);
+            background: rgba(255,255,255,0.07);
+        }
+        .modal-card .err {
+            color: #ef6e6e;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 16px;
+            text-align: left;
+        }
+        .modal-card .btn-primary {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .modal-card .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(255, 152, 0, 0.35); }
+        .modal-card .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-google {
+            margin-top: 16px;
+            width: 100%;
+            padding: 13px 14px;
+            background: #fff;
+            color: #3c4043;
+            border: 1px solid rgba(0,0,0,0.12);
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-family: inherit;
+        }
+        .btn-google:hover { background: #f7f8fa; }
+        .btn-google svg { width: 20px; height: 20px; flex: 0 0 20px; }
+        .modal-card .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 16px 0 0;
+            color: rgba(255,255,255,0.45);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .modal-card .divider::before, .modal-card .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.10);
+        }
+
+        /* ── Pause menu (ESC during match) ───────── */
+        .pause-menu {
+            position: absolute;
+            inset: 0;
+            background: rgba(8, 6, 16, 0.72);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 220;
+        }
+        .pause-menu.active { display: flex; }
+        .pause-card {
+            background: linear-gradient(180deg, rgba(31,31,40,0.96) 0%, rgba(20,20,28,0.96) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 18px;
+            padding: 32px 30px;
+            min-width: 320px;
+            color: #fff;
+            text-align: center;
+            box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+        }
+        .pause-card h2 {
+            margin: 0 0 22px;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #ffd58a;
+        }
+        .pause-btn {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 14px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255,255,255,0.04);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .pause-btn:hover { background: rgba(255,255,255,0.10); border-color: rgba(255,255,255,0.18); }
+        .pause-btn.primary {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-color: transparent;
+        }
+        .pause-btn.danger {
+            background: linear-gradient(135deg, #c62828 0%, #a01818 100%);
+            border-color: transparent;
+        }
+
+        /* ── Splash screen (nb3game intro) ───────────────── */
+        .splash-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #001e28 0%, #000005 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 9999;
+            font-family: 'Courier New', monospace;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        .splash-screen.hide { opacity: 0; pointer-events: none; }
+        .splash-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+        }
+        .splash-particles { position: absolute; inset: 0; overflow: hidden; }
+        .splash-particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: #00ffcc;
+            box-shadow: 0 0 8px #00ffcc;
+            border-radius: 1px;
+            opacity: 0;
+            animation: splashFly 1.6s ease-out forwards;
+        }
+        @keyframes splashFly {
+            0%   { opacity: 0; transform: translate(0,0) scale(0.5); }
+            20%  { opacity: 0.9; }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+        }
+        .splash-logo-wrap {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            animation: splashLogo 2.8s ease forwards;
+        }
+        @keyframes splashLogo {
+            0%   { opacity: 0; transform: scale(0.6); }
+            18%  { opacity: 1; transform: scale(1.02); }
+            70%  { opacity: 1; transform: scale(1.0); }
+            100% { opacity: 0; transform: scale(1.06); }
+        }
+        .splash-line {
+            width: 240px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #00ffcc 50%, transparent 100%);
+            box-shadow: 0 0 12px #00ffcc;
+        }
+        .splash-logo {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: #00ffcc;
+            text-shadow: 0 0 24px #00ffcc, 0 0 48px rgba(0, 255, 204, 0.45);
+            font-family: 'Courier New', monospace;
+            animation: splashPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); }
+        }
+        .splash-sub {
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: #ff9944;
+            text-shadow: 0 0 8px rgba(255, 153, 68, 0.6);
+        }
+        .splash-bar-wrap {
+            position: absolute;
+            bottom: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 6px;
+            background: rgba(0, 51, 68, 0.6);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .splash-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #00ffcc 0%, #0088ff 100%);
+            box-shadow: 0 0 10px #00ffcc;
+            animation: splashBar 2.4s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+        @keyframes splashBar {
+            from { width: 0; }
+            to   { width: 100%; }
+        }
+        @media (max-width: 540px) {
+            .splash-logo { font-size: 34px; letter-spacing: 4px; }
+            .splash-line { width: 180px; }
+            .splash-bar-wrap { width: 170px; }
+        }
+
+        /* ── Mobile responsive (phone / landscape) ───────────────── */
+        @media (max-width: 900px) {
+            .left-panel { width: 56px; padding: 12px 0; gap: 10px; }
+            .menu-btn { width: 40px; height: 40px; border-radius: 8px; }
+            .menu-btn svg { width: 18px; height: 18px; }
+            .home-screen { padding: 12px; }
+            .player-info { gap: 10px; margin-bottom: 10px; }
+            .player-avatar { width: 38px; height: 38px; font-size: 15px; border-radius: 8px; }
+            .player-name { font-size: 14px; }
+            .player-level { font-size: 11px; padding: 1px 7px; }
+            .xp-bar { height: 6px; }
+            .xp-text { font-size: 10px; }
+            .currency { padding: 4px 8px; font-size: 13px; }
+            .currency-icon { width: 18px; height: 18px; font-size: 11px; }
+            .character-frame { width: 200px; height: 280px; margin: 0 auto 10px; }
+            .menu-char-canvas { width: 200px !important; height: 280px !important; }
+            .character-info { padding: 6px 12px; gap: 8px; }
+            .character-name { font-size: 13px; }
+            .character-level { width: 26px; height: 26px; font-size: 11px; }
+            .mode-selector { padding: 9px 14px; }
+            .mode-text { font-size: 13px; }
+            .play-button { padding: 11px 28px; font-size: 14px; }
+            .overlay-header { padding: 10px 14px; }
+            .overlay-tab { padding: 6px 12px; font-size: 13px; }
+        }
+        @media (orientation: landscape) and (max-height: 500px) {
+            .left-panel { width: 48px; padding: 8px 0; gap: 8px; }
+            .menu-btn { width: 36px; height: 36px; }
+            .menu-btn svg { width: 16px; height: 16px; }
+            .home-screen,
+            .home-screen.active { padding: 8px 12px; flex-direction: row; gap: 12px; align-items: stretch; }
+            .player-info { flex-direction: column; flex: 0 0 28%; max-width: 200px; gap: 6px; margin-bottom: 0; align-items: stretch; }
+            .player-avatar { width: 32px; height: 32px; font-size: 13px; }
+            .character-display { flex: 1; margin: 0; min-width: 0; }
+            .character-frame { width: 150px; height: 200px; margin: 0 auto 6px; }
+            .menu-char-canvas { width: 150px !important; height: 200px !important; }
+            .character-info { padding: 4px 10px; }
+            .character-name { font-size: 11px; }
+            .character-level { width: 22px; height: 22px; font-size: 10px; }
+            .bottom-controls { flex-direction: column; flex: 0 0 26%; max-width: 180px; gap: 6px; justify-content: center; }
+            .mode-selector { width: 100%; padding: 7px 12px; }
+            .play-button { width: 100%; padding: 14px 8px; font-size: 14px; }
+            .currency-bar { margin-top: auto; }
+            .results-table { min-width: auto; padding: 10px 12px; }
+            .results-title { font-size: 32px; margin-bottom: 0; letter-spacing: 2px; }
+            .results-final-score { font-size: 16px; margin-bottom: 8px; }
+            .results-cards { gap: 6px; padding: 6px; max-height: 50vh; }
+            .result-card { padding: 6px 8px; font-size: 11px; }
+            .result-card-coin { font-size: 16px; }
+            .result-card-reward { font-size: 11px; }
+            .modal-card { padding: 16px 18px; min-width: 280px; max-width: 90vw; }
+            .modal-card h2 { font-size: 18px; }
+            .pause-card { padding: 16px 20px; min-width: 220px; }
+            .lock-hint { padding: 10px 16px; font-size: 12px; }
+        }
+
+        /* ── Results screen redesign ───────────────── */
+        .results-top {
+            width: min(900px, 96vw);
+            margin-bottom: 14px;
+        }
+        .results-title-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            gap: 16px;
+        }
+        .results-title-row .results-title { font-size: 44px; letter-spacing: 3px; margin: 0; }
+        .results-title-row .results-final-score { font-size: 22px; margin: 0; align-self: center; }
+
+        .results-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+        .results-level-badge {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff9944 0%, #ff6b00 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: #14141c;
+            box-shadow: 0 0 12px rgba(255, 153, 68, 0.4);
+        }
+        .results-xp-block { flex: 1; }
+        .results-xp-bar {
+            position: relative;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .results-xp-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+            transition: width 1.2s ease-out;
+        }
+        .results-xp-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .results-xp-text .gained { color: #4CAF50; font-weight: 600; }
+        .results-coin-total {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+        .results-coin-total .currency-icon {
+            width: 28px; height: 28px; font-size: 14px;
+        }
+
+        .results-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: min(900px, 96vw);
+            margin-bottom: 18px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        @media (max-width: 700px) {
+            .results-cards { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 420px) {
+            .results-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        .result-card {
+            background: linear-gradient(180deg, #1f1f28 0%, #14141c 100%);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            min-height: 130px;
+        }
+        .result-card.you { border-color: #ff9944; box-shadow: 0 0 16px rgba(255, 153, 68, 0.35); }
+        .result-card.team-blue { border-top-color: rgba(92, 198, 255, 0.55); }
+        .result-card.team-red { border-top-color: rgba(255, 119, 87, 0.55); }
+        .result-card.you.team-blue { border-color: #ff9944; }
+        .result-card.you.team-red { border-color: #ff9944; }
+        .result-card-tag {
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 6px;
+        }
+        .result-card.you .result-card-tag { color: #ff9944; }
+        .result-card-coin {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d8d8d8 0%, #9a9a9a 100%);
+            color: #2b2b2b;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800;
+            font-size: 22px;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.4);
+            margin-bottom: 6px;
+        }
+        .result-card-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .result-card-stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 6px;
+        }
+        .result-card-reward {
+            margin-top: auto;
+            font-size: 13px;
+            font-weight: 700;
+            color: #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .result-card-reward.zero { color: rgba(255,255,255,0.35); }
+        .result-card-reward .currency-icon {
+            width: 18px; height: 18px; font-size: 10px;
+        }
+        .result-card-team-tag {
+            font-size: 9px;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .result-card.team-blue .result-card-team-tag { color: #5cc6ff; }
+        .result-card.team-red .result-card-team-tag { color: #ff7757; }
+    </style>
+</head>
+<body>
+    <!-- Splash screen (nb3game intro) -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-grid"></div>
+        <div class="splash-particles" id="splashParticles"></div>
+        <div class="splash-logo-wrap">
+            <div class="splash-line"></div>
+            <div class="splash-logo">nb3game</div>
+            <div class="splash-line"></div>
+            <div class="splash-sub">⚡ COLDLINE ⚡</div>
+        </div>
+        <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <button class="menu-btn active" data-screen="home" title="Главное меню">
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            </button>
+
+            <button class="menu-btn" data-screen="inventory" title="Инвентарь">
+                <!-- Pistol icon -->
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M3 8 L3 7 L4 7 L4 8 L18 8 L18 9 L21 9 L21 11 L18 11 L18 13 L17 13 L20 19 L15 19 L12 13 Q10.5 14.5 9 13 L3 13 Z" />
+                </svg>
+            </button>
+
+            <button class="menu-btn settings" data-screen="settings" title="Настройки">
+                <!-- Gear icon -->
+                <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.6a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 0 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="screen home-screen active" id="homeScreen">
+            <div class="player-info">
+                <div class="player-avatar">D</div>
+
+                <div class="player-details">
+                    <div class="player-header">
+                        <span class="player-name" id="playerName">Игрок</span>
+                        <div class="player-level">
+                            <span class="icon-trophy"></span><span id="playerLevelNum">1</span>
+                        </div>
+                    </div>
+
+                    <div class="xp-bar">
+                        <div class="xp-progress" id="playerXpProgress" style="width:0%"></div>
+                    </div>
+
+                    <div class="xp-text">
+                        <span id="playerXpText">XP: 0 / 100</span>
+                        <span id="playerXpPct">0% до уровня 2</span>
+                    </div>
+                </div>
+
+                <div class="currency-bar">
+                    <div class="currency silver">
+                        <span class="currency-icon">C</span>
+                        <span class="currency-value" id="silverValue">1000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="character-display">
+                <div class="character-container">
+                    <div class="character-frame">
+                        <div class="character-glow"></div>
+                        <canvas id="menuCharCanvas" class="menu-char-canvas" width="280" height="420"></canvas>
+                    </div>
+
+                    <div class="character-info">
+                        <span class="character-name" id="characterName">Игрок</span>
+                        <div class="character-level" id="characterLevel">1</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-controls">
+                <div class="mode-selector">
+                    <span class="mode-text">Командный бой</span>
+                    <span class="icon-chevron"></span>
+                </div>
+
+                <button class="play-button">Играть</button>
+            </div>
+            </div>
+
+            <div class="screen inventory-screen" id="inventoryScreen">
+        <div class="overlay-header">
+            <div class="overlay-tabs">
+                <button class="overlay-tab active" data-panel="inventory">Инвентарь</button>
+                <button class="overlay-tab" data-panel="shop">Магазин</button>
+                <button class="overlay-tab" data-panel="market">Рынок</button>
+            </div>
+            <div class="currency-bar">
+                <div class="currency silver">
+                    <span class="currency-icon">C</span>
+                    <span class="currency-value" id="silverValueOverlay">1000</span>
+                </div>
+            </div>
+        </div>
+        <div class="overlay-body">
+            <div class="panel active" id="panelInventory">
+                <div class="grid" id="inventoryGrid"></div>
+                <div class="empty-state" id="inventoryEmpty">
+                    <svg fill="currentColor" stroke="currentColor" stroke-width="0" viewBox="0 0 24 24">
+                        <path d="M2 8h14a2 2 0 0 1 2 2v1h3l-1.2 4H17l-1.2 3.5a1 1 0 0 1-.95.7h-3.2a1 1 0 0 1-.83-.44L8.6 14H6.4l-.85 4.1A1 1 0 0 1 4.57 19H3.2A1.2 1.2 0 0 1 2 17.8V8z"/>
+                    </svg>
+                    <div>Инвентарь пуст</div>
+                </div>
+            </div>
+
+            <div class="panel" id="panelShop">
+                <div class="grid" id="shopGrid"></div>
+            </div>
+
+            <div class="panel" id="panelMarket">
+                <div class="empty-state">
+                    <svg fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        <circle cx="9" cy="21" r="1"></circle>
+                        <circle cx="20" cy="21" r="1"></circle>
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                    </svg>
+                    <div>Рынок в разработке</div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buy / Open modal -->
+    <div class="modal" id="itemModal">
+        <div class="modal-card" id="itemModalCard">
+            <!-- Filled dynamically -->
+        </div>
+    </div>
+
+    <!-- Box opening screen -->
+    <div class="open-screen" id="openScreen">
+        <div class="open-title">Открытие кейса...</div>
+        <div class="reel-window">
+            <div class="reel-track" id="reelTrack"></div>
+            <div class="reel-marker"></div>
+        </div>
+        <div class="open-result" id="openResult"></div>
+        <div class="open-actions" id="openActions" style="display:none">
+            <button class="btn btn-primary" id="openContinueBtn">Забрать в инвентарь</button>
+        </div>
+    </div>
+
+    <!-- Matchmaking screen -->
+    <div class="matchmaking-screen" id="matchmakingScreen">
+        <div class="mm-title">Поиск матча</div>
+        <div class="mm-mode" id="mmMode">Командный бой 5×5</div>
+        <div class="mm-spinner"></div>
+        <div class="mm-count">Игроки: <strong><span id="mmCount">1</span></strong> / 10</div>
+        <div class="mm-elapsed">Ожидание: <span id="mmElapsed">0.0</span> сек</div>
+        <div class="mm-slots" id="mmSlots"></div>
+        <button class="mm-cancel" id="mmCancel">Отмена</button>
+    </div>
+
+    <!-- Match (game) screen -->
+    <div class="match-screen" id="matchScreen">
+        <canvas id="gameCanvas"></canvas>
+        <div class="hud" id="hud">
+            <div class="hud-top">
+                <div class="hud-score">
+                    <span class="team-blue" id="scoreBlue">0</span>
+                    <span class="sep">VS</span>
+                    <span class="team-red" id="scoreRed">0</span>
+                </div>
+                <div class="hud-timer" id="hudTimer">5:00</div>
+            </div>
+
+            <div class="hud-top-right" id="hudTeamList"></div>
+            <div class="hud-killfeed" id="hudKillfeed"></div>
+
+            <div class="hud-bottom-left">
+                <div class="hud-hp">
+                    <div class="hud-hp-label">HP</div>
+                    <div class="hud-hp-text"><span id="hudHp">100</span></div>
+                    <div class="hud-hp-bar"><div class="hud-hp-fill" id="hudHpFill" style="width:100%"></div></div>
+                </div>
+            </div>
+
+            <div class="hud-bottom-right">
+                <div class="hud-weapon" id="hudWeapon">Pistol</div>
+                <div class="hud-ammo">
+                    <span id="hudAmmo">12</span><span class="reserve">/<span id="hudReserve">48</span></span>
+                </div>
+            </div>
+
+            <div class="crosshair"></div>
+            <div class="hit-marker" id="hitMarker">
+                <svg viewBox="0 0 28 28" fill="none" stroke="#ff4d4d" stroke-width="2" stroke-linecap="round">
+                    <line x1="4" y1="4" x2="10" y2="10"/>
+                    <line x1="24" y1="4" x2="18" y2="10"/>
+                    <line x1="4" y1="24" x2="10" y2="18"/>
+                    <line x1="24" y1="24" x2="18" y2="18"/>
+                </svg>
+            </div>
+            <div class="damage-flash" id="damageFlash"></div>
+
+            <div class="lock-hint" id="lockHint">
+                <h3>Нажмите чтобы начать</h3>
+                <div class="pc-only">WASD — движение · Мышь — обзор · ЛКМ — стрелять · R — перезарядка · Space — прыжок · Shift — присесть · ESC — выход</div>
+                <div class="touch-only">Левый стик — движение · Правый стик — обзор · Огонь / Прыжок / R — кнопки справа</div>
+                <small class="pc-only">Захват курсора (Pointer Lock)</small>
+            </div>
+
+            <div class="mobile-controls" id="mobileControls">
+                <div class="joystick left" id="joyMove"><div class="stick" id="joyMoveStick"></div></div>
+                <div class="joystick right" id="joyLook"><div class="stick" id="joyLookStick"></div></div>
+                <button class="action-btn fire" id="btnFire">Огонь</button>
+                <button class="action-btn jump" id="btnJump">Прыжок</button>
+                <button class="action-btn reload" id="btnReload">R</button>
+            </div>
+
+            <!-- Pause menu (ESC during match) -->
+            <div class="pause-menu" id="pauseMenu">
+                <div class="pause-card">
+                    <h2>Пауза</h2>
+                    <button class="pause-btn primary" id="pauseContinue">Продолжить игру</button>
+                    <button class="pause-btn" id="pauseSettings">Настройки</button>
+                    <button class="pause-btn danger" id="pauseExit">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth modal: shown on first launch (no saved email/nick) -->
+    <div class="modal-overlay" id="authOverlay">
+        <div class="modal-card">
+            <h2>Добро пожаловать</h2>
+            <p class="sub">Войдите, чтобы продолжить</p>
+            <button class="btn-google" id="googleSignIn">
+                <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.4l-6.5-5.5C29.6 34.6 26.9 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.5 5.5C41.4 35.6 44 30.2 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg>
+                Войти через Google
+            </button>
+            <div class="divider">или</div>
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" placeholder="you@gmail.com" autocomplete="email">
+            <div class="err" id="authErr"></div>
+            <button class="btn-primary" id="authSubmit">Продолжить</button>
+        </div>
+    </div>
+
+    <!-- Nickname prompt: shown after registration if no nickname saved yet -->
+    <div class="modal-overlay" id="nickOverlay">
+        <div class="modal-card">
+            <h2>Введите ник</h2>
+            <p class="sub">Так вас будут видеть в матчах</p>
+            <label for="nickInput">Никнейм</label>
+            <input type="text" id="nickInput" placeholder="Ваш ник" maxlength="20" autocomplete="off">
+            <div class="err" id="nickErr"></div>
+            <button class="btn-primary" id="nickSubmit">Сохранить</button>
+        </div>
+    </div>
+
+    <!-- Results screen -->
+    <div class="results-screen" id="resultsScreen">
+        <div class="results-top">
+            <div class="results-title-row">
+                <div class="results-title" id="resultsTitle">Победа</div>
+                <div class="results-final-score" id="resultsFinalScore">5 : 3</div>
+            </div>
+            <div class="results-progress-row">
+                <div class="results-level-badge" id="resultsLevelBadge">1</div>
+                <div class="results-xp-block">
+                    <div class="results-xp-bar"><div class="results-xp-fill" id="resultsXpFill" style="width:0%"></div></div>
+                    <div class="results-xp-text">
+                        <span id="resultsXpLabel">Уровень 1 — 0 / 100 XP</span>
+                        <span class="gained" id="resultsXpGained">+0 XP</span>
+                    </div>
+                </div>
+                <div class="results-coin-total">
+                    <span class="currency-icon" style="background:linear-gradient(135deg,#d8d8d8,#9a9a9a);color:#2b2b2b">C</span>
+                    <span id="resultsCoinsHud">+0</span>
+                </div>
+            </div>
+        </div>
+        <div class="results-cards" id="resultsCards"></div>
+        <button class="results-back" id="resultsBack">В меню</button>
+    </div>
+
+    <script>
+        // ── Data: skin pool (drops from the Fable Box) ──────────
+        const SKIN_POOL = [
+            { id: 'p90_jungle',      name: 'P90 "JUNGLE"',      rarity: 'common',    weight: 60, img: 'assets/p90_jungle.png' },
+            { id: 'akr_worm',        name: 'AKR "WORM"',        rarity: 'uncommon',  weight: 25, img: 'assets/akr_worm.png' },
+            { id: 'ump45_cerberus',  name: 'UMP45',             rarity: 'epic',      weight: 8,  img: 'assets/ump45_cerberus.png' },
+            { id: 'usp_pisces',      name: 'USP "PISCES"',      rarity: 'epic',      weight: 8,  img: 'assets/usp_pisces.png' },
+            { id: 'fnfal_tactical',  name: 'FNFAL "TACTICAL"',  rarity: 'epic',      weight: 8,  img: 'assets/fnfal_tactical.png' },
+            { id: 'm4_lizard',       name: 'M4 "LIZARD"',       rarity: 'legendary', weight: 3,  img: 'assets/m4_lizard.png' },
+            { id: 'tec9_fable',      name: 'TEC9 "FABLE"',      rarity: 'legendary', weight: 3,  img: 'assets/tec9_fable.png' }
+        ];
+
+        const FABLE_BOX = {
+            id: 'fable_box',
+            name: '"Fable" Box',
+            rarity: 'box',
+            price: 100,
+            img: 'assets/fable_box.png'
+        };
+
+        const RARITY_LABEL = {
+            common: 'Common',
+            uncommon: 'Uncommon',
+            epic: 'Epic',
+            legendary: 'Legendary'
+        };
+
+        // ── State persistence ───────────────────────────────────
+        const STORAGE_KEY = 'nb3_menu_state';
+
+        function loadState() {
+            try {
+                const raw = JSON.parse(localStorage.getItem(STORAGE_KEY));
+                if (raw && typeof raw === 'object') {
+                    return {
+                        silver: typeof raw.silver === 'number' ? raw.silver : 1000,
+                        inventory: Array.isArray(raw.inventory) ? raw.inventory : [],
+                        level: typeof raw.level === 'number' && raw.level >= 1 ? Math.min(100, raw.level) : 1,
+                        xp:    typeof raw.xp === 'number' && raw.xp >= 0 ? raw.xp : 0
+                    };
+                }
+            } catch (e) {}
+            return { silver: 1000, inventory: [], level: 1, xp: 0 };
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        const state = loadState();
+
+        // ── Level / XP system ───────────────────────────────────
+        // Level 1→2 requires 100 XP, Level 2→3 requires 200 XP, ..., Level N→N+1 requires N*100 XP.
+        // Levels capped at 100. XP overflow carries over to the next level (per user spec).
+        const MAX_LEVEL = 100;
+        const XP_PER_KILL = 10;
+        function xpForNextLevel(level) {
+            // XP needed to advance FROM `level` to `level+1`.
+            return level * 100;
+        }
+        function levelProgressPercent() {
+            if (state.level >= MAX_LEVEL) return 100;
+            return Math.max(0, Math.min(100, (state.xp / xpForNextLevel(state.level)) * 100));
+        }
+        // Award `amount` XP, handle level-ups with overflow carrying over.
+        // Returns { levelsGained, finalLevel, finalXp }.
+        function awardXP(amount) {
+            let levelsGained = 0;
+            if (amount <= 0) return { levelsGained, finalLevel: state.level, finalXp: state.xp };
+            state.xp += amount;
+            while (state.level < MAX_LEVEL && state.xp >= xpForNextLevel(state.level)) {
+                state.xp -= xpForNextLevel(state.level);
+                state.level++;
+                levelsGained++;
+            }
+            if (state.level >= MAX_LEVEL) {
+                state.level = MAX_LEVEL;
+                state.xp = 0; // cap, no carry past 100
+            }
+            saveState();
+            return { levelsGained, finalLevel: state.level, finalXp: state.xp };
+        }
+
+        // ── Coin reward (silver, but labeled "Coins") ───────────
+        // Per-player roll: uniform random from {10,15,20,25,30,35} (1/6 chance each).
+        // Team-wide total clamped to [50, 200]: rolls trimmed/topped in 5-unit steps.
+        const COIN_VALUES = [10, 15, 20, 25, 30, 35];
+        const COIN_MIN = 10, COIN_MAX = 35, COIN_STEP = 5;
+        const COIN_TEAM_MIN = 50, COIN_TEAM_MAX = 200;
+        function rollPlayerCoins() {
+            return COIN_VALUES[Math.floor(Math.random() * COIN_VALUES.length)];
+        }
+        function rollCoinRewards(playerCount) {
+            const rewards = [];
+            for (let i = 0; i < playerCount; i++) rewards.push(rollPlayerCoins());
+            let total = rewards.reduce((a, b) => a + b, 0);
+            // Trim while over team cap by removing 5 from a random player who is still > COIN_MIN.
+            let guard = 0;
+            while (total > COIN_TEAM_MAX && guard++ < 500) {
+                const idxs = rewards.map((v, i) => v > COIN_MIN ? i : -1).filter(i => i >= 0);
+                if (!idxs.length) break;
+                const k = idxs[Math.floor(Math.random() * idxs.length)];
+                rewards[k] -= COIN_STEP;
+                total -= COIN_STEP;
+            }
+            // Top up while under team floor by adding 5 to a random player still < COIN_MAX.
+            guard = 0;
+            while (total < COIN_TEAM_MIN && guard++ < 500) {
+                const idxs = rewards.map((v, i) => v < COIN_MAX ? i : -1).filter(i => i >= 0);
+                if (!idxs.length) break;
+                const k = idxs[Math.floor(Math.random() * idxs.length)];
+                rewards[k] += COIN_STEP;
+                total += COIN_STEP;
+            }
+            return rewards;
+        }
+
+        // ── Helpers ─────────────────────────────────────────────
+        function updateSilverDisplay() {
+            const els = document.querySelectorAll('#silverValue, #silverValueOverlay');
+            els.forEach(el => { el.textContent = state.silver; });
+        }
+
+        function getSkinById(id) {
+            return SKIN_POOL.find(s => s.id === id);
+        }
+
+        function pickRandomSkin() {
+            const total = SKIN_POOL.reduce((sum, s) => sum + s.weight, 0);
+            let roll = Math.random() * total;
+            for (const skin of SKIN_POOL) {
+                roll -= skin.weight;
+                if (roll <= 0) return skin;
+            }
+            return SKIN_POOL[SKIN_POOL.length - 1];
+        }
+
+        // ── Menu / screen navigation ────────────────────────────
+        const homeScreen = document.getElementById('homeScreen');
+        const inventoryScreen = document.getElementById('inventoryScreen');
+        const overlayTabs = document.querySelectorAll('.overlay-tab');
+        const panelInventory = document.getElementById('panelInventory');
+        const panelShop = document.getElementById('panelShop');
+        const panelMarket = document.getElementById('panelMarket');
+
+        document.querySelectorAll('.menu-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const screen = this.dataset.screen;
+                if (screen === 'inventory') {
+                    showInventory('inventory');
+                } else if (screen === 'home') {
+                    showHome();
+                }
+            });
+        });
+
+        overlayTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                overlayTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const target = tab.dataset.panel;
+                panelInventory.classList.toggle('active', target === 'inventory');
+                panelShop.classList.toggle('active', target === 'shop');
+                panelMarket.classList.toggle('active', target === 'market');
+            });
+        });
+
+        function showInventory(initialTab) {
+            homeScreen.classList.remove('active');
+            inventoryScreen.classList.add('active');
+            renderInventory();
+            renderShop();
+            updateSilverDisplay();
+            if (initialTab) {
+                overlayTabs.forEach(t => {
+                    t.classList.toggle('active', t.dataset.panel === initialTab);
+                });
+                panelInventory.classList.toggle('active', initialTab === 'inventory');
+                panelShop.classList.toggle('active', initialTab === 'shop');
+                panelMarket.classList.toggle('active', initialTab === 'market');
+            }
+        }
+
+        function showHome() {
+            inventoryScreen.classList.remove('active');
+            homeScreen.classList.add('active');
+        }
+
+        // ── Rendering: inventory & shop grids ───────────────────
+        const inventoryGrid = document.getElementById('inventoryGrid');
+        const inventoryEmpty = document.getElementById('inventoryEmpty');
+        const shopGrid = document.getElementById('shopGrid');
+
+        function renderInventory() {
+            inventoryGrid.innerHTML = '';
+            const items = state.inventory;
+            if (items.length === 0) {
+                inventoryEmpty.style.display = 'flex';
+                return;
+            }
+            inventoryEmpty.style.display = 'none';
+
+            items.forEach((entry, idx) => {
+                let card;
+                if (entry.type === 'box') {
+                    card = createCard({
+                        img: FABLE_BOX.img,
+                        name: FABLE_BOX.name,
+                        sub: 'Кейс'
+                    });
+                    card.addEventListener('click', () => openBoxModal(idx));
+                } else if (entry.type === 'skin') {
+                    const skin = getSkinById(entry.id);
+                    if (!skin) return;
+                    card = createCard({
+                        img: skin.img,
+                        name: skin.name,
+                        sub: RARITY_LABEL[skin.rarity] || ''
+                    });
+                }
+                if (card) inventoryGrid.appendChild(card);
+            });
+        }
+
+        function renderShop() {
+            shopGrid.innerHTML = '';
+            const card = createCard({
+                img: FABLE_BOX.img,
+                name: FABLE_BOX.name,
+                price: FABLE_BOX.price
+            });
+            card.addEventListener('click', () => openShopBoxModal());
+            shopGrid.appendChild(card);
+        }
+
+        function createCard({ img, name, sub, price }) {
+            const card = document.createElement('div');
+            card.className = 'item-card';
+
+            const wrap = document.createElement('div');
+            wrap.className = 'item-img-wrap';
+            const im = document.createElement('img');
+            im.src = img;
+            im.alt = name;
+            wrap.appendChild(im);
+
+            const meta = document.createElement('div');
+            meta.className = 'item-meta';
+
+            const nm = document.createElement('div');
+            nm.className = 'item-name';
+            nm.textContent = name;
+            meta.appendChild(nm);
+
+            const subRow = document.createElement('div');
+            subRow.className = 'item-sub';
+            const subText = document.createElement('span');
+            subText.textContent = sub || '';
+            subRow.appendChild(subText);
+
+            if (typeof price === 'number') {
+                const p = document.createElement('span');
+                p.className = 'item-price';
+                p.innerHTML = '<span class="currency-icon" style="width:18px;height:18px;font-size:11px">C</span>' + price;
+                subRow.appendChild(p);
+            }
+
+            meta.appendChild(subRow);
+            card.appendChild(wrap);
+            card.appendChild(meta);
+            return card;
+        }
+
+        // ── Modals: buy / open ──────────────────────────────────
+        const itemModal = document.getElementById('itemModal');
+        const itemModalCard = document.getElementById('itemModalCard');
+
+        function closeItemModal() { itemModal.classList.remove('active'); }
+        itemModal.addEventListener('click', e => {
+            if (e.target === itemModal) closeItemModal();
+        });
+
+        function openShopBoxModal() {
+            const enough = state.silver >= FABLE_BOX.price;
+            itemModalCard.innerHTML = `
+                <img src="${FABLE_BOX.img}" alt="${FABLE_BOX.name}">
+                <div class="modal-title">${FABLE_BOX.name}</div>
+                <div class="modal-subtitle">Случайный скин из Fable Collection</div>
+                <div class="price-line">
+                    <span class="currency-icon" style="width:20px;height:20px;font-size:12px;background:linear-gradient(135deg,#d8d8d8,#9a9a9a);color:#2b2b2b">C</span>
+                    <span>${FABLE_BOX.price}</span>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelBtn">Отмена</button>
+                    <button class="btn btn-primary" id="buyBtn" ${enough ? '' : 'disabled'}>${enough ? 'Купить' : 'Недостаточно'}</button>
+                </div>
+            `;
+            itemModal.classList.add('active');
+            document.getElementById('cancelBtn').addEventListener('click', closeItemModal);
+            document.getElementById('buyBtn').addEventListener('click', () => {
+                if (state.silver < FABLE_BOX.price) return;
+                state.silver -= FABLE_BOX.price;
+                state.inventory.push({ type: 'box', id: 'fable_box' });
+                saveState();
+                updateSilverDisplay();
+                renderInventory();
+                closeItemModal();
+            });
+        }
+
+        function openBoxModal(inventoryIndex) {
+            itemModalCard.innerHTML = `
+                <img src="${FABLE_BOX.img}" alt="${FABLE_BOX.name}">
+                <div class="modal-title">${FABLE_BOX.name}</div>
+                <div class="modal-subtitle">В кейсе случайный скин из Fable Collection</div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" id="cancelBtn">Назад</button>
+                    <button class="btn btn-primary" id="openBtn">Открыть</button>
+                </div>
+            `;
+            itemModal.classList.add('active');
+            document.getElementById('cancelBtn').addEventListener('click', closeItemModal);
+            document.getElementById('openBtn').addEventListener('click', () => {
+                closeItemModal();
+                runOpenAnimation(inventoryIndex);
+            });
+        }
+
+        // ── Box opening animation ───────────────────────────────
+        const openScreen = document.getElementById('openScreen');
+        const reelTrack = document.getElementById('reelTrack');
+        const openResult = document.getElementById('openResult');
+        const openActions = document.getElementById('openActions');
+
+        function runOpenAnimation(inventoryIndex) {
+            const result = pickRandomSkin();
+
+            const reelLength = 60;
+            const winIndex = 50; // ensure it lands far into the reel
+            const items = [];
+            for (let i = 0; i < reelLength; i++) {
+                if (i === winIndex) items.push(result);
+                else items.push(SKIN_POOL[Math.floor(Math.random() * SKIN_POOL.length)]);
+            }
+
+            reelTrack.innerHTML = '';
+            items.forEach(skin => {
+                const cell = document.createElement('div');
+                cell.className = 'reel-item';
+                const img = document.createElement('img');
+                img.src = skin.img;
+                img.alt = skin.name;
+                cell.appendChild(img);
+                reelTrack.appendChild(cell);
+            });
+
+            // Reset state
+            openResult.classList.remove('show');
+            openResult.innerHTML = '';
+            openActions.style.display = 'none';
+            reelTrack.style.transition = 'none';
+            reelTrack.style.transform = 'translateX(0)';
+
+            openScreen.classList.add('active');
+
+            // Compute target translate so winIndex lands under center marker
+            const itemWidth = 200 + 4; // flex basis + gap
+            const reelWindowWidth = document.querySelector('.reel-window').clientWidth;
+            const offset = winIndex * itemWidth + itemWidth / 2 - reelWindowWidth / 2;
+            const jitter = (Math.random() - 0.5) * (itemWidth * 0.15);
+            const targetX = -(offset + jitter);
+
+            // Trigger animation on next frame
+            requestAnimationFrame(() => {
+                reelTrack.style.transition = 'transform 5.2s cubic-bezier(0.08, 0.82, 0.17, 1)';
+                reelTrack.style.transform = `translateX(${targetX}px)`;
+            });
+
+            setTimeout(() => {
+                openResult.innerHTML = `
+                    <div class="rarity rarity-${result.rarity}">${RARITY_LABEL[result.rarity]}</div>
+                    <div class="name">${result.name}</div>
+                `;
+                openResult.classList.add('show');
+                openActions.style.display = 'flex';
+            }, 5400);
+
+            document.getElementById('openContinueBtn').onclick = () => {
+                // Remove box from inventory, add skin
+                state.inventory.splice(inventoryIndex, 1);
+                state.inventory.push({ type: 'skin', id: result.id });
+                saveState();
+                renderInventory();
+                openScreen.classList.remove('active');
+            };
+        }
+
+        document.querySelector('.mode-selector').addEventListener('click', function () {
+            // Only one mode for now
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        //                FIREBASE  (Realtime DB REST API)
+        // ─────────────────────────────────────────────────────────────
+        const FB_URL = 'https://nb3game-default-rtdb.firebaseio.com';
+
+        async function fbGet(path) {
+            try {
+                const r = await fetch(`${FB_URL}/${path}.json`);
+                return await r.json();
+            } catch (e) { return null; }
+        }
+        async function fbSet(path, data) {
+            try {
+                await fetch(`${FB_URL}/${path}.json`, { method: 'PUT', body: JSON.stringify(data) });
+            } catch (e) {}
+        }
+        async function fbDelete(path) {
+            try { await fetch(`${FB_URL}/${path}.json`, { method: 'DELETE' }); } catch (e) {}
+        }
+        async function fbUpdate(path, data) {
+            try {
+                await fetch(`${FB_URL}/${path}.json`, { method: 'PATCH', body: JSON.stringify(data) });
+            } catch (e) {}
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //                       PLAYER IDENTITY
+        // ─────────────────────────────────────────────────────────────
+        function loadAccount() {
+            try { return JSON.parse(localStorage.getItem('nb3_data')) || {}; } catch (e) { return {}; }
+        }
+        function saveAccount(patch) {
+            const cur = loadAccount();
+            const next = Object.assign(cur, patch);
+            try { localStorage.setItem('nb3_data', JSON.stringify(next)); } catch (e) {}
+            return next;
+        }
+        function getLocalPlayer() {
+            let data = loadAccount();
+            if (!data.guestId) {
+                data.guestId = 'g_' + Math.random().toString(36).slice(2, 9);
+                saveAccount({ guestId: data.guestId });
+            }
+            const id = (data.email || data.login || data.guestId).replace(/[.#$\[\]\/]/g, '_');
+            return {
+                id,
+                nick: data.nickname || data.login || 'Гость-' + data.guestId.slice(-4)
+            };
+        }
+        function refreshMenuIdentity() {
+            const acc = loadAccount();
+            const nick = acc.nickname || acc.login || (acc.guestId ? 'Гость-' + acc.guestId.slice(-4) : 'Игрок');
+            const nameEl = document.getElementById('playerName');
+            if (nameEl) nameEl.textContent = nick;
+            const charNameEl = document.getElementById('characterName');
+            if (charNameEl) charNameEl.textContent = nick;
+            const avatarEl = document.querySelector('.player-avatar');
+            if (avatarEl) avatarEl.textContent = (nick.charAt(0) || '?').toUpperCase();
+            // Level / XP display
+            const lvNumEl = document.getElementById('playerLevelNum');
+            const charLvEl = document.getElementById('characterLevel');
+            const xpProgEl = document.getElementById('playerXpProgress');
+            const xpTextEl = document.getElementById('playerXpText');
+            const xpPctEl = document.getElementById('playerXpPct');
+            if (lvNumEl) lvNumEl.textContent = state.level;
+            if (charLvEl) charLvEl.textContent = state.level;
+            if (xpProgEl) xpProgEl.style.width = levelProgressPercent().toFixed(1) + '%';
+            if (xpTextEl) {
+                if (state.level >= MAX_LEVEL) xpTextEl.textContent = 'Максимальный уровень';
+                else xpTextEl.textContent = `XP: ${state.xp} / ${xpForNextLevel(state.level)}`;
+            }
+            if (xpPctEl) {
+                if (state.level >= MAX_LEVEL) xpPctEl.textContent = '— ';
+                else xpPctEl.textContent = `${Math.floor(levelProgressPercent())}% до уровня ${state.level + 1}`;
+            }
+        }
+
+        // ── Auth + nickname modals ───────────────────────────────
+        const authOverlay = document.getElementById('authOverlay');
+        const nickOverlay = document.getElementById('nickOverlay');
+        function openAuthIfNeeded() {
+            const acc = loadAccount();
+            if (acc.email || acc.login) {
+                if (!acc.nickname) openNickPrompt();
+                return;
+            }
+            authOverlay.classList.add('active');
+            setTimeout(() => { const e = document.getElementById('authEmail'); if (e) e.focus(); }, 60);
+        }
+        function openNickPrompt() {
+            const acc = loadAccount();
+            const input = document.getElementById('nickInput');
+            if (input) input.value = acc.nickname || '';
+            nickOverlay.classList.add('active');
+            setTimeout(() => { if (input) input.focus(); }, 60);
+        }
+        function finishAuth(email, login) {
+            saveAccount({ email: email || null, login: login || null });
+            authOverlay.classList.remove('active');
+            const acc = loadAccount();
+            refreshMenuIdentity();
+            if (!acc.nickname) openNickPrompt();
+        }
+        function submitAuthFromForm() {
+            const e = document.getElementById('authEmail');
+            const err = document.getElementById('authErr');
+            const v = (e.value || '').trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+                err.textContent = 'Введите корректный email';
+                return;
+            }
+            err.textContent = '';
+            finishAuth(v, null);
+        }
+        function submitNick() {
+            const e = document.getElementById('nickInput');
+            const err = document.getElementById('nickErr');
+            const v = (e.value || '').trim();
+            if (v.length < 2) { err.textContent = 'Минимум 2 символа'; return; }
+            if (v.length > 20) { err.textContent = 'Максимум 20 символов'; return; }
+            err.textContent = '';
+            saveAccount({ nickname: v });
+            nickOverlay.classList.remove('active');
+            refreshMenuIdentity();
+        }
+        document.getElementById('authSubmit').addEventListener('click', submitAuthFromForm);
+        document.getElementById('authEmail').addEventListener('keydown', e => { if (e.key === 'Enter') submitAuthFromForm(); });
+        document.getElementById('nickSubmit').addEventListener('click', submitNick);
+        document.getElementById('nickInput').addEventListener('keydown', e => { if (e.key === 'Enter') submitNick(); });
+        document.getElementById('googleSignIn').addEventListener('click', () => {
+            // Honest stub: real Google OAuth requires a backend with a Client ID.
+            // We approximate it: prefill the email field and let the user edit/confirm.
+            // To enable real Google Sign-In, integrate Google Identity Services with a client_id
+            // (https://developers.google.com/identity/gsi/web) and call finishAuth(email) on credential.
+            const e = document.getElementById('authEmail');
+            if (e && !e.value) e.value = 'you@gmail.com';
+            if (e) e.focus();
+            const err = document.getElementById('authErr');
+            err.textContent = 'Введите ваш Google email и нажмите «Продолжить».';
+        });
+
+        // ─────────────────────────────────────────────────────────────
+        //                       MATCHMAKING
+        // ─────────────────────────────────────────────────────────────
+        const QUEUE_PATH = 'queues/team_dm';
+        const QUEUE_TARGET = 10;
+        const QUEUE_TIMEOUT_MS = 10000;
+
+        const BOT_NAMES = [
+            'Стрелок','Хищник','Призрак','Феникс','Гром','Айсберг','Сокол','Викинг',
+            'Тень','Пума','Орёл','Барсук','Зефир','Кобра','Шторм','Самурай','Рысь','Гепард'
+        ];
+
+        const matchmakingScreen = document.getElementById('matchmakingScreen');
+        const matchScreen = document.getElementById('matchScreen');
+        const resultsScreen = document.getElementById('resultsScreen');
+        const mmCountEl = document.getElementById('mmCount');
+        const mmElapsedEl = document.getElementById('mmElapsed');
+        const mmSlotsEl = document.getElementById('mmSlots');
+
+        let mm = null;  // current matchmaking session
+
+        function renderMatchmakingSlots(humans, bots) {
+            mmSlotsEl.innerHTML = '';
+            const all = humans.concat(bots);
+            for (let i = 0; i < QUEUE_TARGET; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'mm-slot';
+                if (i < humans.length) {
+                    slot.classList.add('filled');
+                    slot.innerHTML = `<div class="slot-label">Игрок</div><div>${escapeHtml(humans[i].nick)}</div>`;
+                } else if (i < all.length) {
+                    slot.classList.add('bot');
+                    slot.innerHTML = `<div class="slot-label">Бот</div><div>${escapeHtml(bots[i - humans.length].nick)}</div>`;
+                } else {
+                    slot.innerHTML = `<div class="slot-label">Слот</div><div>...</div>`;
+                }
+                mmSlotsEl.appendChild(slot);
+            }
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        async function startMatchmaking() {
+            const me = getLocalPlayer();
+            mm = {
+                me,
+                cancelled: false,
+                startTime: Date.now(),
+                pollHandle: null,
+                tickHandle: null,
+                timeoutHandle: null,
+                humans: [{ id: me.id, nick: me.nick }],
+                done: false
+            };
+
+            matchmakingScreen.classList.add('active');
+            mmCountEl.textContent = '1';
+            mmElapsedEl.textContent = '0.0';
+            renderMatchmakingSlots(mm.humans, []);
+
+            // 1. Register in queue
+            await fbSet(`${QUEUE_PATH}/${me.id}`, {
+                nick: me.nick,
+                joinedAt: Date.now()
+            });
+
+            // 2. Poll queue + UI tick
+            const startQueuePoll = async () => {
+                if (mm.cancelled || mm.done) return;
+                const data = await fbGet(QUEUE_PATH);
+                if (mm.cancelled || mm.done) return;
+                if (data && typeof data === 'object') {
+                    // Filter out stale entries (older than 60s)
+                    const now = Date.now();
+                    const fresh = Object.entries(data)
+                        .filter(([id, info]) => info && (now - (info.joinedAt || 0) < 60000))
+                        .map(([id, info]) => ({ id, nick: info.nick || id }));
+                    // Ensure self is in list
+                    if (!fresh.some(p => p.id === me.id)) fresh.unshift({ id: me.id, nick: me.nick });
+                    mm.humans = fresh.slice(0, QUEUE_TARGET);
+                    mmCountEl.textContent = String(mm.humans.length);
+                    renderMatchmakingSlots(mm.humans, []);
+                    if (mm.humans.length >= QUEUE_TARGET) {
+                        return finishMatchmaking(mm.humans, []);
+                    }
+                }
+            };
+
+            mm.pollHandle = setInterval(startQueuePoll, 600);
+            startQueuePoll();
+
+            mm.tickHandle = setInterval(() => {
+                const elapsed = (Date.now() - mm.startTime) / 1000;
+                mmElapsedEl.textContent = elapsed.toFixed(1);
+            }, 100);
+
+            // 3. Timeout → fill with bots
+            mm.timeoutHandle = setTimeout(() => {
+                if (mm.cancelled || mm.done) return;
+                const need = QUEUE_TARGET - mm.humans.length;
+                const bots = [];
+                const names = BOT_NAMES.slice().sort(() => Math.random() - 0.5);
+                for (let i = 0; i < need; i++) {
+                    bots.push({ id: 'bot_' + i + '_' + Math.random().toString(36).slice(2, 6), nick: names[i % names.length] });
+                }
+                finishMatchmaking(mm.humans, bots);
+            }, QUEUE_TIMEOUT_MS);
+        }
+
+        async function finishMatchmaking(humans, bots) {
+            if (!mm || mm.done) return;
+            mm.done = true;
+            clearInterval(mm.pollHandle);
+            clearInterval(mm.tickHandle);
+            clearTimeout(mm.timeoutHandle);
+            // Final UI flash
+            renderMatchmakingSlots(humans, bots);
+            mmCountEl.textContent = String(humans.length + bots.length);
+            await new Promise(r => setTimeout(r, 700));
+            // Leave queue
+            fbDelete(`${QUEUE_PATH}/${mm.me.id}`);
+            // Build lobby and start match
+            matchmakingScreen.classList.remove('active');
+            startMatch({ me: mm.me, humans, bots });
+        }
+
+        async function cancelMatchmaking() {
+            if (!mm || mm.done) return;
+            mm.cancelled = true;
+            clearInterval(mm.pollHandle);
+            clearInterval(mm.tickHandle);
+            clearTimeout(mm.timeoutHandle);
+            await fbDelete(`${QUEUE_PATH}/${mm.me.id}`);
+            matchmakingScreen.classList.remove('active');
+            mm = null;
+        }
+
+        document.getElementById('mmCancel').addEventListener('click', cancelMatchmaking);
+        document.querySelector('.play-button').addEventListener('click', startMatchmaking);
+
+        // ─────────────────────────────────────────────────────────────
+        //              3D MATCH:  Three.js + bots
+        // ─────────────────────────────────────────────────────────────
+        const G = {
+            canvas: null,
+            renderer: null,
+            scene: null,
+            camera: null,
+            players: [],
+            walls: [],
+            bullets: [],
+            keys: {},
+            mouse: { dx: 0, dy: 0 },
+            yaw: 0,
+            pitch: 0,
+            running: false,
+            paused: false,
+            timeLeft: 300,
+            score: { blue: 0, red: 0 },
+            lastTime: 0,
+            lockHint: null,
+            pointerLocked: false,
+            wallMeshes: [],
+            collidables: [],
+            spawnsBlue: [],
+            spawnsRed: [],
+            killsLog: [],
+            me: null,
+            settings: null,
+            // Touch / unified input
+            touch: {
+                move: { x: 0, y: 0 },
+                look: { x: 0, y: 0 },
+                fire: false,
+                jumpQueued: false
+            },
+            // Viewmodel (first-person weapon attached to camera)
+            viewmodel: null,
+            viewmodelKick: 0,
+            viewmodelBob: 0,
+            muzzleFlash: null,
+            muzzleFlashUntil: 0
+        };
+
+        const IS_TOUCH = (typeof window !== 'undefined') && (
+            ('ontouchstart' in window) ||
+            (navigator.maxTouchPoints && navigator.maxTouchPoints > 0)
+        );
+        if (IS_TOUCH) document.body.classList.add('is-touch');
+
+        const PLAYER_HEIGHT = 1.7;
+        const PLAYER_RADIUS = 0.35;
+        const GRAVITY = 18;
+        const JUMP_SPEED = 7.0;
+        const MOVE_SPEED = 5.4;
+        const INFINITE_RESERVE = 999;
+        const CROUCH_SPEED = 2.8;
+        const SPRINT_SPEED = 7.4;
+        const MAX_HP = 100;
+
+        const WEAPONS = {
+            pistol:  { name: 'Pistol',           dmg: 22, rpm: 360, range: 60, spread: 0.018, mag: 12, reserve: 48, reload: 1.2, recoil: 0.003, full: false },
+            p90:     { name: 'P90 "JUNGLE"',     dmg: 17, rpm: 850, range: 55, spread: 0.030, mag: 50, reserve: 100, reload: 2.4, recoil: 0.0025, full: true },
+            akr:     { name: 'AKR "WORM"',       dmg: 28, rpm: 600, range: 80, spread: 0.025, mag: 30, reserve: 90, reload: 2.6, recoil: 0.0045, full: true },
+            ump45:   { name: 'UMP45',            dmg: 24, rpm: 600, range: 60, spread: 0.024, mag: 25, reserve: 75, reload: 2.5, recoil: 0.0035, full: true },
+            usp:     { name: 'USP "PISCES"',     dmg: 30, rpm: 280, range: 70, spread: 0.012, mag: 12, reserve: 48, reload: 1.4, recoil: 0.004, full: false },
+            fnfal:   { name: 'FNFAL "TACTICAL"', dmg: 38, rpm: 520, range: 90, spread: 0.022, mag: 20, reserve: 60, reload: 2.8, recoil: 0.006, full: true },
+            m4:      { name: 'M4 "LIZARD"',      dmg: 26, rpm: 720, range: 80, spread: 0.022, mag: 30, reserve: 90, reload: 2.4, recoil: 0.0035, full: true },
+            tec9:    { name: 'TEC9 "FABLE"',     dmg: 20, rpm: 750, range: 50, spread: 0.030, mag: 24, reserve: 72, reload: 2.0, recoil: 0.003, full: true }
+        };
+
+        // Map skin id → weapon key
+        const SKIN_TO_WEAPON = {
+            p90_jungle: 'p90',
+            akr_worm: 'akr',
+            ump45_cerberus: 'ump45',
+            usp_pisces: 'usp',
+            fnfal_tactical: 'fnfal',
+            m4_lizard: 'm4',
+            tec9_fable: 'tec9'
+        };
+
+        function getActiveWeaponKey() {
+            // Find first skin in inventory; otherwise pistol
+            const skin = state.inventory.find(e => e.type === 'skin');
+            if (skin && SKIN_TO_WEAPON[skin.id]) return SKIN_TO_WEAPON[skin.id];
+            return 'pistol';
+        }
+
+        function startMatch(lobby) {
+            // Lobby: { me, humans, bots }
+            G.me = lobby.me;
+            G.timeLeft = 300;
+            G.score = { blue: 0, red: 0 };
+            G.killsLog = [];
+
+            // 1. Compose 10 participants (humans + bots), split into two teams of 5
+            const all = lobby.humans.concat(lobby.bots.map(b => ({ ...b, isBot: true })));
+            // Make sure local player is at index 0 (so they end up on a team consistently)
+            const meIdx = all.findIndex(p => p.id === lobby.me.id);
+            if (meIdx > 0) {
+                const m = all.splice(meIdx, 1)[0];
+                all.unshift(m);
+            }
+            // Shuffle non-local participants while keeping local at index 0
+            const rest = all.slice(1);
+            for (let i = rest.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [rest[i], rest[j]] = [rest[j], rest[i]];
+            }
+            const ordered = [all[0]].concat(rest);
+            G.players = ordered.map((p, idx) => ({
+                id: p.id,
+                nick: p.nick,
+                team: idx % 2 === 0 ? 'blue' : 'red',
+                isBot: !!p.isBot || p.id !== lobby.me.id,  // any non-local participant is bot-controlled in this client
+                isLocal: p.id === lobby.me.id,
+                hp: MAX_HP,
+                alive: true,
+                kills: 0,
+                deaths: 0,
+                weaponKey: p.id === lobby.me.id ? getActiveWeaponKey() : pickBotWeapon(),
+                ammo: 0,
+                reserve: 0,
+                reloading: false,
+                reloadEnd: 0,
+                lastShotAt: 0,
+                pos: new THREE.Vector3(),
+                vel: new THREE.Vector3(),
+                yaw: 0,
+                pitch: 0,
+                onGround: true,
+                crouching: false,
+                mesh: null,
+                nameSprite: null,
+                respawnAt: 0,
+                target: null,            // bot AI target
+                botState: 'patrol',
+                wanderTarget: null,
+                lastBotThink: 0
+            }));
+
+            G.players.forEach(pl => {
+                // Override per user request: every match always starts with 25/999 (999 = infinite).
+                // We load 25 rounds in the magazine regardless of the weapon's natural mag size.
+                pl.ammo = 25;
+                pl.reserve = INFINITE_RESERVE;
+            });
+
+            initThreeScene();
+            assignSpawns();
+            buildPlayerMeshes();
+            spawnAllPlayers();
+            buildHUDTeamList();
+
+            matchScreen.classList.add('active');
+            G.lockHint = document.getElementById('lockHint');
+            // Per user request: do not show the initial lock-hint banner.
+            // ESC opens the pause menu instead.
+            if (G.lockHint) G.lockHint.style.display = 'none';
+            G.canvas.focus();
+
+            updateHud();
+            G.running = true;
+            G.lastTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function pickBotWeapon() {
+            const pool = ['pistol','p90','akr','ump45','usp','fnfal','m4','tec9'];
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        // ─── Three scene setup ─────────────────────────────────────
+        function initThreeScene() {
+            G.canvas = document.getElementById('gameCanvas');
+            G.renderer = new THREE.WebGLRenderer({ canvas: G.canvas, antialias: true });
+            G.renderer.setPixelRatio(window.devicePixelRatio);
+            G.renderer.setSize(window.innerWidth, window.innerHeight, false);
+            G.renderer.shadowMap.enabled = true;
+            G.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            G.scene = new THREE.Scene();
+            G.scene.background = new THREE.Color(0x101018);
+            G.scene.fog = new THREE.Fog(0x101018, 25, 90);
+
+            G.camera = new THREE.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.05, 250);
+
+            // Lighting
+            const hemi = new THREE.HemisphereLight(0xa8c0ff, 0x404060, 0.5);
+            G.scene.add(hemi);
+            const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+            sun.position.set(20, 30, 10);
+            sun.castShadow = true;
+            sun.shadow.mapSize.set(1024, 1024);
+            sun.shadow.camera.near = 1;
+            sun.shadow.camera.far = 90;
+            sun.shadow.camera.left = -40;
+            sun.shadow.camera.right = 40;
+            sun.shadow.camera.top = 40;
+            sun.shadow.camera.bottom = -40;
+            G.scene.add(sun);
+            G.scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+            buildArena();
+            buildViewmodel();
+
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // First-person viewmodel: a small weapon attached to the camera
+        function buildViewmodel() {
+            // Remove previous viewmodel if rebuilding (e.g. weapon changed)
+            if (G.viewmodel) {
+                G.camera.remove(G.viewmodel);
+                G.viewmodel = null;
+                G.muzzleFlash = null;
+            }
+            const wpKey = (G.me && G.me.weaponKey) || 'pistol';
+            const isHeavy = ['akr', 'm4', 'fnfal'].includes(wpKey);
+            const isSmg = ['p90', 'ump45', 'tec9'].includes(wpKey);
+
+            const root = new THREE.Group();
+            const matGun = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.45, metalness: 0.6 });
+            const matAccent = new THREE.MeshStandardMaterial({ color: 0x444452, roughness: 0.5, metalness: 0.4 });
+            const matGrip = new THREE.MeshStandardMaterial({ color: 0x0e0e14, roughness: 0.85, metalness: 0.05 });
+            const matHand = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.8, metalness: 0.0 });
+
+            // Body (longer for rifles)
+            const bodyLen = isHeavy ? 0.55 : (isSmg ? 0.42 : 0.32);
+            const bodyH = isHeavy ? 0.08 : 0.07;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, bodyH, bodyLen), matGun);
+            body.position.set(0, 0, -bodyLen / 2 - 0.05);
+            root.add(body);
+
+            // Barrel
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 10), matAccent);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.set(0, 0.005, -bodyLen - 0.09);
+            root.add(barrel);
+
+            // Sight rail
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, bodyLen * 0.6), matAccent);
+            rail.position.set(0, bodyH / 2 + 0.012, -bodyLen / 2 - 0.05);
+            root.add(rail);
+
+            // Magazine (for full-auto)
+            if (isHeavy || isSmg) {
+                const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.07), matAccent);
+                mag.position.set(0, -0.10, -bodyLen / 2);
+                root.add(mag);
+            }
+
+            // Grip
+            const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.06), matGrip);
+            grip.position.set(0, -0.10, -0.05);
+            grip.rotation.x = 0.25;
+            root.add(grip);
+
+            // Hands
+            const handGeom = new THREE.SphereGeometry(0.045, 10, 8);
+            const handR = new THREE.Mesh(handGeom, matHand);
+            handR.position.set(0, -0.16, -0.05);
+            root.add(handR);
+            const handL = new THREE.Mesh(handGeom, matHand);
+            handL.position.set(-0.02, -0.05, -bodyLen + 0.02);
+            root.add(handL);
+
+            // Muzzle flash (hidden by default) — bright cross
+            const flashMat = new THREE.MeshBasicMaterial({ color: 0xffe39a, transparent: true, opacity: 0, depthWrite: false });
+            const flash = new THREE.Group();
+            const f1 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.18), flashMat);
+            const f2 = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.18), flashMat);
+            f2.rotation.z = Math.PI / 4;
+            flash.add(f1); flash.add(f2);
+            flash.position.set(0, 0.01, -bodyLen - 0.20);
+            flash.visible = false;
+            root.add(flash);
+            G.muzzleFlash = flash;
+            G.muzzleFlashMat = flashMat;
+
+            // Position viewmodel relative to camera (right-hand, down-forward)
+            root.position.set(0.18, -0.18, -0.30);
+            root.rotation.y = -0.06;
+            root.renderOrder = 1000;
+            // Disable depth test issues — render the viewmodel above scene
+            root.traverse(o => {
+                if (o.isMesh) {
+                    o.renderOrder = 1000;
+                    if (o.material && o.material !== flashMat) {
+                        o.material.depthTest = true;
+                    }
+                }
+            });
+            G.camera.add(root);
+            G.scene.add(G.camera);
+            G.viewmodel = root;
+            G.viewmodelBasePos = root.position.clone();
+            G.viewmodelKick = 0;
+        }
+
+        // Build a small held-gun group used for non-local players (parented to the right shoulder).
+        // Matches the viewmodel's design (body + barrel + sight rail + magazine + grip) at a slightly
+        // smaller scale so the other players' weapon looks as polished as the local viewmodel.
+        function buildHeldGun(fallbackMat) {
+            const root = new THREE.Group();
+            const matGun = new THREE.MeshStandardMaterial({ color: 0x1a1a22, roughness: 0.45, metalness: 0.6 });
+            const matAccent = new THREE.MeshStandardMaterial({ color: 0x444452, roughness: 0.5, metalness: 0.4 });
+            const matGrip = new THREE.MeshStandardMaterial({ color: 0x0e0e14, roughness: 0.85, metalness: 0.05 });
+
+            const bodyLen = 0.40;
+            const bodyH = 0.07;
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.06, bodyH, bodyLen), matGun);
+            body.position.set(0, 0, -bodyLen / 2 - 0.03);
+            root.add(body);
+
+            const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.18, 10), matAccent);
+            barrel.rotation.x = Math.PI / 2;
+            barrel.position.set(0, 0.005, -bodyLen - 0.07);
+            root.add(barrel);
+
+            const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, bodyLen * 0.6), matAccent);
+            rail.position.set(0, bodyH / 2 + 0.012, -bodyLen / 2 - 0.03);
+            root.add(rail);
+
+            const mag = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.06), matAccent);
+            mag.position.set(0, -0.09, -bodyLen / 2);
+            root.add(mag);
+
+            const grip = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.14, 0.06), matGrip);
+            grip.position.set(0, -0.09, -0.03);
+            grip.rotation.x = 0.25;
+            root.add(grip);
+
+            root.traverse(o => { if (o.isMesh) o.castShadow = true; });
+            return root;
+        }
+
+        // ─── Menu 3D character ───────────────────────────────────
+        // Rotating humanoid on the home-screen frame. Replaces the static SVG.
+        const Menu3D = {
+            renderer: null, scene: null, camera: null, root: null,
+            rafId: 0, autoRot: true, dragging: false, lastX: 0, yaw: 0
+        };
+        function initMenuCharacter() {
+            const canvas = document.getElementById('menuCharCanvas');
+            if (!canvas || typeof THREE === 'undefined') return;
+            try {
+                Menu3D.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+            } catch (e) { return; }
+            const w = canvas.clientWidth || 280, h = canvas.clientHeight || 420;
+            Menu3D.renderer.setPixelRatio(window.devicePixelRatio || 1);
+            Menu3D.renderer.setSize(w, h, false);
+            Menu3D.scene = new THREE.Scene();
+            Menu3D.camera = new THREE.PerspectiveCamera(28, w / h, 0.1, 50);
+            Menu3D.camera.position.set(0, 1.1, 4.4);
+            Menu3D.camera.lookAt(0, 1.0, 0);
+
+            const amb = new THREE.AmbientLight(0xffffff, 0.55);
+            const dir = new THREE.DirectionalLight(0xffe2b3, 0.9);
+            dir.position.set(3, 5, 4);
+            const rim = new THREE.DirectionalLight(0xff8a4a, 0.45);
+            rim.position.set(-3, 2, -2);
+            Menu3D.scene.add(amb); Menu3D.scene.add(dir); Menu3D.scene.add(rim);
+
+            // Floor disc as visual anchor
+            const disc = new THREE.Mesh(
+                new THREE.CircleGeometry(0.9, 32),
+                new THREE.MeshStandardMaterial({ color: 0x1a1620, roughness: 1.0 })
+            );
+            disc.rotation.x = -Math.PI / 2;
+            disc.position.y = 0.0;
+            Menu3D.scene.add(disc);
+
+            // Character group
+            const root = new THREE.Group();
+            const shirt = new THREE.MeshStandardMaterial({ color: 0xff7043, roughness: 0.7, metalness: 0.05 });
+            const pants = new THREE.MeshStandardMaterial({ color: 0x2c3038, roughness: 0.85, metalness: 0.05 });
+            const skin = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.75, metalness: 0 });
+            const eyes = new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.4 });
+            const boots = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.9, metalness: 0.05 });
+
+            const legGeom = new THREE.BoxGeometry(0.18, 0.85, 0.22);
+            const legL = new THREE.Mesh(legGeom, pants); legL.position.set(-0.12, 0.425, 0); root.add(legL);
+            const legR = new THREE.Mesh(legGeom, pants); legR.position.set( 0.12, 0.425, 0); root.add(legR);
+            const bootGeom = new THREE.BoxGeometry(0.22, 0.10, 0.32);
+            const bootL = new THREE.Mesh(bootGeom, boots); bootL.position.set(-0.12, 0.05, 0.05); root.add(bootL);
+            const bootR = new THREE.Mesh(bootGeom, boots); bootR.position.set( 0.12, 0.05, 0.05); root.add(bootR);
+
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.55, 0.28), shirt);
+            torso.position.set(0, 1.125, 0); root.add(torso);
+            const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.08, 8), skin);
+            neck.position.set(0, 1.44, 0); root.add(neck);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skin);
+            head.position.set(0, 1.58, 0); root.add(head);
+            const eyeGeom = new THREE.SphereGeometry(0.025, 8, 6);
+            const eyeL = new THREE.Mesh(eyeGeom, eyes); eyeL.position.set(-0.05, 1.60, 0.14); root.add(eyeL);
+            const eyeR = new THREE.Mesh(eyeGeom, eyes); eyeR.position.set( 0.05, 1.60, 0.14); root.add(eyeR);
+            const armGeom = new THREE.BoxGeometry(0.13, 0.50, 0.16);
+            const sL = new THREE.Group(); sL.position.set(-0.30, 1.36, 0);
+            const sR = new THREE.Group(); sR.position.set( 0.30, 1.36, 0);
+            const aL = new THREE.Mesh(armGeom, shirt); aL.position.set(0, -0.20, 0.05); aL.rotation.x = -0.25; sL.add(aL);
+            const aR = new THREE.Mesh(armGeom, shirt); aR.position.set(0, -0.20, 0.05); aR.rotation.x = -0.25; sR.add(aR);
+            root.add(sL); root.add(sR);
+
+            root.position.y = 0;
+            Menu3D.root = root;
+            Menu3D.scene.add(root);
+
+            // Drag-to-rotate
+            const onDown = e => {
+                Menu3D.dragging = true;
+                Menu3D.autoRot = false;
+                Menu3D.lastX = (e.touches ? e.touches[0].clientX : e.clientX);
+            };
+            const onMove = e => {
+                if (!Menu3D.dragging) return;
+                const x = (e.touches ? e.touches[0].clientX : e.clientX);
+                Menu3D.yaw += (x - Menu3D.lastX) * 0.01;
+                Menu3D.lastX = x;
+            };
+            const onUp = () => { Menu3D.dragging = false; };
+            canvas.addEventListener('mousedown', onDown);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            canvas.addEventListener('touchstart', onDown, { passive: true });
+            canvas.addEventListener('touchmove', onMove, { passive: true });
+            canvas.addEventListener('touchend', onUp);
+
+            // Render loop
+            let last = performance.now();
+            function tick(t) {
+                Menu3D.rafId = requestAnimationFrame(tick);
+                const dt = Math.min(0.1, (t - last) / 1000); last = t;
+                if (Menu3D.autoRot && !Menu3D.dragging) Menu3D.yaw += dt * 0.55;
+                if (Menu3D.root) Menu3D.root.rotation.y = Menu3D.yaw;
+                Menu3D.renderer.render(Menu3D.scene, Menu3D.camera);
+            }
+            tick(performance.now());
+
+            // Stop spinning while in a match (saves perf) — match screen sits on top anyway
+            const obs = new MutationObserver(() => {
+                const inMatch = document.getElementById('matchScreen').classList.contains('active');
+                Menu3D.autoRot = !inMatch;
+            });
+            obs.observe(document.getElementById('matchScreen'), { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Animate humanoid mesh based on movement velocity
+        function animateHumanoid(pl, tMs) {
+            if (!pl.parts) return;
+            const speed = Math.hypot(pl.vel.x, pl.vel.z);
+            const moving = speed > 0.3;
+            const t = tMs * 0.001;
+            const stride = moving ? Math.sin(t * 8) * Math.min(1, speed / 5.0) * 0.7 : 0;
+            pl.parts.legL.rotation.x =  stride;
+            pl.parts.legR.rotation.x = -stride;
+            pl.parts.bootL.position.z = 0.05 + stride * 0.25;
+            pl.parts.bootR.position.z = 0.05 - stride * 0.25;
+            // Subtle arm sway opposite to legs
+            pl.parts.shoulderL.rotation.x = -stride * 0.25;
+            pl.parts.shoulderR.rotation.x =  stride * 0.25;
+            // Head bob
+            pl.parts.head.position.y = 1.58 + (moving ? Math.abs(Math.sin(t * 8)) * 0.025 : 0);
+        }
+
+        function onWindowResize() {
+            if (!G.renderer) return;
+            G.renderer.setSize(window.innerWidth, window.innerHeight, false);
+            G.camera.aspect = window.innerWidth / window.innerHeight;
+            G.camera.updateProjectionMatrix();
+        }
+
+        function buildArena() {
+            G.collidables = [];
+
+            const HALF = 30;
+            // Floor
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x2a2a36, roughness: 0.95 });
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2, HALF * 2), floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.receiveShadow = true;
+            G.scene.add(floor);
+
+            // Outer walls
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a3548, roughness: 0.8 });
+            const wallH = 6;
+            const wallT = 1;
+            function addWall(x, z, w, d, mat = wallMat) {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(w, wallH, d), mat);
+                m.position.set(x, wallH / 2, z);
+                m.castShadow = true;
+                m.receiveShadow = true;
+                G.scene.add(m);
+                G.collidables.push({ box: new THREE.Box3().setFromObject(m), mesh: m });
+            }
+            addWall(0, -HALF, HALF * 2, wallT);
+            addWall(0, HALF, HALF * 2, wallT);
+            addWall(-HALF, 0, wallT, HALF * 2);
+            addWall(HALF, 0, wallT, HALF * 2);
+
+            // Inner cover blocks
+            const coverMat = new THREE.MeshStandardMaterial({ color: 0x4a4458, roughness: 0.85 });
+            const coverData = [
+                [-18, -10, 4, 4, 3],
+                [-18,  10, 4, 4, 3],
+                [ 18, -10, 4, 4, 3],
+                [ 18,  10, 4, 4, 3],
+                [ -8,  -4, 5, 1, 2],
+                [  8,   4, 5, 1, 2],
+                [  0,   0, 6, 6, 4],
+                [-12,   0, 1, 6, 2.5],
+                [ 12,   0, 1, 6, 2.5],
+                [  0, -20, 8, 1.5, 2.5],
+                [  0,  20, 8, 1.5, 2.5]
+            ];
+            for (const [x, z, w, d, h] of coverData) {
+                const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), coverMat);
+                m.position.set(x, h / 2, z);
+                m.castShadow = true;
+                m.receiveShadow = true;
+                G.scene.add(m);
+                G.collidables.push({ box: new THREE.Box3().setFromObject(m), mesh: m });
+            }
+
+            // Spawn points
+            G.spawnsBlue = [
+                new THREE.Vector3(-25, 0, -25), new THREE.Vector3(-22, 0, -20),
+                new THREE.Vector3(-25, 0, -16), new THREE.Vector3(-20, 0, -25),
+                new THREE.Vector3(-26, 0, -10)
+            ];
+            G.spawnsRed = [
+                new THREE.Vector3( 25, 0,  25), new THREE.Vector3( 22, 0,  20),
+                new THREE.Vector3( 25, 0,  16), new THREE.Vector3( 20, 0,  25),
+                new THREE.Vector3( 26, 0,  10)
+            ];
+
+            // A few accent lights for atmosphere
+            const lightColors = [0xff5050, 0x50a0ff];
+            G.spawnsBlue.slice(0, 1).forEach(p => {
+                const l = new THREE.PointLight(0x50a0ff, 0.7, 14);
+                l.position.set(p.x, 4, p.z);
+                G.scene.add(l);
+            });
+            G.spawnsRed.slice(0, 1).forEach(p => {
+                const l = new THREE.PointLight(0xff5050, 0.7, 14);
+                l.position.set(p.x, 4, p.z);
+                G.scene.add(l);
+            });
+        }
+
+        function rebuildLocalViewmodel() {
+            if (!G.scene || !G.camera) return;
+            buildViewmodel();
+        }
+
+        function buildPlayerMeshes() {
+            const blueShirt = new THREE.MeshStandardMaterial({ color: 0x3068c8, roughness: 0.7, metalness: 0.05 });
+            const redShirt = new THREE.MeshStandardMaterial({ color: 0xc8402c, roughness: 0.7, metalness: 0.05 });
+            const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1f2030, roughness: 0.85, metalness: 0.05 });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xd9bfa0, roughness: 0.75, metalness: 0.0 });
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x0a0a14, roughness: 0.4 });
+            const bootMat = new THREE.MeshStandardMaterial({ color: 0x14141a, roughness: 0.9, metalness: 0.05 });
+            const gunMat = new THREE.MeshStandardMaterial({ color: 0x18181f, roughness: 0.5, metalness: 0.5 });
+
+            G.players.forEach(pl => {
+                if (pl.isLocal) {
+                    pl.mesh = null; // local is just camera + viewmodel
+                    return;
+                }
+                const shirtMat = pl.team === 'blue' ? blueShirt : redShirt;
+
+                // Root group whose origin is at the FEET. PLAYER_HEIGHT total.
+                const root = new THREE.Group();
+                root.castShadow = true;
+
+                // Legs (two boxes side-by-side, 0.0 .. 0.85)
+                const legGeom = new THREE.BoxGeometry(0.18, 0.85, 0.22);
+                const legL = new THREE.Mesh(legGeom, pantsMat);
+                const legR = new THREE.Mesh(legGeom, pantsMat);
+                legL.position.set(-0.12, 0.425, 0);
+                legR.position.set( 0.12, 0.425, 0);
+                legL.castShadow = legR.castShadow = true;
+                root.add(legL); root.add(legR);
+
+                // Boots
+                const bootGeom = new THREE.BoxGeometry(0.22, 0.10, 0.32);
+                const bootL = new THREE.Mesh(bootGeom, bootMat);
+                const bootR = new THREE.Mesh(bootGeom, bootMat);
+                bootL.position.set(-0.12, 0.05, 0.05);
+                bootR.position.set( 0.12, 0.05, 0.05);
+                bootL.castShadow = bootR.castShadow = true;
+                root.add(bootL); root.add(bootR);
+
+                // Torso (0.85 .. 1.40)
+                const torso = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.55, 0.28), shirtMat);
+                torso.position.set(0, 1.125, 0);
+                torso.castShadow = true;
+                root.add(torso);
+
+                // Neck (small)
+                const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.08, 8), skinMat);
+                neck.position.set(0, 1.44, 0);
+                neck.castShadow = true;
+                root.add(neck);
+
+                // Head (sphere centered at 1.58)
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), skinMat);
+                head.position.set(0, 1.58, 0);
+                head.castShadow = true;
+                root.add(head);
+
+                // Eyes
+                const eyeGeom = new THREE.SphereGeometry(0.025, 8, 6);
+                const eyeL = new THREE.Mesh(eyeGeom, eyeMat);
+                const eyeR = new THREE.Mesh(eyeGeom, eyeMat);
+                eyeL.position.set(-0.05, 1.60, 0.14);
+                eyeR.position.set( 0.05, 1.60, 0.14);
+                root.add(eyeL); root.add(eyeR);
+
+                // Arms: shoulder joints + upper arms angled forward to grip gun
+                const armGeom = new THREE.BoxGeometry(0.13, 0.50, 0.16);
+                const armL = new THREE.Mesh(armGeom, shirtMat);
+                const armR = new THREE.Mesh(armGeom, shirtMat);
+                armL.castShadow = armR.castShadow = true;
+
+                const shoulderL = new THREE.Group();
+                const shoulderR = new THREE.Group();
+                shoulderL.position.set(-0.30, 1.36, 0);
+                shoulderR.position.set( 0.30, 1.36, 0);
+                armL.position.set(0, -0.20, 0.05);
+                armR.position.set(0, -0.20, 0.05);
+                armL.rotation.x = -0.6;
+                armR.rotation.x = -0.6;
+                shoulderL.add(armL); shoulderR.add(armR);
+                root.add(shoulderL); root.add(shoulderR);
+
+                // Hands at end of arms
+                const handGeom = new THREE.SphereGeometry(0.07, 10, 8);
+                const handL = new THREE.Mesh(handGeom, skinMat);
+                const handR = new THREE.Mesh(handGeom, skinMat);
+                handL.position.set(0, -0.42, 0.32);
+                handR.position.set(0, -0.42, 0.32);
+                shoulderL.add(handL); shoulderR.add(handR);
+
+                // Gun in the RIGHT HAND (parented to right shoulder so it follows arm sway).
+                // Geometry mirrors the local viewmodel: body + barrel + sight rail + magazine + grip.
+                const gun = buildHeldGun(gunMat);
+                // Place it at the right hand: same offset as handR but slightly forward.
+                gun.position.set(0, -0.42, 0.36);
+                gun.rotation.x = 0.10;
+                shoulderR.add(gun);
+
+                pl.mesh = root;
+                pl.parts = { legL, legR, bootL, bootR, shoulderL, shoulderR, head, gun };
+                G.scene.add(root);
+
+                // Nameplate sprite
+                pl.nameSprite = makeNameSprite(pl.nick, pl.team);
+                pl.nameSprite.position.set(0, 2.05, 0);
+                root.add(pl.nameSprite);
+            });
+        }
+
+        function makeNameSprite(text, team) {
+            const c = document.createElement('canvas');
+            c.width = 256; c.height = 64;
+            const ctx = c.getContext('2d');
+            ctx.font = 'bold 28px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+            ctx.lineWidth = 5;
+            ctx.strokeText(text, 128, 32);
+            ctx.fillStyle = team === 'blue' ? '#7ec2ff' : '#ff8a72';
+            ctx.fillText(text, 128, 32);
+            const tex = new THREE.CanvasTexture(c);
+            tex.needsUpdate = true;
+            const mat = new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true });
+            const s = new THREE.Sprite(mat);
+            s.scale.set(2.0, 0.5, 1);
+            s.renderOrder = 999;
+            return s;
+        }
+
+        function assignSpawns() {
+            // Just remember; actual spawn placement happens in spawnPlayer
+        }
+
+        function spawnAllPlayers() {
+            G.players.forEach(pl => spawnPlayer(pl, true));
+        }
+
+        function spawnPlayer(pl, initial) {
+            const spawns = pl.team === 'blue' ? G.spawnsBlue : G.spawnsRed;
+            const sp = spawns[Math.floor(Math.random() * spawns.length)];
+            pl.pos.set(sp.x + (Math.random() - 0.5) * 2, PLAYER_HEIGHT, sp.z + (Math.random() - 0.5) * 2);
+            pl.vel.set(0, 0, 0);
+            pl.hp = MAX_HP;
+            pl.alive = true;
+            pl.onGround = true;
+            pl.reloading = false;
+            // Always 25 in the mag, infinite reserve — same rule as at match start.
+            pl.ammo = 25;
+            pl.reserve = INFINITE_RESERVE;
+            // Face toward arena center
+            const dx = -pl.pos.x;
+            const dz = -pl.pos.z;
+            pl.yaw = Math.atan2(dx, -dz);
+            pl.pitch = 0;
+            if (pl.isLocal) {
+                G.yaw = pl.yaw;
+                G.pitch = 0;
+                G.camera.position.copy(pl.pos);
+                updateCameraRotation();
+            } else if (pl.mesh) {
+                pl.mesh.visible = true;
+                pl.mesh.position.set(pl.pos.x, pl.pos.y - PLAYER_HEIGHT, pl.pos.z);
+                pl.mesh.rotation.y = pl.yaw;
+            }
+        }
+
+        function updateCameraRotation() {
+            const eulerY = G.yaw;
+            const eulerX = G.pitch;
+            G.camera.rotation.order = 'YXZ';
+            G.camera.rotation.y = eulerY;
+            G.camera.rotation.x = eulerX;
+        }
+
+        // ─── Input ────────────────────────────────────────────────
+        window.addEventListener('keydown', e => {
+            if (!G.running) return;
+            if (e.code === 'Escape') {
+                e.preventDefault();
+                togglePauseMenu();
+                return;
+            }
+            if (G.paused) return;
+            G.keys[e.code] = true;
+            if (e.code === 'KeyR') tryReload(getLocalPlayer2());
+        });
+        window.addEventListener('keyup', e => { G.keys[e.code] = false; });
+
+        function getLocalPlayer2() { return G.players.find(p => p.isLocal); }
+
+        document.addEventListener('mousemove', e => {
+            if (!G.pointerLocked || !G.running) return;
+            const me = getLocalPlayer2();
+            if (!me || !me.alive) return;
+            const sens = 0.0022;
+            G.yaw -= e.movementX * sens;
+            G.pitch -= e.movementY * sens;
+            const lim = Math.PI / 2 - 0.05;
+            if (G.pitch > lim) G.pitch = lim;
+            if (G.pitch < -lim) G.pitch = -lim;
+            updateCameraRotation();
+        });
+
+        document.addEventListener('mousedown', e => {
+            if (!G.running) return;
+            if (IS_TOUCH) return; // touch handled via buttons
+            if (!G.pointerLocked) {
+                G.canvas.requestPointerLock();
+                return;
+            }
+            if (e.button === 0) {
+                tryShoot(getLocalPlayer2(), true);
+            }
+        });
+
+        // Auto-fire when holding LMB (desktop only)
+        let autoFireHandle = null;
+        document.addEventListener('mousedown', e => {
+            if (IS_TOUCH) return;
+            if (e.button !== 0 || !G.pointerLocked) return;
+            if (autoFireHandle) clearInterval(autoFireHandle);
+            autoFireHandle = setInterval(() => {
+                const me = getLocalPlayer2();
+                if (!me) return;
+                const wp = WEAPONS[me.weaponKey];
+                if (!wp.full) return;
+                tryShoot(me, false);
+            }, 30);
+        });
+        document.addEventListener('mouseup', e => {
+            if (e.button !== 0) return;
+            if (autoFireHandle) clearInterval(autoFireHandle);
+            autoFireHandle = null;
+        });
+
+        // ─── Touch input: joysticks + buttons ─────────────────────
+        function initJoystick(baseId, stickId, onChange) {
+            const base = document.getElementById(baseId);
+            const stick = document.getElementById(stickId);
+            if (!base || !stick) return;
+            let activeId = null;
+            let cx = 0, cy = 0;
+            const maxR = 50;
+            function setStick(dx, dy) {
+                const len = Math.hypot(dx, dy);
+                let nx = dx, ny = dy;
+                if (len > maxR) { nx = dx * maxR / len; ny = dy * maxR / len; }
+                stick.style.transform = `translate(calc(-50% + ${nx}px), calc(-50% + ${ny}px))`;
+                onChange(nx / maxR, ny / maxR);
+            }
+            function reset() {
+                stick.style.transform = 'translate(-50%, -50%)';
+                onChange(0, 0);
+            }
+            base.addEventListener('touchstart', e => {
+                e.preventDefault();
+                if (activeId !== null) return;
+                const t0 = e.changedTouches[0];
+                activeId = t0.identifier;
+                const r = base.getBoundingClientRect();
+                cx = r.left + r.width / 2;
+                cy = r.top + r.height / 2;
+                setStick(t0.clientX - cx, t0.clientY - cy);
+            }, { passive: false });
+            window.addEventListener('touchmove', e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier !== activeId) continue;
+                    setStick(t.clientX - cx, t.clientY - cy);
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            const endHandler = e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        activeId = null;
+                        reset();
+                    }
+                }
+            };
+            window.addEventListener('touchend', endHandler);
+            window.addEventListener('touchcancel', endHandler);
+        }
+
+        function initActionBtn(id, onDown, onUp) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let activeId = null;
+            el.addEventListener('touchstart', e => {
+                e.preventDefault();
+                if (activeId !== null) return;
+                activeId = e.changedTouches[0].identifier;
+                onDown && onDown();
+            }, { passive: false });
+            const endHandler = e => {
+                if (activeId === null) return;
+                for (const t of e.changedTouches) {
+                    if (t.identifier === activeId) {
+                        activeId = null;
+                        onUp && onUp();
+                    }
+                }
+            };
+            el.addEventListener('touchend', endHandler);
+            el.addEventListener('touchcancel', endHandler);
+            // Mouse fallback for desktop testing of the touch UI
+            el.addEventListener('mousedown', e => { e.preventDefault(); onDown && onDown(); });
+            el.addEventListener('mouseup',   e => { e.preventDefault(); onUp && onUp(); });
+            el.addEventListener('mouseleave', e => { onUp && onUp(); });
+        }
+
+        if (IS_TOUCH || true) {
+            // Wire joysticks/buttons. They are hidden via CSS unless body.is-touch.
+            initJoystick('joyMove', 'joyMoveStick', (x, y) => { G.touch.move.x = x; G.touch.move.y = y; });
+            initJoystick('joyLook', 'joyLookStick', (x, y) => { G.touch.look.x = x; G.touch.look.y = y; });
+            initActionBtn('btnFire',
+                () => {
+                    if (!G.running) return;
+                    G.touch.fire = true;
+                    tryShoot(getLocalPlayer2(), true);
+                },
+                () => { G.touch.fire = false; }
+            );
+            initActionBtn('btnJump', () => { if (G.running) G.touch.jumpQueued = true; });
+            initActionBtn('btnReload', () => { if (G.running) tryReload(getLocalPlayer2()); });
+        }
+
+        // Hide lock hint when touch UI starts a match (no pointer lock on mobile)
+        function dismissLockHint() {
+            if (G.lockHint) G.lockHint.style.display = 'none';
+        }
+        document.addEventListener('touchstart', () => {
+            if (G.running && IS_TOUCH) dismissLockHint();
+        });
+        // On touch devices, tapping the lock hint just dismisses it
+        document.addEventListener('click', e => {
+            if (!G.running || !IS_TOUCH) return;
+            const lh = document.getElementById('lockHint');
+            if (lh && lh.contains(e.target)) dismissLockHint();
+        });
+
+        document.addEventListener('pointerlockchange', () => {
+            G.pointerLocked = document.pointerLockElement === G.canvas;
+            // Lock-hint banner is suppressed; pause menu replaces it.
+            if (G.lockHint) G.lockHint.style.display = 'none';
+            // If the user lost pointer lock unexpectedly while in-game, open the pause menu.
+            if (!G.pointerLocked && G.running && !G.paused && !IS_TOUCH) {
+                openPauseMenu();
+            }
+        });
+
+        // ─── Pause menu (ESC) ──────────────────────────────────────
+        const pauseMenuEl = document.getElementById('pauseMenu');
+        function openPauseMenu() {
+            if (!G.running || G.paused) return;
+            G.paused = true;
+            G.keys = {};
+            G.touch.fire = false;
+            G.touch.move.x = 0; G.touch.move.y = 0;
+            G.touch.look.x = 0; G.touch.look.y = 0;
+            pauseMenuEl.classList.add('active');
+            if (document.pointerLockElement) document.exitPointerLock();
+        }
+        function closePauseMenu() {
+            if (!G.paused) return;
+            G.paused = false;
+            pauseMenuEl.classList.remove('active');
+            // Reset frame timing so dt doesn't jump after a long pause
+            G.lastTime = performance.now();
+            if (!IS_TOUCH && G.canvas) G.canvas.requestPointerLock();
+        }
+        function togglePauseMenu() {
+            if (G.paused) closePauseMenu(); else openPauseMenu();
+        }
+        document.getElementById('pauseContinue').addEventListener('click', closePauseMenu);
+        document.getElementById('pauseSettings').addEventListener('click', () => {
+            // Placeholder: settings screen not implemented yet (per user request).
+        });
+        document.getElementById('pauseExit').addEventListener('click', () => {
+            G.paused = false;
+            pauseMenuEl.classList.remove('active');
+            exitToMenu();
+        });
+        function exitToMenu() {
+            // Tear down the active match without showing the results screen.
+            G.running = false;
+            G.paused = false;
+            if (document.pointerLockElement) document.exitPointerLock();
+            matchScreen.classList.remove('active');
+            if (G.renderer) {
+                try { G.renderer.dispose(); } catch (e) {}
+                G.renderer = null;
+            }
+            G.scene = null;
+            G.players = [];
+            G.collidables = [];
+            // Make sure the home screen is selected.
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            const homeBtn = document.querySelector('.menu-btn[data-screen="home"]');
+            if (homeBtn) homeBtn.classList.add('active');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const home = document.getElementById('homeScreen');
+            if (home) home.classList.add('active');
+        }
+
+        // ─── Shooting ─────────────────────────────────────────────
+        function tryShoot(shooter, firstClick) {
+            if (!shooter || !shooter.alive || shooter.reloading) return;
+            const wp = WEAPONS[shooter.weaponKey];
+            const now = performance.now();
+            const cooldown = 60000 / wp.rpm;
+            if (now - shooter.lastShotAt < cooldown) return;
+            if (shooter.ammo <= 0) {
+                tryReload(shooter);
+                return;
+            }
+            shooter.lastShotAt = now;
+            shooter.ammo--;
+
+            // Compute shot origin and direction
+            let origin, dir;
+            if (shooter.isLocal) {
+                origin = G.camera.position.clone();
+                dir = new THREE.Vector3();
+                G.camera.getWorldDirection(dir);
+                // Recoil: nudge pitch up a bit
+                G.pitch += wp.recoil * (0.6 + Math.random() * 0.6);
+                if (G.pitch > Math.PI / 2 - 0.05) G.pitch = Math.PI / 2 - 0.05;
+                updateCameraRotation();
+                // Viewmodel kick + muzzle flash
+                G.viewmodelKick = Math.min(1.2, (G.viewmodelKick || 0) + 1);
+                if (G.muzzleFlash) {
+                    G.muzzleFlash.visible = true;
+                    G.muzzleFlash.rotation.z = Math.random() * Math.PI * 2;
+                    if (G.muzzleFlashMat) G.muzzleFlashMat.opacity = 1.0;
+                    G.muzzleFlashUntil = now + 55;
+                }
+            } else {
+                origin = shooter.pos.clone();
+                origin.y = shooter.pos.y - 0.1;
+                const fwd = new THREE.Vector3(
+                    -Math.sin(shooter.yaw) * Math.cos(shooter.pitch),
+                    Math.sin(shooter.pitch),
+                    -Math.cos(shooter.yaw) * Math.cos(shooter.pitch)
+                );
+                dir = fwd;
+            }
+            // Apply spread
+            const spread = wp.spread;
+            dir.x += (Math.random() - 0.5) * spread * 2;
+            dir.y += (Math.random() - 0.5) * spread * 2;
+            dir.z += (Math.random() - 0.5) * spread * 2;
+            dir.normalize();
+
+            // Tracer (short line)
+            spawnTracer(origin, dir, wp.range);
+            // Muzzle flash for non-local shooters: small light pop
+            if (!shooter.isLocal && shooter.mesh) {
+                spawnMuzzleFlash(shooter);
+            }
+
+            doHitscan(shooter, origin, dir, wp);
+        }
+
+        function doHitscan(shooter, origin, dir, wp) {
+            // Raycast against players (capsules approximated as cylinders/spheres) and walls
+            // We'll do per-player AABB-ish test and per-wall Box3 intersection, take nearest hit
+            let nearest = wp.range;
+            let hitPlayer = null;
+
+            // Walls
+            const raycaster = new THREE.Raycaster(origin, dir, 0.01, wp.range);
+            const wallMeshes = G.collidables.map(c => c.mesh);
+            const wallHits = raycaster.intersectObjects(wallMeshes, false);
+            if (wallHits.length > 0 && wallHits[0].distance < nearest) {
+                nearest = wallHits[0].distance;
+            }
+
+            // Players (excluding shooter)
+            for (const pl of G.players) {
+                if (pl === shooter || !pl.alive) continue;
+                // Capsule approx: vertical segment from feet to head with radius
+                const feet = pl.isLocal
+                    ? new THREE.Vector3(G.camera.position.x, G.camera.position.y - PLAYER_HEIGHT, G.camera.position.z)
+                    : new THREE.Vector3(pl.pos.x, pl.pos.y - PLAYER_HEIGHT / 2 - 0.5, pl.pos.z);
+                const head = new THREE.Vector3(feet.x, feet.y + PLAYER_HEIGHT, feet.z);
+                const t = rayCapsuleIntersect(origin, dir, feet, head, PLAYER_RADIUS + 0.05);
+                if (t !== null && t > 0.05 && t < nearest) {
+                    nearest = t;
+                    hitPlayer = pl;
+                }
+            }
+
+            if (hitPlayer) {
+                applyDamage(shooter, hitPlayer, wp.dmg);
+            }
+        }
+
+        // Intersect ray with capsule (segment + radius). Returns t along dir or null.
+        function rayCapsuleIntersect(orig, dir, a, b, r) {
+            // Approximate: project segment to infinite cylinder + spheres at ends
+            const ba = new THREE.Vector3().subVectors(b, a);
+            const oa = new THREE.Vector3().subVectors(orig, a);
+            const baba = ba.dot(ba);
+            const bard = ba.dot(dir);
+            const baoa = ba.dot(oa);
+            const rdoa = dir.dot(oa);
+            const oaoa = oa.dot(oa);
+            const A = baba - bard * bard;
+            const B = baba * rdoa - baoa * bard;
+            const C = baba * oaoa - baoa * baoa - r * r * baba;
+            const disc = B * B - A * C;
+            let tMin = Infinity;
+            if (disc >= 0 && Math.abs(A) > 1e-6) {
+                const t = (-B - Math.sqrt(disc)) / A;
+                if (t > 0) {
+                    const y = baoa + t * bard;
+                    if (y > 0 && y < baba) tMin = t;
+                }
+            }
+            // Endcaps as spheres
+            tMin = Math.min(tMin, raySphere(orig, dir, a, r));
+            tMin = Math.min(tMin, raySphere(orig, dir, b, r));
+            return tMin === Infinity ? null : tMin;
+        }
+        function raySphere(orig, dir, center, r) {
+            const oc = new THREE.Vector3().subVectors(orig, center);
+            const b = oc.dot(dir);
+            const c = oc.dot(oc) - r * r;
+            const disc = b * b - c;
+            if (disc < 0) return Infinity;
+            const t = -b - Math.sqrt(disc);
+            return t > 0 ? t : Infinity;
+        }
+
+        function applyDamage(shooter, target, dmg) {
+            if (!target.alive) return;
+            // Friendly fire disabled: same-team shots deal no damage and don't credit anything.
+            if (shooter && shooter !== target && shooter.team === target.team) return;
+            target.hp -= dmg;
+            if (target.isLocal) {
+                flashDamage();
+            } else if (shooter.isLocal) {
+                flashHitMarker();
+            }
+            if (target.hp <= 0) {
+                target.hp = 0;
+                target.alive = false;
+                target.deaths++;
+                shooter.kills++;
+                if (shooter.team === 'blue') G.score.blue++;
+                else G.score.red++;
+                pushKillfeed(shooter, target);
+                if (target.mesh) target.mesh.visible = false;
+                target.respawnAt = performance.now() + 3000;
+                if (target.isLocal) {
+                    // Show death overlay implicitly via lock hint trick
+                }
+                updateHud();
+            }
+        }
+
+        const tracerMat = new THREE.LineBasicMaterial({ color: 0xfff0a0, transparent: true, opacity: 0.9 });
+        function spawnTracer(origin, dir, range) {
+            const end = new THREE.Vector3().copy(dir).multiplyScalar(range).add(origin);
+            const geom = new THREE.BufferGeometry().setFromPoints([origin, end]);
+            const line = new THREE.Line(geom, tracerMat.clone());
+            G.scene.add(line);
+            setTimeout(() => { G.scene.remove(line); line.geometry.dispose(); line.material.dispose(); }, 60);
+        }
+
+        function spawnMuzzleFlash(pl) {
+            // small instant light
+            const l = new THREE.PointLight(0xffcc66, 3, 5);
+            l.position.copy(pl.pos);
+            l.position.y = pl.pos.y - 0.1;
+            G.scene.add(l);
+            setTimeout(() => G.scene.remove(l), 60);
+        }
+
+        function tryReload(pl) {
+            if (!pl || !pl.alive) return;
+            const wp = WEAPONS[pl.weaponKey];
+            if (pl.reloading) return;
+            if (pl.ammo >= wp.mag) return;
+            if (pl.reserve <= 0) return;
+            pl.reloading = true;
+            pl.reloadEnd = performance.now() + wp.reload * 1000;
+        }
+
+        function completeReloadIfDone(pl, now) {
+            if (!pl.reloading) return;
+            if (now < pl.reloadEnd) return;
+            const wp = WEAPONS[pl.weaponKey];
+            const need = wp.mag - pl.ammo;
+            const give = Math.min(need, pl.reserve);
+            pl.ammo += give;
+            // Infinite reserve: never decrement when at INFINITE_RESERVE sentinel
+            if (pl.reserve !== INFINITE_RESERVE) pl.reserve -= give;
+            pl.reloading = false;
+        }
+
+        function flashDamage() {
+            const el = document.getElementById('damageFlash');
+            el.classList.remove('show');
+            void el.offsetWidth;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 400);
+        }
+        function flashHitMarker() {
+            const el = document.getElementById('hitMarker');
+            el.classList.remove('show');
+            void el.offsetWidth;
+            el.classList.add('show');
+        }
+
+        function pushKillfeed(killer, victim) {
+            const el = document.getElementById('hudKillfeed');
+            const row = document.createElement('div');
+            row.className = 'killfeed-row';
+            const kCls = killer.team === 'blue' ? '' : 'red';
+            const vCls = victim.team === 'blue' ? 'blue' : '';
+            row.innerHTML = `<span class="killer ${kCls}">${escapeHtml(killer.nick)}</span><span class="arrow">→</span><span class="victim ${vCls}">${escapeHtml(victim.nick)}</span>`;
+            el.prepend(row);
+            setTimeout(() => row.remove(), 5500);
+        }
+
+        // ─── Movement ─────────────────────────────────────────────
+        function moveAndCollide(pl, dt) {
+            // Apply gravity
+            pl.vel.y -= GRAVITY * dt;
+            // Step x
+            pl.pos.x += pl.vel.x * dt;
+            resolveCollision(pl, 'x');
+            // Step z
+            pl.pos.z += pl.vel.z * dt;
+            resolveCollision(pl, 'z');
+            // Step y
+            pl.pos.y += pl.vel.y * dt;
+            resolveGroundAndCeiling(pl);
+        }
+
+        function resolveCollision(pl, axis) {
+            const half = PLAYER_RADIUS;
+            const bottom = pl.pos.y - PLAYER_HEIGHT;
+            const top = pl.pos.y - 0.05;
+            const aabb = new THREE.Box3(
+                new THREE.Vector3(pl.pos.x - half, bottom, pl.pos.z - half),
+                new THREE.Vector3(pl.pos.x + half, top, pl.pos.z + half)
+            );
+            for (const c of G.collidables) {
+                if (!aabb.intersectsBox(c.box)) continue;
+                if (axis === 'x') {
+                    if (pl.vel.x > 0) pl.pos.x = c.box.min.x - half - 0.001;
+                    else if (pl.vel.x < 0) pl.pos.x = c.box.max.x + half + 0.001;
+                    pl.vel.x = 0;
+                } else {
+                    if (pl.vel.z > 0) pl.pos.z = c.box.min.z - half - 0.001;
+                    else if (pl.vel.z < 0) pl.pos.z = c.box.max.z + half + 0.001;
+                    pl.vel.z = 0;
+                }
+            }
+            // Player↔player collision: cylinders in the XZ plane (resolve per-axis).
+            const minDist = PLAYER_RADIUS * 2;
+            for (const other of G.players) {
+                if (other === pl || !other.alive) continue;
+                const op = other.isLocal ? G.camera.position : other.pos;
+                // Vertical overlap check (skip if one is jumping over the other)
+                const aTop = top, aBot = bottom;
+                const bTop = op.y - 0.05, bBot = op.y - PLAYER_HEIGHT;
+                if (aTop < bBot || aBot > bTop) continue;
+                const dx = pl.pos.x - op.x;
+                const dz = pl.pos.z - op.z;
+                const d = Math.hypot(dx, dz);
+                if (d >= minDist || d < 1e-6) continue;
+                const push = minDist - d + 0.001;
+                if (axis === 'x') {
+                    pl.pos.x += (dx / d) * push;
+                    if ((pl.vel.x > 0 && dx < 0) || (pl.vel.x < 0 && dx > 0)) pl.vel.x = 0;
+                } else {
+                    pl.pos.z += (dz / d) * push;
+                    if ((pl.vel.z > 0 && dz < 0) || (pl.vel.z < 0 && dz > 0)) pl.vel.z = 0;
+                }
+            }
+            // Outer arena
+            const LIM = 29.4;
+            if (pl.pos.x > LIM) { pl.pos.x = LIM; pl.vel.x = 0; }
+            if (pl.pos.x < -LIM) { pl.pos.x = -LIM; pl.vel.x = 0; }
+            if (pl.pos.z > LIM) { pl.pos.z = LIM; pl.vel.z = 0; }
+            if (pl.pos.z < -LIM) { pl.pos.z = -LIM; pl.vel.z = 0; }
+        }
+
+        function resolveGroundAndCeiling(pl) {
+            // Check if standing on top of any box (or floor)
+            const half = PLAYER_RADIUS;
+            const feet = pl.pos.y - PLAYER_HEIGHT;
+            let groundY = 0;
+            const probe = new THREE.Box3(
+                new THREE.Vector3(pl.pos.x - half, feet - 0.5, pl.pos.z - half),
+                new THREE.Vector3(pl.pos.x + half, feet + 0.5, pl.pos.z + half)
+            );
+            for (const c of G.collidables) {
+                if (!probe.intersectsBox(c.box)) continue;
+                // If we're falling onto top
+                if (c.box.max.y <= pl.pos.y - 0.1) {
+                    if (c.box.max.y > groundY) groundY = c.box.max.y;
+                }
+            }
+            const desiredY = groundY + PLAYER_HEIGHT;
+            if (pl.pos.y <= desiredY) {
+                pl.pos.y = desiredY;
+                pl.vel.y = 0;
+                pl.onGround = true;
+            } else {
+                pl.onGround = false;
+            }
+        }
+
+        // ─── Bot AI ───────────────────────────────────────────────
+        function botThink(pl, dt, now) {
+            if (!pl.alive) return;
+            const enemies = G.players.filter(p => p.team !== pl.team && p.alive);
+            if (enemies.length === 0) {
+                pl.vel.x = pl.vel.z = 0;
+                return;
+            }
+            // Pick or keep target
+            if (!pl.target || !pl.target.alive || pl.target.team === pl.team) {
+                pl.target = enemies[Math.floor(Math.random() * enemies.length)];
+            }
+            // Sometimes re-roll target
+            if (now - pl.lastBotThink > 1200 + Math.random() * 1500) {
+                pl.lastBotThink = now;
+                if (Math.random() < 0.4) pl.target = enemies[Math.floor(Math.random() * enemies.length)];
+                if (Math.random() < 0.6) pl.wanderTarget = randomArenaPoint();
+            }
+
+            const tgtPos = pl.target.isLocal ? G.camera.position : pl.target.pos;
+            const toTgt = new THREE.Vector3().subVectors(tgtPos, pl.pos);
+            toTgt.y = 0;
+            const dist = toTgt.length();
+            const tgtDir = toTgt.clone().normalize();
+            // Smoothly rotate yaw toward target (instead of snapping). This makes the
+            // "don't shoot from behind" rule actually matter: turning takes a moment.
+            const targetYaw = Math.atan2(-tgtDir.x, -tgtDir.z) + Math.PI;
+            const dyaw = ((targetYaw - pl.yaw + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+            const turnSpeed = 4.0; // rad/sec
+            pl.yaw += Math.max(-turnSpeed * dt, Math.min(turnSpeed * dt, dyaw));
+            // Pitch toward target Y
+            const dy = tgtPos.y - pl.pos.y + 0.4;
+            const horiz = Math.hypot(tgtPos.x - pl.pos.x, tgtPos.z - pl.pos.z);
+            pl.pitch = Math.atan2(dy, Math.max(horiz, 0.1)) * 0.6;
+
+            // Forward vector based on current yaw (so a bot whose back is to the
+            // target has a NEGATIVE dot with tgtDir).
+            const fwd = new THREE.Vector3(-Math.sin(pl.yaw), 0, -Math.cos(pl.yaw));
+            const right = new THREE.Vector3(Math.cos(pl.yaw), 0, -Math.sin(pl.yaw));
+
+            // LOS + facing check: don't shoot when target is behind us or blocked.
+            const facing = fwd.dot(tgtDir); // 1 = perfectly facing target, -1 = back to target
+            const seeTarget = hasLineOfSight(pl, pl.target);
+            const canShoot = seeTarget && facing > 0.7; // ~45° forward cone
+
+            // Movement: strafe / approach + separation from other players (no clumping).
+            const wp = WEAPONS[pl.weaponKey];
+            const idealDist = Math.min(wp.range * 0.55, 18);
+            let speed = MOVE_SPEED * 0.8;
+            let mv = new THREE.Vector3();
+            if (seeTarget) {
+                if (dist > idealDist + 2) mv.add(fwd);
+                else if (dist < idealDist - 4) mv.sub(fwd);
+                const strafe = (Math.sin(now * 0.002 + pl.id.length) > 0) ? 1 : -1;
+                mv.add(right.clone().multiplyScalar(strafe * 0.6));
+            } else {
+                let goal = pl.wanderTarget || tgtPos;
+                const to = new THREE.Vector3().subVectors(goal, pl.pos);
+                to.y = 0;
+                if (to.length() < 1.5) pl.wanderTarget = randomArenaPoint();
+                to.normalize();
+                mv.copy(to);
+            }
+            // Separation: push away from any other player closer than SEP_RADIUS
+            const SEP_RADIUS = 1.6;
+            const sep = new THREE.Vector3();
+            for (const other of G.players) {
+                if (other === pl || !other.alive) continue;
+                const op = other.isLocal ? G.camera.position : other.pos;
+                const dx = pl.pos.x - op.x;
+                const dz = pl.pos.z - op.z;
+                const d2 = dx * dx + dz * dz;
+                if (d2 > SEP_RADIUS * SEP_RADIUS || d2 < 1e-6) continue;
+                const d = Math.sqrt(d2);
+                const w = (SEP_RADIUS - d) / SEP_RADIUS; // 0..1
+                sep.x += (dx / d) * w;
+                sep.z += (dz / d) * w;
+            }
+            if (sep.lengthSq() > 0) {
+                sep.normalize();
+                mv.add(sep.multiplyScalar(1.4));
+            }
+            if (mv.lengthSq() > 0) mv.normalize();
+            pl.vel.x = mv.x * speed;
+            pl.vel.z = mv.z * speed;
+
+            // Shoot only when we can actually see the target AND we're facing it.
+            if (canShoot && dist < wp.range) {
+                if (pl.ammo === 0) tryReload(pl);
+                else tryShoot(pl, false);
+            } else if (pl.ammo < wp.mag * 0.3 && pl.reserve > 0) {
+                tryReload(pl);
+            }
+        }
+
+        function randomArenaPoint() {
+            return new THREE.Vector3((Math.random() - 0.5) * 50, PLAYER_HEIGHT, (Math.random() - 0.5) * 50);
+        }
+
+        function hasLineOfSight(from, to) {
+            const a = from.isLocal ? G.camera.position : from.pos.clone();
+            const b = to.isLocal ? G.camera.position : to.pos.clone();
+            const dir = new THREE.Vector3().subVectors(b, a).normalize();
+            const dist = a.distanceTo(b);
+            const ray = new THREE.Raycaster(a, dir, 0.1, dist - 0.2);
+            const wallMeshes = G.collidables.map(c => c.mesh);
+            const hits = ray.intersectObjects(wallMeshes, false);
+            return hits.length === 0;
+        }
+
+        // ─── Game loop ────────────────────────────────────────────
+        function gameLoop(t) {
+            if (!G.running) return;
+            requestAnimationFrame(gameLoop);
+            if (G.paused) {
+                G.lastTime = t;
+                if (G.renderer && G.scene && G.camera) G.renderer.render(G.scene, G.camera);
+                return;
+            }
+            const dt = Math.min(0.05, (t - G.lastTime) / 1000);
+            G.lastTime = t;
+            const now = t;
+
+            // Timer
+            G.timeLeft -= dt;
+            if (G.timeLeft <= 0) {
+                G.timeLeft = 0;
+                endMatch();
+            }
+
+            // Touch look — apply continuous yaw/pitch from right-stick offset
+            if (IS_TOUCH && (G.touch.look.x !== 0 || G.touch.look.y !== 0)) {
+                const lookSens = 2.6;
+                G.yaw -= G.touch.look.x * lookSens * dt;
+                G.pitch -= G.touch.look.y * lookSens * dt;
+                const lim = Math.PI / 2 - 0.05;
+                if (G.pitch > lim) G.pitch = lim;
+                if (G.pitch < -lim) G.pitch = -lim;
+                updateCameraRotation();
+            }
+
+            // Update local player
+            const me = getLocalPlayer2();
+            if (me) {
+                completeReloadIfDone(me, now);
+                if (me.alive) {
+                    me.yaw = G.yaw;
+                    me.pitch = G.pitch;
+                    const kFwd   = (G.keys['KeyW'] ? 1 : 0) - (G.keys['KeyS'] ? 1 : 0);
+                    const kRight = (G.keys['KeyD'] ? 1 : 0) - (G.keys['KeyA'] ? 1 : 0);
+                    // Left stick: y up = forward (so invert), x right = strafe right
+                    let inputFwd   = kFwd   + (IS_TOUCH ? -G.touch.move.y : 0);
+                    let inputRight = kRight + (IS_TOUCH ? G.touch.move.x : 0);
+                    if (inputFwd > 1) inputFwd = 1; if (inputFwd < -1) inputFwd = -1;
+                    if (inputRight > 1) inputRight = 1; if (inputRight < -1) inputRight = -1;
+                    const sprint = !!G.keys['ShiftLeft'] || !!G.keys['ShiftRight'];
+                    me.crouching = !!G.keys['ControlLeft'];
+                    const speed = me.crouching ? CROUCH_SPEED : (sprint ? SPRINT_SPEED : MOVE_SPEED);
+                    const fwd = new THREE.Vector3(-Math.sin(G.yaw), 0, -Math.cos(G.yaw));
+                    const right = new THREE.Vector3(Math.cos(G.yaw), 0, -Math.sin(G.yaw));
+                    const mv = new THREE.Vector3();
+                    mv.add(fwd.multiplyScalar(inputFwd));
+                    mv.add(right.multiplyScalar(inputRight));
+                    if (mv.lengthSq() > 0) mv.normalize();
+                    me.vel.x = mv.x * speed;
+                    me.vel.z = mv.z * speed;
+                    const wantJump = G.keys['Space'] || G.touch.jumpQueued;
+                    if (wantJump && me.onGround) {
+                        me.vel.y = JUMP_SPEED;
+                        me.onGround = false;
+                    }
+                    G.touch.jumpQueued = false;
+                    moveAndCollide(me, dt);
+                    G.camera.position.copy(me.pos);
+                    // Touch auto-fire while fire button held
+                    if (IS_TOUCH && G.touch.fire) {
+                        const wp = WEAPONS[me.weaponKey];
+                        if (wp.full || (now - (me.lastShotAt || 0) > 60000 / wp.rpm)) {
+                            tryShoot(me, false);
+                        }
+                    }
+                } else {
+                    // Dead — wait for respawn
+                    if (now >= me.respawnAt) {
+                        spawnPlayer(me, false);
+                    }
+                }
+            }
+
+            // Viewmodel animation: recoil kick decay + muzzle flash fade + walk bob
+            if (G.viewmodel && G.viewmodelBasePos) {
+                const kick = G.viewmodelKick || 0;
+                const decay = Math.max(0, kick - dt * 6);
+                G.viewmodelKick = decay;
+                const mePos = me ? me.pos : null;
+                const speed2 = mePos ? Math.hypot(me.vel.x, me.vel.z) : 0;
+                const bobAmp = Math.min(1, speed2 / 5.0) * 0.012;
+                const bobY = Math.sin(t * 0.012) * bobAmp;
+                const bobX = Math.cos(t * 0.006) * bobAmp * 0.5;
+                G.viewmodel.position.set(
+                    G.viewmodelBasePos.x + bobX,
+                    G.viewmodelBasePos.y + bobY,
+                    G.viewmodelBasePos.z + kick * 0.08
+                );
+                G.viewmodel.rotation.x = -kick * 0.20;
+                if (G.muzzleFlash) {
+                    if (now >= G.muzzleFlashUntil) {
+                        G.muzzleFlash.visible = false;
+                        if (G.muzzleFlashMat) G.muzzleFlashMat.opacity = 0;
+                    } else if (G.muzzleFlashMat) {
+                        const remain = (G.muzzleFlashUntil - now) / 55;
+                        G.muzzleFlashMat.opacity = Math.max(0, remain);
+                    }
+                }
+            }
+
+            // Update bots
+            for (const pl of G.players) {
+                if (pl.isLocal) continue;
+                completeReloadIfDone(pl, now);
+                if (pl.alive) {
+                    botThink(pl, dt, now);
+                    moveAndCollide(pl, dt);
+                    if (pl.mesh) {
+                        pl.mesh.position.set(pl.pos.x, pl.pos.y - PLAYER_HEIGHT, pl.pos.z);
+                        pl.mesh.rotation.y = pl.yaw;
+                        animateHumanoid(pl, t);
+                    }
+                } else {
+                    if (now >= pl.respawnAt) {
+                        spawnPlayer(pl, false);
+                    }
+                }
+            }
+
+            updateHud();
+            G.renderer.render(G.scene, G.camera);
+        }
+
+        function updateHud() {
+            const me = getLocalPlayer2();
+            if (!me) return;
+            document.getElementById('hudHp').textContent = me.alive ? me.hp : 0;
+            document.getElementById('hudHpFill').style.width = (Math.max(0, me.hp) / MAX_HP * 100) + '%';
+            const wp = WEAPONS[me.weaponKey];
+            document.getElementById('hudWeapon').textContent = wp.name + (me.reloading ? ' (перезарядка...)' : '');
+            document.getElementById('hudAmmo').textContent = me.ammo;
+            document.getElementById('hudReserve').textContent = me.reserve;
+            document.getElementById('scoreBlue').textContent = G.score.blue;
+            document.getElementById('scoreRed').textContent = G.score.red;
+            const t = Math.max(0, G.timeLeft);
+            const mns = Math.floor(t / 60);
+            const sec = Math.floor(t % 60);
+            document.getElementById('hudTimer').textContent = `${mns}:${sec.toString().padStart(2, '0')}`;
+            updateTeamList();
+        }
+
+        function buildHUDTeamList() {
+            const el = document.getElementById('hudTeamList');
+            el.innerHTML = '<div class="hud-team hud-team-blue"></div><div class="hud-team hud-team-red" style="margin-top:8px"></div>';
+        }
+        function updateTeamList() {
+            const el = document.getElementById('hudTeamList');
+            const blue = G.players.filter(p => p.team === 'blue');
+            const red = G.players.filter(p => p.team === 'red');
+            const render = (arr) => arr.map(p =>
+                `<div class="hud-team-row ${!p.alive ? 'dead' : ''} ${p.isLocal ? 'you' : ''}"><span class="name">${escapeHtml(p.nick)}</span><span class="kd">${p.kills}/${p.deaths}</span></div>`
+            ).join('');
+            el.innerHTML =
+                '<div class="hud-team hud-team-blue">' + render(blue) + '</div>' +
+                '<div class="hud-team hud-team-red" style="margin-top:8px">' + render(red) + '</div>';
+        }
+
+        function endMatch() {
+            if (!G.running) return;
+            G.running = false;
+            if (document.pointerLockElement) document.exitPointerLock();
+            matchScreen.classList.remove('active');
+
+            const me = getLocalPlayer2();
+            const myTeam = me ? me.team : 'blue';
+            const result = G.score.blue === G.score.red ? 'draw'
+                : (myTeam === 'blue' ? G.score.blue > G.score.red : G.score.red > G.score.blue) ? 'win' : 'lose';
+            const title = document.getElementById('resultsTitle');
+            title.textContent = result === 'win' ? 'Победа' : (result === 'lose' ? 'Поражение' : 'Ничья');
+            title.className = 'results-title ' + result;
+            document.getElementById('resultsFinalScore').textContent = `${G.score.blue} : ${G.score.red}`;
+
+            // Sort: local player first, then descending kills.
+            const sorted = G.players.slice().sort((a, b) => {
+                if (a.isLocal !== b.isLocal) return a.isLocal ? -1 : 1;
+                if (b.kills !== a.kills) return b.kills - a.kills;
+                return a.deaths - b.deaths;
+            });
+
+            // Coin rewards (10..35 each, multiples of 5, team total clamped to [50, 200]).
+            const rewards = rollCoinRewards(sorted.length);
+
+            // XP awarded to the local player only: kills * XP_PER_KILL.
+            const beforeLevel = state.level;
+            const beforeXp = state.xp;
+            const xpEarned = (me ? me.kills : 0) * XP_PER_KILL;
+            const xpRes = awardXP(xpEarned);
+
+            // Local player's coin reward goes into silver.
+            const myIdx = sorted.findIndex(p => p.isLocal);
+            const myCoins = myIdx >= 0 ? rewards[myIdx] : 0;
+            if (myCoins > 0) {
+                state.silver += myCoins;
+                saveState();
+            }
+            updateSilverDisplay();
+            refreshMenuIdentity();
+
+            // Top progress strip
+            document.getElementById('resultsLevelBadge').textContent = state.level;
+            const pct = state.level >= MAX_LEVEL ? 100 : (state.xp / xpForNextLevel(state.level)) * 100;
+            requestAnimationFrame(() => {
+                document.getElementById('resultsXpFill').style.width = pct.toFixed(1) + '%';
+            });
+            const xpLabel = state.level >= MAX_LEVEL
+                ? 'Максимальный уровень (100)'
+                : `Уровень ${state.level} — ${state.xp} / ${xpForNextLevel(state.level)} XP`;
+            document.getElementById('resultsXpLabel').textContent = xpLabel
+                + (xpRes.levelsGained ? ` · +${xpRes.levelsGained} ур.` : '');
+            document.getElementById('resultsXpGained').textContent = `+${xpEarned} XP`;
+            document.getElementById('resultsCoinsHud').textContent = `+${myCoins}`;
+
+            // Card grid: one card per player.
+            function coinTag(coins, isLocal) {
+                if (coins >= 30) return isLocal ? 'Удача' : 'Удачно';
+                if (coins >= 20) return 'Хорошая игра';
+                if (coins >= 15) return 'Старался';
+                return 'Без удачи';
+            }
+            const cards = document.getElementById('resultsCards');
+            cards.innerHTML = sorted.map((p, i) => {
+                const coins = rewards[i];
+                const teamClass = p.team === 'blue' ? 'team-blue' : 'team-red';
+                const meClass = p.isLocal ? 'you' : '';
+                return `<div class="result-card ${meClass} ${teamClass}">
+                    <div class="result-card-tag">${coinTag(coins, p.isLocal)}</div>
+                    <div class="result-card-coin">C</div>
+                    <div class="result-card-name">${escapeHtml(p.nick)}</div>
+                    <div class="result-card-stats">${p.kills} убийств · ${p.deaths} смертей</div>
+                    <div class="result-card-reward ${coins === 0 ? 'zero' : ''}">
+                        <span class="currency-icon" style="background:linear-gradient(135deg,#d8d8d8,#9a9a9a);color:#2b2b2b">C</span>
+                        Coins +${coins}
+                    </div>
+                    <div class="result-card-team-tag">${p.team === 'blue' ? 'Синие' : 'Красные'}</div>
+                </div>`;
+            }).join('');
+
+            resultsScreen.classList.add('active');
+        }
+
+        document.getElementById('resultsBack').addEventListener('click', () => {
+            resultsScreen.classList.remove('active');
+            // Cleanup scene
+            if (G.renderer) {
+                G.renderer.dispose();
+                G.renderer = null;
+            }
+            G.scene = null;
+            G.players = [];
+            G.collidables = [];
+        });
+
+        // ── Splash screen (nb3game intro) ─────────────────────────
+        function spawnSplashParticles() {
+            const host = document.getElementById('splashParticles');
+            if (!host) return;
+            const N = 60;
+            const W = window.innerWidth, H = window.innerHeight;
+            const cx = W / 2, cy = H / 2;
+            for (let i = 0; i < N; i++) {
+                const el = document.createElement('div');
+                el.className = 'splash-particle';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 120 + Math.random() * 360;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                el.style.left = (cx - 2) + 'px';
+                el.style.top = (cy - 2) + 'px';
+                el.style.setProperty('--dx', dx + 'px');
+                el.style.setProperty('--dy', dy + 'px');
+                el.style.animationDelay = (Math.random() * 0.6) + 's';
+                host.appendChild(el);
+            }
+        }
+        function hideSplash() {
+            const sp = document.getElementById('splashScreen');
+            if (!sp) return;
+            sp.classList.add('hide');
+            setTimeout(() => { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 600);
+        }
+        spawnSplashParticles();
+        setTimeout(hideSplash, 2800);
+
+        // Initial paint
+        updateSilverDisplay();
+        refreshMenuIdentity();
+        openAuthIfNeeded();
+        if (typeof initMenuCharacter === 'function') initMenuCharacter();
+    </script>
+</body>
+</html>
