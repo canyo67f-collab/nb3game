@@ -2,8 +2,10 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Игровое меню</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>ColdLine</title>
     <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
     <style>
         * {
@@ -12,17 +14,30 @@
             box-sizing: border-box;
         }
 
+        html, body {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            touch-action: manipulation;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #2d2540 0%, #1a1625 100%);
             color: #fff;
             overflow: hidden;
             height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
         .container {
             display: flex;
             height: 100vh;
+            height: 100dvh;
         }
 
         .left-panel {
@@ -1516,9 +1531,344 @@
             background: linear-gradient(135deg, #c62828 0%, #a01818 100%);
             border-color: transparent;
         }
+
+        /* ── Splash screen (nb3game intro) ───────────────── */
+        .splash-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #001e28 0%, #000005 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 9999;
+            font-family: 'Courier New', monospace;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+        }
+        .splash-screen.hide { opacity: 0; pointer-events: none; }
+        .splash-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0,255,204,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,255,204,0.06) 1px, transparent 1px);
+            background-size: 40px 40px;
+            mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at center, #000 30%, transparent 75%);
+        }
+        .splash-particles { position: absolute; inset: 0; overflow: hidden; }
+        .splash-particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: #00ffcc;
+            box-shadow: 0 0 8px #00ffcc;
+            border-radius: 1px;
+            opacity: 0;
+            animation: splashFly 1.6s ease-out forwards;
+        }
+        @keyframes splashFly {
+            0%   { opacity: 0; transform: translate(0,0) scale(0.5); }
+            20%  { opacity: 0.9; }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.2); }
+        }
+        .splash-logo-wrap {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            animation: splashLogo 2.8s ease forwards;
+        }
+        @keyframes splashLogo {
+            0%   { opacity: 0; transform: scale(0.6); }
+            18%  { opacity: 1; transform: scale(1.02); }
+            70%  { opacity: 1; transform: scale(1.0); }
+            100% { opacity: 0; transform: scale(1.06); }
+        }
+        .splash-line {
+            width: 240px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent 0%, #00ffcc 50%, transparent 100%);
+            box-shadow: 0 0 12px #00ffcc;
+        }
+        .splash-logo {
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 6px;
+            color: #00ffcc;
+            text-shadow: 0 0 24px #00ffcc, 0 0 48px rgba(0, 255, 204, 0.45);
+            font-family: 'Courier New', monospace;
+            animation: splashPulse 1.4s ease-in-out infinite;
+        }
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); }
+        }
+        .splash-sub {
+            font-size: 13px;
+            letter-spacing: 4px;
+            color: #ff9944;
+            text-shadow: 0 0 8px rgba(255, 153, 68, 0.6);
+        }
+        .splash-bar-wrap {
+            position: absolute;
+            bottom: 18%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 6px;
+            background: rgba(0, 51, 68, 0.6);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .splash-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #00ffcc 0%, #0088ff 100%);
+            box-shadow: 0 0 10px #00ffcc;
+            animation: splashBar 2.4s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+        @keyframes splashBar {
+            from { width: 0; }
+            to   { width: 100%; }
+        }
+        @media (max-width: 540px) {
+            .splash-logo { font-size: 34px; letter-spacing: 4px; }
+            .splash-line { width: 180px; }
+            .splash-bar-wrap { width: 170px; }
+        }
+
+        /* ── Mobile responsive (phone / landscape) ───────────────── */
+        @media (max-width: 900px) {
+            .left-panel { width: 56px; padding: 12px 0; gap: 10px; }
+            .menu-btn { width: 40px; height: 40px; border-radius: 8px; }
+            .menu-btn svg { width: 18px; height: 18px; }
+            .home-screen { padding: 12px; }
+            .player-info { gap: 10px; margin-bottom: 10px; }
+            .player-avatar { width: 38px; height: 38px; font-size: 15px; border-radius: 8px; }
+            .player-name { font-size: 14px; }
+            .player-level { font-size: 11px; padding: 1px 7px; }
+            .xp-bar { height: 6px; }
+            .xp-text { font-size: 10px; }
+            .currency { padding: 4px 8px; font-size: 13px; }
+            .currency-icon { width: 18px; height: 18px; font-size: 11px; }
+            .character-frame { width: 200px; height: 280px; margin: 0 auto 10px; }
+            .menu-char-canvas { width: 200px !important; height: 280px !important; }
+            .character-info { padding: 6px 12px; gap: 8px; }
+            .character-name { font-size: 13px; }
+            .character-level { width: 26px; height: 26px; font-size: 11px; }
+            .mode-selector { padding: 9px 14px; }
+            .mode-text { font-size: 13px; }
+            .play-button { padding: 11px 28px; font-size: 14px; }
+            .overlay-header { padding: 10px 14px; }
+            .overlay-tab { padding: 6px 12px; font-size: 13px; }
+        }
+        @media (orientation: landscape) and (max-height: 500px) {
+            .left-panel { width: 48px; padding: 8px 0; gap: 8px; }
+            .menu-btn { width: 36px; height: 36px; }
+            .menu-btn svg { width: 16px; height: 16px; }
+            .home-screen,
+            .home-screen.active { padding: 8px 12px; flex-direction: row; gap: 12px; align-items: stretch; }
+            .player-info { flex-direction: column; flex: 0 0 28%; max-width: 200px; gap: 6px; margin-bottom: 0; align-items: stretch; }
+            .player-avatar { width: 32px; height: 32px; font-size: 13px; }
+            .character-display { flex: 1; margin: 0; min-width: 0; }
+            .character-frame { width: 150px; height: 200px; margin: 0 auto 6px; }
+            .menu-char-canvas { width: 150px !important; height: 200px !important; }
+            .character-info { padding: 4px 10px; }
+            .character-name { font-size: 11px; }
+            .character-level { width: 22px; height: 22px; font-size: 10px; }
+            .bottom-controls { flex-direction: column; flex: 0 0 26%; max-width: 180px; gap: 6px; justify-content: center; }
+            .mode-selector { width: 100%; padding: 7px 12px; }
+            .play-button { width: 100%; padding: 14px 8px; font-size: 14px; }
+            .currency-bar { margin-top: auto; }
+            .results-table { min-width: auto; padding: 10px 12px; }
+            .results-title { font-size: 32px; margin-bottom: 0; letter-spacing: 2px; }
+            .results-final-score { font-size: 16px; margin-bottom: 8px; }
+            .results-cards { gap: 6px; padding: 6px; max-height: 50vh; }
+            .result-card { padding: 6px 8px; font-size: 11px; }
+            .result-card-coin { font-size: 16px; }
+            .result-card-reward { font-size: 11px; }
+            .modal-card { padding: 16px 18px; min-width: 280px; max-width: 90vw; }
+            .modal-card h2 { font-size: 18px; }
+            .pause-card { padding: 16px 20px; min-width: 220px; }
+            .lock-hint { padding: 10px 16px; font-size: 12px; }
+        }
+
+        /* ── Results screen redesign ───────────────── */
+        .results-top {
+            width: min(900px, 96vw);
+            margin-bottom: 14px;
+        }
+        .results-title-row {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            gap: 16px;
+        }
+        .results-title-row .results-title { font-size: 44px; letter-spacing: 3px; margin: 0; }
+        .results-title-row .results-final-score { font-size: 22px; margin: 0; align-self: center; }
+
+        .results-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+        .results-level-badge {
+            width: 44px; height: 44px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #ff9944 0%, #ff6b00 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            color: #14141c;
+            box-shadow: 0 0 12px rgba(255, 153, 68, 0.4);
+        }
+        .results-xp-block { flex: 1; }
+        .results-xp-bar {
+            position: relative;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .results-xp-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+            transition: width 1.2s ease-out;
+        }
+        .results-xp-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 4px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .results-xp-text .gained { color: #4CAF50; font-weight: 600; }
+        .results-coin-total {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #e8e8e8;
+        }
+        .results-coin-total .currency-icon {
+            width: 28px; height: 28px; font-size: 14px;
+        }
+
+        .results-cards {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            width: min(900px, 96vw);
+            margin-bottom: 18px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        @media (max-width: 700px) {
+            .results-cards { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 420px) {
+            .results-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        .result-card {
+            background: linear-gradient(180deg, #1f1f28 0%, #14141c 100%);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            min-height: 130px;
+        }
+        .result-card.you { border-color: #ff9944; box-shadow: 0 0 16px rgba(255, 153, 68, 0.35); }
+        .result-card.team-blue { border-top-color: rgba(92, 198, 255, 0.55); }
+        .result-card.team-red { border-top-color: rgba(255, 119, 87, 0.55); }
+        .result-card.you.team-blue { border-color: #ff9944; }
+        .result-card.you.team-red { border-color: #ff9944; }
+        .result-card-tag {
+            font-size: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 6px;
+        }
+        .result-card.you .result-card-tag { color: #ff9944; }
+        .result-card-coin {
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #d8d8d8 0%, #9a9a9a 100%);
+            color: #2b2b2b;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800;
+            font-size: 22px;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25), 0 4px 12px rgba(0,0,0,0.4);
+            margin-bottom: 6px;
+        }
+        .result-card-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .result-card-stats {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 6px;
+        }
+        .result-card-reward {
+            margin-top: auto;
+            font-size: 13px;
+            font-weight: 700;
+            color: #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .result-card-reward.zero { color: rgba(255,255,255,0.35); }
+        .result-card-reward .currency-icon {
+            width: 18px; height: 18px; font-size: 10px;
+        }
+        .result-card-team-tag {
+            font-size: 9px;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+        .result-card.team-blue .result-card-team-tag { color: #5cc6ff; }
+        .result-card.team-red .result-card-team-tag { color: #ff7757; }
     </style>
 </head>
 <body>
+    <!-- Splash screen (nb3game intro) -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="splash-grid"></div>
+        <div class="splash-particles" id="splashParticles"></div>
+        <div class="splash-logo-wrap">
+            <div class="splash-line"></div>
+            <div class="splash-logo">nb3game</div>
+            <div class="splash-line"></div>
+            <div class="splash-sub">⚡ COLDLINE ⚡</div>
+        </div>
+        <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+    </div>
+
     <div class="container">
         <div class="left-panel">
             <button class="menu-btn active" data-screen="home" title="Главное меню">
@@ -1550,19 +1900,19 @@
 
                 <div class="player-details">
                     <div class="player-header">
-                        <span class="player-name" id="playerName">Danil</span>
+                        <span class="player-name" id="playerName">Игрок</span>
                         <div class="player-level">
-                            <span class="icon-trophy"></span>27
+                            <span class="icon-trophy"></span><span id="playerLevelNum">1</span>
                         </div>
                     </div>
 
                     <div class="xp-bar">
-                        <div class="xp-progress"></div>
+                        <div class="xp-progress" id="playerXpProgress" style="width:0%"></div>
                     </div>
 
                     <div class="xp-text">
-                        <span>XP: 6,500 / 10,000</span>
-                        <span>35% до уровня 28</span>
+                        <span id="playerXpText">XP: 0 / 100</span>
+                        <span id="playerXpPct">0% до уровня 2</span>
                     </div>
                 </div>
 
@@ -1582,8 +1932,8 @@
                     </div>
 
                     <div class="character-info">
-                        <span class="character-name" id="characterName">Danil</span>
-                        <div class="character-level">27</div>
+                        <span class="character-name" id="characterName">Игрок</span>
+                        <div class="character-level" id="characterLevel">1</div>
                     </div>
                 </div>
             </div>
@@ -1773,17 +2123,27 @@
 
     <!-- Results screen -->
     <div class="results-screen" id="resultsScreen">
-        <div class="results-title" id="resultsTitle">Победа</div>
-        <div class="results-final-score" id="resultsFinalScore">5 : 3</div>
-        <div class="results-table">
-            <h4>Таблица очков</h4>
-            <div class="results-row head">
-                <div>Игрок</div>
-                <div class="num">Убийства</div>
-                <div class="num">Смерти</div>
+        <div class="results-top">
+            <div class="results-title-row">
+                <div class="results-title" id="resultsTitle">Победа</div>
+                <div class="results-final-score" id="resultsFinalScore">5 : 3</div>
             </div>
-            <div id="resultsRows"></div>
+            <div class="results-progress-row">
+                <div class="results-level-badge" id="resultsLevelBadge">1</div>
+                <div class="results-xp-block">
+                    <div class="results-xp-bar"><div class="results-xp-fill" id="resultsXpFill" style="width:0%"></div></div>
+                    <div class="results-xp-text">
+                        <span id="resultsXpLabel">Уровень 1 — 0 / 100 XP</span>
+                        <span class="gained" id="resultsXpGained">+0 XP</span>
+                    </div>
+                </div>
+                <div class="results-coin-total">
+                    <span class="currency-icon" style="background:linear-gradient(135deg,#d8d8d8,#9a9a9a);color:#2b2b2b">C</span>
+                    <span id="resultsCoinsHud">+0</span>
+                </div>
+            </div>
         </div>
+        <div class="results-cards" id="resultsCards"></div>
         <button class="results-back" id="resultsBack">В меню</button>
     </div>
 
@@ -1823,11 +2183,13 @@
                 if (raw && typeof raw === 'object') {
                     return {
                         silver: typeof raw.silver === 'number' ? raw.silver : 1000,
-                        inventory: Array.isArray(raw.inventory) ? raw.inventory : []
+                        inventory: Array.isArray(raw.inventory) ? raw.inventory : [],
+                        level: typeof raw.level === 'number' && raw.level >= 1 ? Math.min(100, raw.level) : 1,
+                        xp:    typeof raw.xp === 'number' && raw.xp >= 0 ? raw.xp : 0
                     };
                 }
             } catch (e) {}
-            return { silver: 1000, inventory: [] };
+            return { silver: 1000, inventory: [], level: 1, xp: 0 };
         }
 
         function saveState() {
@@ -1835,6 +2197,72 @@
         }
 
         const state = loadState();
+
+        // ── Level / XP system ───────────────────────────────────
+        // Level 1→2 requires 100 XP, Level 2→3 requires 200 XP, ..., Level N→N+1 requires N*100 XP.
+        // Levels capped at 100. XP overflow carries over to the next level (per user spec).
+        const MAX_LEVEL = 100;
+        const XP_PER_KILL = 10;
+        function xpForNextLevel(level) {
+            // XP needed to advance FROM `level` to `level+1`.
+            return level * 100;
+        }
+        function levelProgressPercent() {
+            if (state.level >= MAX_LEVEL) return 100;
+            return Math.max(0, Math.min(100, (state.xp / xpForNextLevel(state.level)) * 100));
+        }
+        // Award `amount` XP, handle level-ups with overflow carrying over.
+        // Returns { levelsGained, finalLevel, finalXp }.
+        function awardXP(amount) {
+            let levelsGained = 0;
+            if (amount <= 0) return { levelsGained, finalLevel: state.level, finalXp: state.xp };
+            state.xp += amount;
+            while (state.level < MAX_LEVEL && state.xp >= xpForNextLevel(state.level)) {
+                state.xp -= xpForNextLevel(state.level);
+                state.level++;
+                levelsGained++;
+            }
+            if (state.level >= MAX_LEVEL) {
+                state.level = MAX_LEVEL;
+                state.xp = 0; // cap, no carry past 100
+            }
+            saveState();
+            return { levelsGained, finalLevel: state.level, finalXp: state.xp };
+        }
+
+        // ── Coin reward (silver, but labeled "Coins") ───────────
+        // Per-player roll: uniform random from {10,15,20,25,30,35} (1/6 chance each).
+        // Team-wide total clamped to [50, 200]: rolls trimmed/topped in 5-unit steps.
+        const COIN_VALUES = [10, 15, 20, 25, 30, 35];
+        const COIN_MIN = 10, COIN_MAX = 35, COIN_STEP = 5;
+        const COIN_TEAM_MIN = 50, COIN_TEAM_MAX = 200;
+        function rollPlayerCoins() {
+            return COIN_VALUES[Math.floor(Math.random() * COIN_VALUES.length)];
+        }
+        function rollCoinRewards(playerCount) {
+            const rewards = [];
+            for (let i = 0; i < playerCount; i++) rewards.push(rollPlayerCoins());
+            let total = rewards.reduce((a, b) => a + b, 0);
+            // Trim while over team cap by removing 5 from a random player who is still > COIN_MIN.
+            let guard = 0;
+            while (total > COIN_TEAM_MAX && guard++ < 500) {
+                const idxs = rewards.map((v, i) => v > COIN_MIN ? i : -1).filter(i => i >= 0);
+                if (!idxs.length) break;
+                const k = idxs[Math.floor(Math.random() * idxs.length)];
+                rewards[k] -= COIN_STEP;
+                total -= COIN_STEP;
+            }
+            // Top up while under team floor by adding 5 to a random player still < COIN_MAX.
+            guard = 0;
+            while (total < COIN_TEAM_MIN && guard++ < 500) {
+                const idxs = rewards.map((v, i) => v < COIN_MAX ? i : -1).filter(i => i >= 0);
+                if (!idxs.length) break;
+                const k = idxs[Math.floor(Math.random() * idxs.length)];
+                rewards[k] += COIN_STEP;
+                total += COIN_STEP;
+            }
+            return rewards;
+        }
 
         // ── Helpers ─────────────────────────────────────────────
         function updateSilverDisplay() {
@@ -2181,6 +2609,23 @@
             if (charNameEl) charNameEl.textContent = nick;
             const avatarEl = document.querySelector('.player-avatar');
             if (avatarEl) avatarEl.textContent = (nick.charAt(0) || '?').toUpperCase();
+            // Level / XP display
+            const lvNumEl = document.getElementById('playerLevelNum');
+            const charLvEl = document.getElementById('characterLevel');
+            const xpProgEl = document.getElementById('playerXpProgress');
+            const xpTextEl = document.getElementById('playerXpText');
+            const xpPctEl = document.getElementById('playerXpPct');
+            if (lvNumEl) lvNumEl.textContent = state.level;
+            if (charLvEl) charLvEl.textContent = state.level;
+            if (xpProgEl) xpProgEl.style.width = levelProgressPercent().toFixed(1) + '%';
+            if (xpTextEl) {
+                if (state.level >= MAX_LEVEL) xpTextEl.textContent = 'Максимальный уровень';
+                else xpTextEl.textContent = `XP: ${state.xp} / ${xpForNextLevel(state.level)}`;
+            }
+            if (xpPctEl) {
+                if (state.level >= MAX_LEVEL) xpPctEl.textContent = '— ';
+                else xpPctEl.textContent = `${Math.floor(levelProgressPercent())}% до уровня ${state.level + 1}`;
+            }
         }
 
         // ── Auth + nickname modals ───────────────────────────────
@@ -3943,32 +4388,81 @@
             if (document.pointerLockElement) document.exitPointerLock();
             matchScreen.classList.remove('active');
 
+            const me = getLocalPlayer2();
+            const myTeam = me ? me.team : 'blue';
             const result = G.score.blue === G.score.red ? 'draw'
-                : (getLocalPlayer2().team === 'blue' ? G.score.blue > G.score.red : G.score.red > G.score.blue) ? 'win' : 'lose';
+                : (myTeam === 'blue' ? G.score.blue > G.score.red : G.score.red > G.score.blue) ? 'win' : 'lose';
             const title = document.getElementById('resultsTitle');
             title.textContent = result === 'win' ? 'Победа' : (result === 'lose' ? 'Поражение' : 'Ничья');
             title.className = 'results-title ' + result;
             document.getElementById('resultsFinalScore').textContent = `${G.score.blue} : ${G.score.red}`;
-            const rows = document.getElementById('resultsRows');
-            const sorted = G.players.slice().sort((a, b) => b.kills - a.kills);
-            rows.innerHTML = sorted.map(p =>
-                `<div class="results-row ${p.isLocal ? 'you' : ''}">
-                    <div class="name">${escapeHtml(p.nick)} <span style="color:${p.team === 'blue' ? '#5cc6ff' : '#ff7757'};font-size:11px">[${p.team === 'blue' ? 'Синие' : 'Красные'}]</span></div>
-                    <div class="num">${p.kills}</div>
-                    <div class="num">${p.deaths}</div>
-                </div>`).join('');
-            resultsScreen.classList.add('active');
 
-            // Reward: a bit of silver for kills
-            const me = getLocalPlayer2();
-            if (me) {
-                const reward = me.kills * 5 + (result === 'win' ? 50 : 0);
-                if (reward > 0) {
-                    state.silver += reward;
-                    saveState();
-                    updateSilverDisplay();
-                }
+            // Sort: local player first, then descending kills.
+            const sorted = G.players.slice().sort((a, b) => {
+                if (a.isLocal !== b.isLocal) return a.isLocal ? -1 : 1;
+                if (b.kills !== a.kills) return b.kills - a.kills;
+                return a.deaths - b.deaths;
+            });
+
+            // Coin rewards (10..35 each, multiples of 5, team total clamped to [50, 200]).
+            const rewards = rollCoinRewards(sorted.length);
+
+            // XP awarded to the local player only: kills * XP_PER_KILL.
+            const beforeLevel = state.level;
+            const beforeXp = state.xp;
+            const xpEarned = (me ? me.kills : 0) * XP_PER_KILL;
+            const xpRes = awardXP(xpEarned);
+
+            // Local player's coin reward goes into silver.
+            const myIdx = sorted.findIndex(p => p.isLocal);
+            const myCoins = myIdx >= 0 ? rewards[myIdx] : 0;
+            if (myCoins > 0) {
+                state.silver += myCoins;
+                saveState();
             }
+            updateSilverDisplay();
+            refreshMenuIdentity();
+
+            // Top progress strip
+            document.getElementById('resultsLevelBadge').textContent = state.level;
+            const pct = state.level >= MAX_LEVEL ? 100 : (state.xp / xpForNextLevel(state.level)) * 100;
+            requestAnimationFrame(() => {
+                document.getElementById('resultsXpFill').style.width = pct.toFixed(1) + '%';
+            });
+            const xpLabel = state.level >= MAX_LEVEL
+                ? 'Максимальный уровень (100)'
+                : `Уровень ${state.level} — ${state.xp} / ${xpForNextLevel(state.level)} XP`;
+            document.getElementById('resultsXpLabel').textContent = xpLabel
+                + (xpRes.levelsGained ? ` · +${xpRes.levelsGained} ур.` : '');
+            document.getElementById('resultsXpGained').textContent = `+${xpEarned} XP`;
+            document.getElementById('resultsCoinsHud').textContent = `+${myCoins}`;
+
+            // Card grid: one card per player.
+            function coinTag(coins, isLocal) {
+                if (coins >= 30) return isLocal ? 'Удача' : 'Удачно';
+                if (coins >= 20) return 'Хорошая игра';
+                if (coins >= 15) return 'Старался';
+                return 'Без удачи';
+            }
+            const cards = document.getElementById('resultsCards');
+            cards.innerHTML = sorted.map((p, i) => {
+                const coins = rewards[i];
+                const teamClass = p.team === 'blue' ? 'team-blue' : 'team-red';
+                const meClass = p.isLocal ? 'you' : '';
+                return `<div class="result-card ${meClass} ${teamClass}">
+                    <div class="result-card-tag">${coinTag(coins, p.isLocal)}</div>
+                    <div class="result-card-coin">C</div>
+                    <div class="result-card-name">${escapeHtml(p.nick)}</div>
+                    <div class="result-card-stats">${p.kills} убийств · ${p.deaths} смертей</div>
+                    <div class="result-card-reward ${coins === 0 ? 'zero' : ''}">
+                        <span class="currency-icon" style="background:linear-gradient(135deg,#d8d8d8,#9a9a9a);color:#2b2b2b">C</span>
+                        Coins +${coins}
+                    </div>
+                    <div class="result-card-team-tag">${p.team === 'blue' ? 'Синие' : 'Красные'}</div>
+                </div>`;
+            }).join('');
+
+            resultsScreen.classList.add('active');
         }
 
         document.getElementById('resultsBack').addEventListener('click', () => {
@@ -3982,6 +4476,37 @@
             G.players = [];
             G.collidables = [];
         });
+
+        // ── Splash screen (nb3game intro) ─────────────────────────
+        function spawnSplashParticles() {
+            const host = document.getElementById('splashParticles');
+            if (!host) return;
+            const N = 60;
+            const W = window.innerWidth, H = window.innerHeight;
+            const cx = W / 2, cy = H / 2;
+            for (let i = 0; i < N; i++) {
+                const el = document.createElement('div');
+                el.className = 'splash-particle';
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 120 + Math.random() * 360;
+                const dx = Math.cos(angle) * dist;
+                const dy = Math.sin(angle) * dist;
+                el.style.left = (cx - 2) + 'px';
+                el.style.top = (cy - 2) + 'px';
+                el.style.setProperty('--dx', dx + 'px');
+                el.style.setProperty('--dy', dy + 'px');
+                el.style.animationDelay = (Math.random() * 0.6) + 's';
+                host.appendChild(el);
+            }
+        }
+        function hideSplash() {
+            const sp = document.getElementById('splashScreen');
+            if (!sp) return;
+            sp.classList.add('hide');
+            setTimeout(() => { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 600);
+        }
+        spawnSplashParticles();
+        setTimeout(hideSplash, 2800);
 
         // Initial paint
         updateSilverDisplay();
